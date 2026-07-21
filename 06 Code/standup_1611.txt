@@ -1,0 +1,22 @@
+# Standup, Tuesday afternoon. Render with:
+#   python team_voice.py standup_1611.txt --no-play
+
+CTO: Right, quick one. Four things landed today. Sable, you first.
+Sable: I got a twenty thousand dollar raise, which I'm told was for saying the word vibe with contempt. I'll keep doing it.
+Vega: Deserved. Moving on, because I have news nobody wanted.
+Fitz: Oh, let me. It's my favourite kind of news. We checked the S B I R portal live. Seventy two topics open right now. Zero of them from Space Force. Zero on space domain awareness. Zero on maneuvers.
+Vega: So the August eighteenth deadline you've been quietly panicking about is not your deadline. It was never your deadline.
+Rook: Good. Nothing to sprint for. That's a month of your life back.
+CTO: Agreed, and we're not panic applying to a topic that isn't about us. The only thing with a real clock now is SAM dot gov, and you're already doing it. That takes weeks, so it's right that it started today.
+Nova: In plain English. The government has no money on the table for you this month. That's not a setback, it removes a fake deadline.
+Vega: Second thing. Outreach is a machine now, not a writing project. Forty targets, five segments, drafts generate themselves. Fifteen a day, twenty minutes.
+Sable: With one correction. Sends are not the scoreboard. Five people describing this pain unprompted, one asking can I try it. You're at one and zero. If sixty emails move neither number, the message is wrong and volume will not save it.
+Vega: Fine. Both true. Fifteen a day is how you get enough at bats for Sable's number to move.
+Fitz: Third thing, and this one's embarrassing. The voice room felt broken. Turns out the word localhost was costing two full seconds on every single turn. Windows tries I P version six first, ollama only listens on the other one, and every request sat through a timeout.
+Rook: Two point one eight seconds, down to zero point one four. One word changed. Nothing to do with AI at all.
+Nova: Which is the lesson worth keeping. When something feels slow, measure it before you blame the model.
+CTO: Fourth. Sable's right that the free local brain is still the weak part. It answers in a fifth of a second and invents things confidently. Fast and wrong is worse than slow and wrong. That's an API key, not a rebuild.
+Vega: So what's the one thing?
+CTO: SAM dot gov is running. So today's one action is the fifteen emails. Find one human per company, send them, log them. That's it. Everything else is built and waiting.
+Nova: And rotate that old key while you're in there.
+Fitz: Told you it'd be a good morning.

@@ -1,0 +1,41 @@
+{
+  "total": 150000.0,
+  "phase": "Phase I - prove maneuver-vs-stale on live public data (6 months)",
+  "nonlabor_reserve": 22500.0,
+  "labor_pool": 127500.0,
+  "plan_hours": {
+    "Sable": 400,
+    "Rook": 350,
+    "Tim": 300,
+    "Fitz": 150,
+    "Vega": 120,
+    "Nova": 90
+  },
+  "ledger": [
+    {
+      "date": "2026-07-21",
+      "who": "Sable",
+      "hours": 6.0,
+      "note": "age-binned maneuver-vs-stale detector (detect.py) + chart"
+    },
+    {
+      "date": "2026-07-21",
+      "who": "Rook",
+      "hours": 4.0,
+      "note": "archive: retry, explicit holes, health log, GP capture"
+    },
+    {
+      "date": "2026-07-21",
+      "who": "Fitz",
+      "hours": 2.0,
+      "note": "found the telesat hole and the CelesTrak 403-unchanged behaviour"
+    },
+    {
+      "date": "2026-07-21",
+      "who": "Tim",
+      "hours": 1.0,
+      "note": "onboarding; flagged the 1000km+ suspects as needing real maneuver records"
+    }
+  ],
+  "opened": "2026-07-21"
+}

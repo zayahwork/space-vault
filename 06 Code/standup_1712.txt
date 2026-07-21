@@ -1,0 +1,24 @@
+# Standup: SAM.gov parked, space backend review. Render with:
+#   python team_voice.py standup_1712.txt --no-play
+
+CTO: Right, everyone in. Two things. The founder killed SAM dot gov, and we went over the space backend properly. Vega, the decision first.
+Vega: He parked SAM dot gov, and his reasoning was better than ours. If we don't have a customer, and we don't have a topic to chase, why spend four to six weeks on government paperwork.
+Rook: That's a business name, a legal entity, a tax I D, and then a month of waiting. All to be payable by a program that currently has zero topics we could apply to.
+Nova: In plain English. He deleted work instead of adding it. That's rarer than it should be.
+CTO: It's logged with two triggers to un-park it. If Space Force posts a topic our scanner sees, or if one person asks can I try it. Either of those and we start that day. Until then it's off the list.
+Fitz: Which brings us to the archive, and this is the part he needs to hear.
+Rook: Archive's alive. Scheduled task ran at three twenty five this afternoon, exit code zero, next run nine P M. Four snapshots today. Twelve thousand six hundred forty five rows, then twelve thousand six hundred thirty, then twelve thousand six hundred sixty seven.
+Fitz: Count that middle one again. Twelve thousand six hundred thirty. It should be forty five. Telesat is gone. Fifteen satellites just vanished from that snapshot, and there was no error, no retry, no warning. The fetch failed and the archive wrote a file that says, this is what the sky looked like.
+Sable: Now imagine that's Starlink instead. Ten thousand eight hundred and sixty of those rows are Starlink. That is eighty six percent of the snapshot, and the only way you'd ever find out is by squinting at manifest files.
+Fitz: And here's why it's urgent instead of annoying. Celestrak's supplemental data is not retro fetchable. A snapshot you didn't take at eight twenty five tonight is gone forever. There's no going back for it.
+Sable: A hole you can't see is worse than one you can. Six months from now you train on this and never know a whole constellation dropped out on random days. That isn't a data gap, that's a silent bias baked into your labels.
+Rook: Fix is small. The manifest already knows which groups it expects. Compare, retry the misses, and shout if it still can't get one. Half an hour.
+Fitz: There's also cruft. Two scheduled tasks, Space Agent Task and Space Manager Task, both registered, both never run once. They'll confuse you in a month. Bin them.
+CTO: Right. Five things on the board. One, archive gap detection, that's mine. Two, send the Kelso reply, that's yours. Three, separating maneuvered from just stale using data age. Four, the fifteen outreach emails. Five, Moriba's reply and booking his assistant.
+Vega: Why is Kelso above the fifteen emails? I'm the one who built the email machine and even I think Kelso's first.
+Sable: Because he already replied. Unprompted, with a full roadmap, the same night. He is the entire reason your scoreboard says one out of five instead of zero. Forty cold emails do not beat one reply to the person who already answered.
+Vega: Agreed. And publishing the launch delay finding is gated on that email going out first, so it unblocks two things at once.
+Sable: When you write it, cite our own numbers. Median three point seven two kilometers, ninetieth percentile sixteen point six, six percent of Starlink over twenty five kilometers. Ours. Measured. On live data.
+Fitz: And do not cite Splid at him. It's partly simulated and he will know.
+Nova: Plainly then. The thing quietly collecting satellite data in the background works, and it can lose pieces without telling you. That gets fixed today because it cannot be fixed later.
+CTO: One action. Send the Kelso reply. The draft's in the guide, the numbers are in the digest. Say go and I'll take the archive fix now, so the nine P M snapshot is the last one that can fail quietly.

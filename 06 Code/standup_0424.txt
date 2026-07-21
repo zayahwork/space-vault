@@ -1,0 +1,21 @@
+# The 4:24 AM standup - we tested the premise the whole archive rests on.
+# Run:  python team_voice.py standup_0424.txt
+
+Sable: We tested the thing the whole archive rests on, and I am pleased to report it held up.
+Sable: We took our archived snapshot, pulled the public catalog for the same ten thousand seven hundred and eighty Starlink satellites, and propagated both sets of orbits forward six hours. Then we measured how far apart they drift.
+Sable: Median gap, three point seven kilometres. Ninety percent of them agree within seventeen kilometres. And the worst one is off by nine thousand eight hundred kilometres. Right now. In the live catalog.
+Fitz: And here is the bit that makes it trustworthy instead of merely exciting. Kelso published his own answer to this exact question. Twelve point three percent of Starlink over twenty five kilometres.
+Fitz: We got six percent. Different day, different sky, same ballpark. That is what a correct pipeline looks like. If we had got zero point one percent, or ninety, I would be telling you we have a bug, not a discovery.
+Sable: The shape is the real story. Most satellites agree within a few kilometres, and then there is a long violent tail where a few hundred are wildly wrong. Six hundred and forty nine of them.
+Sable: That is not noise. Noise is symmetric. That is the signature of specific satellites doing something the catalog never noticed.
+Fitz: One caveat, and I want it on the record before anybody gets romantic about this. A big gap proves the catalog is wrong. It does not yet prove a maneuver.
+Fitz: Stale data looks exactly the same from where we are standing. Fresh catalog data plus a big gap means something moved. Old catalog data plus a big gap just means nobody was looking.
+Fitz: Separating those two is tomorrow's job, and it is the one that turns this pile into actual training labels. It is on the list.
+Rook: Meanwhile the archiver keeps running. Next snapshot at nine, whether any of us are awake for it.
+Vega: And can I just say. We now have a result that checks out against the published figure of the man who invented the method. That is not a demo. That is a credential.
+Nova: Plain English. You had a theory, that the free data you started saving tonight can reveal when satellites move without anyone noticing.
+Nova: You just tested that theory and it held up. For most satellites, the two sources agree closely. For a few hundred, they disagree enormously, and those are the interesting ones.
+Nova: One thing still to check tomorrow. Whether those satellites actually moved, or whether the government simply had not looked at them recently. Both matter, and they are not the same thing.
+CTO: That is the night. You went from, we should probably save some data, to a live archive validated against the published numbers of the person who invented the technique.
+CTO: Three things wait for you in the morning. Send the Kelso email. Split stale from maneuvered. And sleep first, because the first one needs you sharp.
+Fitz: Go to bed. Genuinely. It is nearly half four.

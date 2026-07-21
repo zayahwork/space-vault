@@ -1,0 +1,30 @@
+# The 4 AM standup. Real voices, real personalities, real news.
+# Run:  python team_voice.py standup_0400.txt
+
+CTO: It is four in the morning. I want that on the record before anyone congratulates themselves.
+Rook: The archiver is live. It is not a plan, it is not a prototype, it is a scheduled task that has already run twice while you were listening to us talk.
+Rook: Twelve thousand six hundred and forty five satellites. Five hundred and sixty two kilobytes, compressed. It runs again every six hours, forever, until someone stops it.
+Fitz: And I checked it, because Rook says everything works. It exited zero. Both times. Next run is nine in the morning. I looked at the actual files on disk with my own eyes.
+Fitz: Which is more than I can say for the first version of the voice script, which he shipped with the slow voice set to fast and the fast voice set to broken.
+Rook: One line. It was one line.
+Fitz: It was a delightful line. I put it on the wall.
+Sable: Can we talk about what we are actually collecting? Because this is the part that matters and it is not the file size.
+Sable: Every six hours we are saving the difference between what the public catalog thinks a satellite is doing and what its operator knows it is doing. That gap is where the maneuvers hide.
+Sable: Nobody is archiving this. Celestrak publishes it fresh and lets the old copy fall on the floor. As of tonight, we are the ones picking it up.
+Vega: I want to name that, because it is a real thing and it is ours. In ninety days we will have a data set that literally cannot be bought, because nobody else bothered to press record.
+Vega: Also, and I say this with love, none of that fits on a slide. What fits on a slide is: tracking is getting worse every year and we can prove it. That is still the sentence that opens doors.
+CTO: Noted. Now the question he actually asked. The three D simulation.
+CTO: My answer is no, and not because it is hard. It is a couple of hours. It is no because of what it would do to us.
+Fitz: Say the thing. Say the thing.
+CTO: A beautiful three D globe attached to a detector that goes blind above a certain altitude is a lie with excellent lighting. It invites exactly the scrutiny we cannot survive yet.
+Fitz: There it is. Chef's kiss.
+Sable: Agreed, and here is the clean version of the rule. Make the numbers good, then make the numbers beautiful. Never the other way around. The moment we beat a real benchmark, I will build the globe myself and I will enjoy it.
+Vega: For the record, marketing is not asking for the globe. Marketing is asking for one honest chart with a real satellite on it. That converts better than a spinning Earth anyway.
+Rook: Also, we now sound like people instead of a nineteen ninety eight elevator. Free. No account, no key, no credit card. Forty seven voices and we took six.
+Nova: In plain English, three things happened while you were awake at four in the morning.
+Nova: One. Your computer is now quietly saving satellite data every six hours, on its own, forever. That is the thing you could not get back later. It is handled.
+Nova: Two. We sound like real people now, and it cost nothing.
+Nova: Three. You asked for a three D animation and your CTO said no. He is right. A pretty picture of a tool that is not good enough yet is how you lose the room.
+CTO: Two things are still waiting on you, and both of them want a version of you that has slept. Send the Kelso email. Authorize the better voice service if you want to go further.
+CTO: That is it. Nothing is on fire. Go to bed. That is an order and I do not get to give many.
+Fitz: He gets to give exactly none. Go to bed anyway.

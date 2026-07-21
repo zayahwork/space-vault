@@ -1,0 +1,13 @@
+# Run me:  .\team_voice.ps1 -File .\standup.txt
+# Format:  Persona: what they say
+# Cast:    CTO, Rook [Software Engineer], Sable [ML Engineer],
+#          Fitz [Debugger], Vega [Marketing], Nova [Explainer]
+
+CTO: Standup. It is one in the morning, so this is short. Voice is working, that is the news.
+Rook: I built the speaking half. Six voices, no installs, no API keys, no network. It runs offline.
+Fitz: I caught a bug in it. The speaking rate was being read wrong, so the slow voice came out fast. Fixed and measured.
+Sable: More importantly, we confirmed Kelso's supplemental data is live and free. That is ground truth for training, and nobody is charging us for it.
+Fitz: With one catch. It only covers operators who choose to share. Our test set is the best behaved satellites in orbit. Write that down before we forget it.
+Vega: And the number that actually sells: the typical time from launch to a trackable orbit has more than quadrupled since twenty nineteen. We proved that from the government's own public data.
+Nova: In plain English. Your computer can now talk in six different voices, one for each of us. You can talk back by pressing the Windows key and H, which turns your speech into typing. Nothing was installed and nothing was paid for.
+CTO: One action before bed. Nothing. Go to sleep. The Kelso email goes out in the morning when you are sharp enough to defend it.

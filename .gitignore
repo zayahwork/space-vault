@@ -1,0 +1,25 @@
+# Credentials. Never, under any circumstance.
+06 Code/spacetrack_auth.json
+**/spacetrack_auth.json
+*.env
+.env
+
+# The archive. ~2 MB a day forever, and it is data, not source - putting it in
+# git would make every clone enormous and every commit slow. It is also the one
+# thing here that genuinely cannot be regenerated, so back it up separately.
+06 Code/supgp_archive/
+06 Code/output/*.csv
+
+# Environments and caches
+06 Code/.venv-meeting/
+**/__pycache__/
+*.pyc
+06 Code/splid-devkit/
+
+# Rendered audio - regenerable from the .txt scripts beside them
+06 Code/*.mp3
+
+# Obsidian's own state
+.obsidian/workspace*.json
+.obsidian/cache
+.trash/

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Room — Space</title>
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+
+<header class="rail">
+  <div class="rail-left">
+    <span class="mark">ROOM</span>
+    <span class="sep">/</span>
+    <span class="vault">SPACE</span>
+  </div>
+  <div class="rail-mid">
+    <span class="lamp" id="lamp" data-state="idle"></span>
+    <span class="state" id="state">connecting</span>
+  </div>
+  <div class="rail-right">
+    <span class="brain" id="brain">—</span>
+    <span class="sep">/</span>
+    <span class="clock" id="clock">--:--:--</span>
+    <span class="utc">UTC</span>
+  </div>
+</header>
+
+<main>
+  <section class="stage" aria-label="The table">
+    <svg id="orbit" viewBox="0 0 860 560" role="img" aria-labelledby="orbit-title">
+      <title id="orbit-title">Six teammates seated around the table</title>
+      <ellipse id="track" cx="430" cy="270" rx="320" ry="212"></ellipse>
+      <g id="links"></g>
+      <g id="seats"></g>
+      <g id="you">
+        <path id="you-mark" d=""></path>
+        <circle id="you-ring" cx="0" cy="0" r="34"></circle>
+        <text id="you-label" text-anchor="middle">YOU</text>
+        <text id="you-focus" text-anchor="middle">focus</text>
+      </g>
+    </svg>
+    <p class="partial" id="partial"></p>
+  </section>
+
+  <section class="log" aria-label="What was said">
+    <div class="log-head">
+      <span>TRANSCRIPT</span>
+      <span id="count">0 lines</span>
+    </div>
+    <div class="log-body" id="log">
+      <p class="empty">Nothing said yet. Talk, or type below.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="deck">
+  <form id="composer" autocomplete="off">
+    <input id="input" type="text" placeholder="Type instead of talking" aria-label="Say something to the room">
+    <button type="submit">Send</button>
+  </form>
+  <button id="cut" type="button" class="cut">Cut in</button>
+  <p class="note">Rings move only when there is real audio. A still ring is silence, not idle.</p>
+</footer>
+
+<script src="/app.js"></script>
+</body>
+</html>

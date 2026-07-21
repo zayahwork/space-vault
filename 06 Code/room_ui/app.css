@@ -1,0 +1,314 @@
+/* The room. A flight console, not a hologram.
+   Everything that moves is driven by a measured number. */
+
+:root {
+  --void:     #090c0b;
+  --deck:     #0f1413;
+  --panel:    #131a18;
+  --rule:     #1e2a26;
+  --rule-lit: #2c3d37;
+  --ink:      #d6e3dd;
+  --dim:      #66756f;
+  --faint:    #3d4a45;
+  --phosphor: #79e8ae;
+  --amber:    #e4a33c;
+
+  --mono: "Cascadia Mono", Consolas, "SF Mono", ui-monospace, monospace;
+  --sans: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+
+  --gap: 20px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  background: var(--void);
+  color: var(--ink);
+  font-family: var(--sans);
+  overflow: hidden;
+}
+
+body {
+  display: grid;
+  grid-template-rows: 44px 1fr 68px;
+  /* A faint horizon glow low on the screen: the only ambient light in here,
+     and it sits where the table is, so it reads as the table being lit. */
+  background-image: radial-gradient(120% 60% at 38% 78%, #0e1a16 0%, var(--void) 62%);
+}
+
+/* ---------------------------------------------------------------- rails */
+
+.rail, .deck {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 22px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.rail { border-bottom: 1px solid var(--rule); }
+.rail-left  { display: flex; align-items: center; gap: 10px; }
+.rail-mid   { display: flex; align-items: center; gap: 9px; margin-inline: auto; }
+.rail-right { display: flex; align-items: center; gap: 10px; }
+
+.mark  { color: var(--ink); font-weight: 600; letter-spacing: 0.28em; }
+.vault { color: var(--phosphor); letter-spacing: 0.28em; }
+.sep   { color: var(--faint); }
+.utc   { color: var(--faint); letter-spacing: 0.2em; }
+.clock { color: var(--dim); font-variant-numeric: tabular-nums; }
+.brain { color: var(--dim); text-transform: none; letter-spacing: 0.06em; }
+
+.lamp {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--faint);
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.02);
+}
+.lamp[data-state="listening"] { background: var(--phosphor); }
+.lamp[data-state="hearing"]   { background: var(--phosphor); animation: pulse 1.1s ease-in-out infinite; }
+.lamp[data-state="thinking"]  { background: var(--amber);    animation: pulse 0.7s ease-in-out infinite; }
+.lamp[data-state="speaking"]  { background: var(--ink); }
+.lamp[data-state="closed"]    { background: #6b3b3b; }
+.state { color: var(--dim); }
+
+@keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.25 } }
+
+/* ---------------------------------------------------------------- layout */
+
+main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.95fr);
+  min-height: 0;
+}
+
+.stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  padding: 8px 4px 0;
+  border-right: 1px solid var(--rule);
+}
+
+#orbit { width: 100%; height: 100%; max-height: 100%; }
+
+/* The table itself: an orbit, drawn as an ellipse, with the founder at its
+   FOCUS rather than its centre - which is where the primary body actually sits.
+   That off-centre marker is the whole point of the drawing. */
+#track {
+  fill: none;
+  stroke: var(--rule-lit);
+  stroke-width: 1;
+  stroke-dasharray: 2 7;
+}
+
+.seat-ring {
+  fill: var(--deck);
+  stroke: var(--faint);
+  stroke-width: 1;
+  transition: stroke 160ms linear;
+}
+.seat.live .seat-ring { stroke: currentColor; }
+
+/* The measured ring. Its radius is RMS. Nothing else touches it. */
+.seat-level {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  opacity: 0;
+}
+
+.seat-mono {
+  font-family: var(--mono);
+  font-size: 17px;
+  font-weight: 600;
+  fill: var(--dim);
+  letter-spacing: 0.02em;
+  transition: fill 160ms linear;
+}
+.seat.live .seat-mono { fill: currentColor; }
+
+.seat-name {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
+  fill: var(--ink);
+  text-transform: uppercase;
+}
+.seat-role {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  fill: var(--faint);
+  text-transform: uppercase;
+}
+.seat-lessons {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.12em;
+  fill: var(--faint);
+}
+.seat.live .seat-role { fill: var(--dim); }
+
+/* Who is talking to you. Drawn only while someone speaks. */
+.link {
+  stroke: currentColor;
+  stroke-width: 1;
+  opacity: 0.34;
+  stroke-dasharray: 1 6;
+}
+
+#you-mark { fill: none; stroke: var(--phosphor); stroke-width: 1.4; }
+#you-ring { fill: none; stroke: var(--phosphor); stroke-width: 1.5; opacity: 0; }
+#you-label {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.3em;
+  fill: var(--phosphor);
+}
+#you-focus {
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.18em;
+  fill: var(--faint);
+}
+
+.partial {
+  position: absolute;
+  left: 0; right: 0; bottom: 10px;
+  margin: 0;
+  padding: 0 40px;
+  text-align: center;
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--dim);
+  min-height: 1.5em;
+}
+.partial::after { content: ""; }
+.partial:not(:empty)::after {
+  content: "▌";
+  color: var(--phosphor);
+  animation: blink 1s steps(1) infinite;
+}
+@keyframes blink { 50% { opacity: 0 } }
+
+/* ---------------------------------------------------------------- log */
+
+.log { display: grid; grid-template-rows: 34px 1fr; min-height: 0; }
+
+.log-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--faint);
+  text-transform: uppercase;
+}
+
+.log-body {
+  overflow-y: auto;
+  padding: 16px 20px 24px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
+}
+
+.empty { color: var(--faint); font-size: 14px; }
+
+.turn { margin: 0 0 16px; animation: rise 260ms ease-out both; }
+@keyframes rise { from { opacity: 0; transform: translateY(4px) } }
+
+.turn-who {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 3px;
+}
+.turn-who b { color: currentColor; font-weight: 600; }
+
+/* Speech is the one thing on this screen a human wrote, so it is the one thing
+   not set in the machine face. */
+.turn-text {
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+.turn.mine .turn-who { color: var(--phosphor); }
+.turn.mine .turn-text {
+  color: var(--ink);
+  border-left: 1px solid var(--rule-lit);
+  padding-left: 12px;
+}
+
+.turn.sys .turn-text { color: var(--amber); font-family: var(--mono); font-size: 12px; }
+
+/* ---------------------------------------------------------------- deck */
+
+.deck { border-top: 1px solid var(--rule); gap: 14px; }
+
+#composer { display: flex; gap: 10px; flex: 1; }
+
+#input {
+  flex: 1;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  letter-spacing: normal;
+  text-transform: none;
+  padding: 9px 12px;
+}
+#input::placeholder { color: var(--faint); }
+#input:focus-visible, button:focus-visible {
+  outline: 1px solid var(--phosphor);
+  outline-offset: 1px;
+}
+
+button {
+  background: transparent;
+  border: 1px solid var(--rule-lit);
+  border-radius: 2px;
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 9px 16px;
+  cursor: pointer;
+  transition: color 140ms, border-color 140ms;
+}
+button:hover { color: var(--ink); border-color: var(--phosphor); }
+.cut:hover { color: var(--amber); border-color: var(--amber); }
+
+.note {
+  margin: 0;
+  color: var(--faint);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: none;
+  max-width: 30ch;
+  line-height: 1.4;
+}
+
+@media (max-width: 1080px) {
+  main { grid-template-columns: 1fr; grid-template-rows: 1fr 40%; }
+  .stage { border-right: 0; border-bottom: 1px solid var(--rule); }
+  .note { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+  .seat-level { display: none; }
+}

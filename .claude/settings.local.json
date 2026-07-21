@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:www.ae.utexas.edu)",
+      "WebFetch(domain:spacewerx.us)",
+      "WebFetch(domain:kayhan.space)",
+      "WebFetch(domain:amostech.space)",
+      "Bash(pip --version)",
+      "Bash(python -c \"import sgp4\")",
+      "Bash(pip install *)",
+      "Bash(python -c \"import sgp4, skyfield, requests, matplotlib; print\\('ALL PACKAGES OK'\\)\")",
+      "Bash(mv \"05 Code\" \"06 Code\" && mv \"04 Routine \\(powers calendar\\)\" \"05 Routine \\(powers calendar\\)\" && mv \"03 Ideas\" \"04 Ideas\" && mv \"02 Reference\" \"03 Reference\" && mkdir -p \"02 Task Guides\" \"99 Archive/week1-day-files\" && mv \"01 This Week\"/*.md \"99 Archive/week1-day-files/\" && rmdir \"01 This Week\" && ls)",
+      "PowerShell(notepad \"C:\\\\Space\\\\06 Code\\\\spacetrack_auth.json\")",
+      "Bash(python -c ' *)",
+      "Bash(python maneuver_chart.py)",
+      "PowerShell(Start-Process \"C:\\\\Space\\\\06 Code\\\\output\\\\iss_maneuvers.png\")",
+      "Bash(python multi_chart.py)",
+      "PowerShell(Start-Process \"C:\\\\Space\\\\06 Code\\\\output\\\\starlink_maneuvers.png\")",
+      "PowerShell(Start-Process \"C:\\\\Space\\\\06 Code\\\\output\\\\goes18_maneuvers.png\")"
+    ]
+  }
+}

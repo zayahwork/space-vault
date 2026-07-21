@@ -1,0 +1,63 @@
+# BATCH UPDATE - state of the project, spoken.
+# Run:  powershell -NoProfile -ExecutionPolicy Bypass -Command "& 'C:\Space\06 Code\team_voice.ps1' -File 'C:\Space\06 Code\batch_update.txt'"
+# Written for the ear: short sentences, no URLs, no tables, numbers spoken plainly.
+
+CTO: Batch update. Everyone reports, then the two decisions we need from you. About five minutes.
+
+CTO: Headline. Day one is done and it went better than it had any right to. Ten emails out, two replies, and both replies came from people who did not have to answer.
+
+Vega: Marketing update. Moriba Jah replied the same day, from vacation, and opened the door to a fifteen minute call. He is back on the twenty third. That is two days away.
+
+Vega: Doctor Kelso, who runs Celestrak, replied the same night with a personally curated reading list. Elders of a field do not do that for strangers. Whatever you wrote, it worked.
+
+Vega: Our scoreboard says five people describing their pain unprompted. We are at one. Kelso counts, because he described the problem in writing, at length, without being asked.
+
+Vega: And I have found the asset that gets replies from people who ignore cold emails. It is a single number, and Rook proved it tonight. More on that in a second.
+
+Rook: Engineering update. Four things exist that did not exist yesterday. A maneuver chart that reads free public orbit data. A deorbit detector. A launch delay analyzer. And the voices you are listening to right now.
+
+Rook: The maneuver chart caught all three International Space Station engine burns over four months. Every one. Zero misses, zero dollars spent on data.
+
+Rook: The deorbit detector caught a Starlink satellite in the middle of dying. It has lost one hundred and twelve kilometers of altitude and it is falling faster every day. We are watching a funeral in real time.
+
+Rook: The launch analyzer is the one Vega cares about. It pulls Kelso's own public table, all twenty six hundred launches, and measures how long each one took to get a trackable orbit.
+
+Vega: Here is the number. In twenty nineteen, the typical launch was trackable in about sixteen hours. This year it takes almost three days. It has gotten worse every single year since twenty twenty one.
+
+Vega: That is not the worst case. That is the typical case. And we can prove it from the government's own published data, on a laptop, for free. That is the line that opens doors.
+
+Sable: Machine learning update. The big find tonight was not our code. It was discovering that Kelso publishes near perfect orbit data for about three quarters of all active satellites, refreshed every thirty minutes, completely free.
+
+Sable: That matters because it is ground truth. It tells us where the public catalog is wrong. Which means it tells us where a maneuver happened that the catalog missed. That is a training signal somebody else maintains for us.
+
+Sable: It is also live data, not simulated. The practice dataset from M I T that we were going to build on is partly simulated. Our own honesty rule says we verify on live data. So this may be the better foundation.
+
+Fitz: Debugging update, and I am the one with bad news, as usual. Three things are wrong or fragile and you should know all of them.
+
+Fitz: One. Our detector is blind at high altitude. On a weather satellite it reported twenty eight maneuvers in four months, which is nonsense. Most of that was measurement noise, not engines firing.
+
+Fitz: Two. We now know why. Kelso's paper says the public data is deliberately smoothed around maneuvers. The people generating it choose short fit windows specifically to avoid modeling engine burns. So the catalog hides the exact events we are trying to detect.
+
+Fitz: That is not a reason to quit. It is a reason to say it out loud. Anyone claiming clean maneuver detection from this data alone, without mentioning that, is either naive or bluffing.
+
+Fitz: Three. Kelso's free ground truth only covers operators who choose to share. That is the best behaved satellites in orbit. If we test only on those, we will believe we are better than we are. Write it down before we forget it.
+
+Sable: Agreed, and worth adding. We also learned the launch identification problem is narrower than it looked. Kelso already solved it back in twenty seventeen, for the case where the operator cooperates.
+
+Sable: What is still unsolved nine years later is the case where nobody cooperates. Two rideshare launches this year are still sitting in the catalog as, quote, object A, unidentified. One of them launched in March.
+
+CTO: That is the honest picture. One clean win, two precisely named blind spots, and a research finding that sharpens what we are actually claiming. That is a good first day.
+
+CTO: Two decisions need you, and only you can make them.
+
+CTO: Decision one. Kelso's reply is written and ready. It cites our own analysis. Read the digest first so you can defend every number, then send it in the morning. Not tonight.
+
+CTO: Decision two. Kelso's ground truth data is published fresh every thirty minutes and, as far as we can tell, not archived anywhere. Every night we do not save it is a night of training data gone forever. I want to start saving all of it. Say go.
+
+Nova: Plain English, then bed. You built something today that found every engine burn on the space station using free data. You found a second free source that tells you when the first source is lying.
+
+Nova: You have a number that proves tracking is getting worse, and two experts replying to your emails. The main risks are that your detector is bad at high altitude, and that the free data only covers the well behaved satellites.
+
+Nova: Nothing is on fire. Nothing expires tonight. The one thing worth starting is saving that data every day, because that is the only thing you cannot get back later.
+
+CTO: End of update. Go to sleep.
