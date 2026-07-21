@@ -103,9 +103,12 @@ def plan_table(b):
               f"{TEAM[name]['salary']:>10,} {rate:>8.0f} {hours:>7} {cost:>11,.0f}")
     print(f"  {'CTO':<7} {'CTO':<18} {'—':>10} {'—':>8} {'—':>7} {0:>11,.0f}"
           "   founder, unpaid")
-    print(f"\n  planned labor {total:>11,.0f}   "
-          f"of ${b['labor_pool']:,.0f} pool   "
-          f"({'OVER BY $%s' % f'{total-b['labor_pool']:,.0f}' if total > b['labor_pool'] else f'${b['labor_pool']-total:,.0f} unallocated'})")
+    pool = b["labor_pool"]
+    # Nested same-type quotes inside an f-string need Python 3.12+, and the room's
+    # venv is 3.11. Build the phrase first.
+    gap = (f"OVER BY ${total - pool:,.0f}" if total > pool
+           else f"${pool - total:,.0f} unallocated")
+    print(f"\n  planned labor {total:>11,.0f}   of ${pool:,.0f} pool   ({gap})")
 
     year = sum(TEAM[n]["salary"] for n in b["plan_hours"])
     print(f"\n  reality check: these six at full salary cost ${year:,}/yr.")

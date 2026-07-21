@@ -13,8 +13,8 @@
 | 📈 | First maneuver charts | 3/3 ISS maneuvers, Starlink deorbit caught | [[RESULTS - First Charts]] |
 | 📬 | Outreach machine | 40 targets loaded, **0 sent** | [[Guide - Daily Outreach]] |
 | 🏛️ | SBIR / SAM.gov | **Parked.** Weekly watcher armed — it un-parks itself | [[Guide - SBIR Steps]] |
-| 👥 | The team, their brains, the money | 6 people, 9 lessons banked, $150K allocated | [[THE TEAM - people, brains, money]] |
-| 🖥️ | **The war room** — see them at the table and talk | Working. `cd "C:\Space\06 Code"` then `.\jarvis.ps1` | opens `127.0.0.1:8770` |
+| 🏢 | **The office** — the room, the team, their brains, the money | 7 people · 14 lessons banked · $1,276 of $127,500 charged | **[[00 THE OFFICE]]** |
+| 🖥️ | **The war room** — see them at the table and talk to them | Working. `cd "C:\Space\06 Code"` then type `jarvis` | [[The Room]] |
 | 🗣️ | **Scoreboard** | **1 / 5** pain descriptions · **0 / 1** "can I try it?" | bottom of [[01 TASKS]] |
 
 ## Where everything lives
@@ -26,6 +26,7 @@
 | **03 Reference** | [[Glossary]] (what words mean) · [[Outreach Emails]] (drafts) · [[Daily Schedule]] · big research docs | When a guide sends you |
 | **04 Ideas** | Parked visions ([[Space Highway - the far-future vision\|Space Highway]]) | Rarely — on purpose |
 | **05 Routine (powers calendar)** | Feeds the daily calendar (🏋️ 10:00 lift, meals, sleep) | Never — it just works |
+| **Office** | How we work: the room, the team, their memory, the money | [[00 THE OFFICE]] — start there |
 | **06 Code** | The actual programs + their output charts | During build sessions with Claude |
 | **99 Archive** | Everything old (the day-file system, the planner before that) | Never, unless digging history |
 
