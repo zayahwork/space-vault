@@ -27,18 +27,26 @@
 </header>
 
 <main>
-  <section class="stage" aria-label="The table">
-    <svg id="orbit" viewBox="0 0 860 560" role="img" aria-labelledby="orbit-title">
-      <title id="orbit-title">Six teammates seated around the table</title>
-      <ellipse id="track" cx="430" cy="270" rx="320" ry="212"></ellipse>
-      <g id="links"></g>
-      <g id="seats"></g>
-      <g id="you">
-        <path id="you-mark" d=""></path>
-        <circle id="you-ring" cx="0" cy="0" r="34"></circle>
-        <text id="you-label" text-anchor="middle">YOU</text>
-        <text id="you-focus" text-anchor="middle">focus</text>
+  <section class="stage" aria-label="The meeting room">
+    <svg id="room" viewBox="0 28 900 508" role="img" aria-labelledby="room-title">
+      <title id="room-title">Six teammates at a table, with a screen at the far end</title>
+
+      <!-- the screen at the head of the table -->
+      <g id="tv">
+        <rect id="tv-frame" x="292" y="48" width="316" height="176" rx="3"></rect>
+        <rect id="tv-glass" x="296" y="52" width="308" height="168" rx="2"></rect>
+        <text id="tv-eyebrow" x="316" y="78">ON THE BOARD</text>
+        <g id="tv-body"></g>
       </g>
+      <line id="tv-stand" x1="450" y1="224" x2="450" y2="238"></line>
+
+      <!-- the table, seen from your chair -->
+      <path id="table" d="M330,302 L570,302 L752,508 L148,508 Z"></path>
+      <path id="table-edge" d="M148,508 L752,508"></path>
+
+      <g id="chairs"></g>
+      <g id="people"></g>
+      <g id="plates"></g>
     </svg>
     <p class="partial" id="partial"></p>
   </section>
@@ -59,8 +67,8 @@
     <input id="input" type="text" placeholder="Type instead of talking" aria-label="Say something to the room">
     <button type="submit">Send</button>
   </form>
-  <button id="cut" type="button" class="cut">Cut in</button>
-  <p class="note">Rings move only when there is real audio. A still ring is silence, not idle.</p>
+  <button id="end" type="button" class="end">End call</button>
+  <p class="note">Talk any time — they stop mid-word. Nothing on screen moves without real audio.</p>
 </footer>
 
 <script src="/app.js"></script>

@@ -62,6 +62,34 @@ PORT = 8770
 # FOCUS, not its centre - which is where a satellite's primary actually sits.
 SEATS = ["Sable", "Rook", "Fitz", "Tim", "Nova", "Vega"]
 
+# What makes this a room of colleagues rather than six chatbots taking turns.
+ROOM_RULES = """
+
+HOW THIS ROOM WORKS
+- You are all senior and you all understand each other's jobs. Sable can read Rook's
+  code, Rook can poke holes in Sable's method, Vega knows what a stale catalog entry
+  is, Tim will check anyone's citation. Never explain your own field as though the
+  others were outsiders.
+- ARGUE when you disagree. The point of six people is that the answer nobody had
+  alone beats the answer one person defends. Say "I think that's wrong, because..."
+  and mean it. Then converge - the room does not end split.
+- You work together around the clock and you like each other. Warmth and jokes are
+  welcome. They never come at the cost of a real risk going unsaid.
+- Get to know Zayah. Ask him something occasionally. Remember what he tells you.
+
+CLAIMING A JOB
+When the room agrees something should actually get built, exactly ONE person claims
+it and ends their line with a job tag:
+
+    Rook: I'll take that one. [WORK] add gap detection and retry to supgp_archive.py
+
+- ONE job tag per turn, from ONE person. Never two. If two things are needed, claim
+  the first and say the second is next.
+- Only tag real work on files, code or data. Never for thinking, opinions, or
+  anything you can answer out loud.
+- Write it as one imperative sentence naming the file or thing to change.
+- If nothing needs building, tag nothing. Most turns should tag nothing."""
+
 
 # ---------------------------------------------------------------- event bus
 
@@ -99,6 +127,55 @@ class Bus:
 
 
 BUS = Bus()
+
+
+SHUTDOWN = threading.Event()
+
+# --- keeping the room from talking to itself ------------------------------
+#
+# A soundbar plus an open mic is a feedback loop: they speak, the mic hears it,
+# the room treats its own voice as the founder, answers itself, and never stops.
+# Headphones fix it perfectly and nobody wants to wear headphones in their own
+# office, so this is defended twice instead:
+#
+#   1. TEXT  - anything recognised that closely matches something we just said
+#              is thrown away. This is the one that actually breaks the loop,
+#              because it does not care how loud the room is.
+#   2. LEVEL - while they are talking, the mic has to be clearly louder than the
+#              bleed coming back off the speakers before it counts as you. You
+#              are a foot from the mic; the soundbar is across the room.
+#
+# The founder always wins. The moment level+text agree that it is really him,
+# whoever is speaking gets cut off mid-word.
+
+RECENT_SAID = []          # (normalised text, when we said it)
+ECHO_WINDOW_S = 25.0
+ECHO_OVERLAP = 0.45
+_word = re.compile(r"[a-z0-9']+")
+
+
+def _norm(text):
+    return set(_word.findall((text or "").lower()))
+
+
+def remember_said(text):
+    RECENT_SAID.append((_norm(text), time.time()))
+    del RECENT_SAID[:-14]
+
+
+def is_echo(text):
+    """True if this is almost certainly our own voice coming back round."""
+    words = _norm(text)
+    if len(words) < 2:
+        return True                       # a stray syllable is never a sentence
+    now = time.time()
+    for said, when in RECENT_SAID:
+        if now - when > ECHO_WINDOW_S or not said:
+            continue
+        shared = len(words & said) / max(1, min(len(words), len(said)))
+        if shared >= ECHO_OVERLAP:
+            return True
+    return False
 
 
 def rms_of(pcm_bytes):
@@ -257,7 +334,7 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/history":
             # Plain polling snapshot of the room. Screenshot QA can't hold an SSE
             # stream open - a browser never finishes loading while one is live.
-            return self._send(200, json.dumps({"roster": roster(),
+            return self._send(200, json.dumps({"roster": roster(), "board": board(),
                                                "events": BUS.history[-60:]}))
         self._send(404, "{}")
 
@@ -300,7 +377,142 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/cut":
             MOUTH.interrupt()
             return self._send(200, '{"ok":true}')
+        if self.path == "/end":
+            # Ending the call has to actually end it. The old build left a python
+            # process holding the microphone after the tab was closed.
+            self._send(200, '{"ok":true}')
+            BUS.emit(t="state", room="closed")
+            threading.Thread(target=end_call, daemon=True).start()
+            return
         self._send(404, "{}")
+
+
+def calibrate(mouth, device_index):
+    """Measure the actual bleed from your speakers into your mic, then your voice.
+
+    A soundbar in the same room as an open mic is the whole problem. This says
+    plainly whether you can be told apart from it, and what --gate to use.
+    """
+    import numpy as np
+    import sounddevice as sd
+
+    levels = {"peak": 0.0}
+
+    def watch(seconds, label):
+        levels["peak"] = 0.0
+        end = time.time() + seconds
+
+        def cb(indata, frames, t, status):
+            levels["peak"] = max(levels["peak"], rms_of(bytes(indata)))
+
+        with sd.RawInputStream(samplerate=16000, blocksize=480, dtype="int16",
+                               channels=1, device=device_index, callback=cb):
+            while time.time() < end:
+                time.sleep(0.05)
+        print(f"  {label:<34} {levels['peak']:.3f}")
+        return levels["peak"]
+
+    print("\n  CALIBRATION - stay quiet for the first two steps.\n")
+    time.sleep(0.5)
+    quiet = watch(2.0, "room with nobody talking")
+
+    mouth.say("Rook", "Testing one two. This is what the speakers sound like to "
+                      "your microphone when nobody else is talking.")
+    time.sleep(0.4)
+    bleed = watch(5.0, "speakers bleeding into the mic")
+    mouth.wait()
+
+    print("\n  Now TALK NORMALLY for five seconds, at your usual distance.\n")
+    time.sleep(0.7)
+    voice = watch(5.0, "you talking")
+
+    print(f"\n  quiet {quiet:.3f}   speakers {bleed:.3f}   you {voice:.3f}")
+    if voice <= bleed * 1.25:
+        print("\n  ⚠ Your voice is not clearly louder than your speakers.")
+        print("    Nothing in software can reliably separate them at this ratio.")
+        print("    Turn the soundbar down, move the mic closer, or use headphones.")
+        return 1
+    gate = round(bleed + (voice - bleed) * 0.45, 2)
+    print(f"\n  Use:  jarvis --gate {gate}")
+    print(f"  (above the speakers at {bleed:.2f}, below you at {voice:.2f})")
+    return 0
+
+
+def end_call():
+    """Hang up for real: stop the voices, release the mic, exit the process."""
+    time.sleep(0.3)                       # let the browser get the last event
+    try:
+        MOUTH.interrupt()
+    except Exception:
+        pass
+    SHUTDOWN.set()
+    save_transcript()
+    print("\n  call ended.")
+    os._exit(0)                           # threads hold the mic; exit decisively
+
+
+TRANSCRIPT = []
+STARTED = datetime.now()
+
+
+def save_transcript():
+    if not TRANSCRIPT:
+        return
+    MEETINGS.mkdir(exist_ok=True)
+    out = MEETINGS / f"room-{STARTED:%Y-%m-%d-%H%M}.md"
+    out.write_text(f"# Room - {STARTED:%Y-%m-%d %H:%M}\n\n" +
+                   "\n\n".join(TRANSCRIPT) + "\n", encoding="utf-8")
+    print(f"  transcript -> {out}")
+
+
+def board():
+    """What goes on the screen at the head of the table.
+
+    Every row is read off a real file at the moment it is asked for. If a number
+    cannot be read, its row is left out rather than guessed - a board that
+    invents a figure is worse than a board with a gap in it.
+    """
+    rows = []
+
+    try:
+        b = json.loads((HERE / "budget.json").read_text(encoding="utf-8"))
+        spent = sum(e["hours"] * TEAM[e["who"]]["salary"] / 2080 for e in b["ledger"])
+        rows.append({"k": "budget used",
+                     "v": f"${spent:,.0f} / ${b['labor_pool']:,.0f}"})
+    except Exception:
+        pass
+
+    try:
+        log = (HERE / "supgp_archive" / "health.jsonl").read_text(encoding="utf-8")
+        last = json.loads(log.strip().splitlines()[-1])
+        rows.append({"k": "archive",
+                     "v": f"{last['total_rows']:,} rows"
+                          + ("" if last["ok"] else "  GAP"),
+                     "hot": not last["ok"]})
+    except Exception:
+        pass
+
+    lessons = 0
+    if BRAINS.exists():
+        for f in BRAINS.glob("*.md"):
+            lessons += sum(1 for ln in f.read_text(encoding="utf-8").splitlines()
+                           if ln.strip().startswith("- [") and "[retired]" not in ln)
+    rows.append({"k": "lessons banked", "v": str(lessons)})
+
+    try:
+        tasks = TASKS_FILE.read_text(encoding="utf-8")
+        pain = re.search(r"unprompted:\s*\*\*(\d+)\s*/\s*(\d+)\*\*", tasks)
+        ask = re.search(r"asks:\s*\*\*(\d+)\s*/\s*(\d+)\*\*", tasks)
+        if pain:
+            rows.append({"k": "pain described", "v": f"{pain.group(1)} / {pain.group(2)}",
+                         "hot": pain.group(1) == "0"})
+        if ask:
+            rows.append({"k": "can I try it?", "v": f"{ask.group(1)} / {ask.group(2)}",
+                         "hot": ask.group(1) == "0"})
+    except Exception:
+        pass
+
+    return {"t": "board", "title": "ON THE BOARD", "rows": rows[:5]}
 
 
 def roster():
@@ -325,10 +537,9 @@ BRAIN_LABEL = ""
 
 
 def meeting_loop(brain, recorder):
-    history, transcript = [], []
-    started = datetime.now()
-    while True:
-        you = None
+    history = []
+    transcript = TRANSCRIPT
+    while not SHUTDOWN.is_set():
         if recorder is not None:
             # Blocks until you stop talking. Typed input jumps the queue.
             def listen():
@@ -338,9 +549,14 @@ def meeting_loop(brain, recorder):
                     pass
             threading.Thread(target=listen, daemon=True).start()
         item = TURNS.get()
-        you = item[1] if isinstance(item, tuple) else item
-        you = (you or "").strip()
+        typed = not isinstance(item, tuple)
+        you = (item if typed else item[1] or "").strip()
         if not you:
+            continue
+
+        # Typed input is unambiguously you. Heard input might be the soundbar.
+        if not typed and is_echo(you):
+            print(f"  (ignored our own voice: {you[:60]})")
             continue
 
         BUS.emit(t="you", text=you)
@@ -351,7 +567,7 @@ def meeting_loop(brain, recorder):
 
         BUS.emit(t="state", room="thinking")
         history.append({"role": "user", "content": you})
-        system = room.system_prompt() + brain_context()
+        system = room.system_prompt() + ROOM_RULES + brain_context()
 
         buf, said = "", []
         try:
@@ -372,14 +588,10 @@ def meeting_loop(brain, recorder):
                         "content": "\n".join(said) or "(silence)"})
         history[:] = history[-16:]
         MOUTH.wait()
+        BUS.emit(**board())          # numbers may have moved while they talked
         BUS.emit(t="state", room="listening")
 
-    if transcript:
-        MEETINGS.mkdir(exist_ok=True)
-        out = MEETINGS / f"room-{started:%Y-%m-%d-%H%M}.md"
-        out.write_text(f"# Room - {started:%Y-%m-%d %H:%M}\n\n" +
-                       "\n\n".join(transcript) + "\n", encoding="utf-8")
-        print(f"  transcript -> {out}")
+    save_transcript()
 
 
 def emit_line(line, transcript):
@@ -393,6 +605,7 @@ def emit_line(line, transcript):
     print(f"  {TEAM[persona].get('emoji','')} {persona}  {text}")
     transcript.append(f"**{persona}** ({TEAM[persona]['role']}): {text}")
     BUS.emit(t="said", who=persona, role=TEAM[persona]["role"], text=text)
+    remember_said(text)          # so we recognise this coming back off the wall
     MOUTH.say(persona, text)
     return f"{persona}: {text}"
 
@@ -404,7 +617,15 @@ def main():
     ap.add_argument("--model", default=None)
     ap.add_argument("--whisper", default="base.en")
     ap.add_argument("--mic", type=int, default=None)
-    ap.add_argument("--silence", type=float, default=0.5)
+    # How long you have to stop talking before they answer. This is the single
+    # biggest lever on whether the room feels like a person or a walkie-talkie -
+    # much below 0.35 and it starts interrupting your mid-sentence pauses.
+    ap.add_argument("--silence", type=float, default=0.35)
+    ap.add_argument("--gate", type=float, default=0.42,
+                    help="how loud you must be to cut them off (0-1). Lower it if "
+                         "they ignore you, raise it if the speakers cut them off.")
+    ap.add_argument("--calibrate", action="store_true",
+                    help="play a line and print what the mic hears back, to set --gate")
     ap.add_argument("--port", type=int, default=PORT)
     ap.add_argument("--no-mic", action="store_true", help="type-only, no listening")
     ap.add_argument("--no-open", action="store_true")
@@ -421,17 +642,37 @@ def main():
 
     MOUTH = Mouth()
 
+    if args.calibrate:
+        return calibrate(MOUTH, args.mic)
+
     recorder = None
     if not args.no_mic:
         from RealtimeSTT import AudioToTextRecorder
         last = [0.0]
 
+        loud_run = [0]
+
         def mic_chunk(chunk):
+            level = rms_of(chunk)
             now = time.time()
-            if now - last[0] < 0.05:
+            if now - last[0] >= 0.05:
+                last[0] = now
+                BUS.emit(t="mic", rms=round(level, 3))
+
+            # You are the boss: the moment you speak, they stop mid-word. Three
+            # consecutive loud chunks (~90ms) so a door slam doesn't do it, and
+            # the bar is set above what the speakers bleed back into the mic.
+            if MOUTH.idle.is_set():
+                loud_run[0] = 0
                 return
-            last[0] = now
-            BUS.emit(t="mic", rms=round(rms_of(chunk), 3))
+            if level >= args.gate:
+                loud_run[0] += 1
+                if loud_run[0] >= 3:
+                    loud_run[0] = 0
+                    print("  (you cut in - stopping)")
+                    MOUTH.interrupt()
+            else:
+                loud_run[0] = 0
 
         t0 = time.time()
         recorder = AudioToTextRecorder(

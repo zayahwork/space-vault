@@ -96,104 +96,106 @@ main {
   border-right: 1px solid var(--rule);
 }
 
-#orbit { width: 100%; height: 100%; max-height: 100%; }
+#room { width: 100%; height: 100%; max-height: 100%; }
 
-/* The table itself: an orbit, drawn as an ellipse, with the founder at its
-   FOCUS rather than its centre - which is where the primary body actually sits.
-   That off-centre marker is the whole point of the drawing. */
-#track {
-  fill: none;
+/* The table, seen from your chair at the head of it. A trapezoid does the
+   perspective; nothing here is 3D, it just has to read as a room. */
+#table {
+  fill: #141d1a;
   stroke: var(--rule-lit);
   stroke-width: 1;
-  stroke-dasharray: 2 7;
+}
+/* The near edge is where you are. It brightens with your own mic level - the
+   only marker of you on the screen, because you are the camera. */
+#table-edge {
+  stroke: var(--phosphor);
+  stroke-width: 1.5;
+  opacity: 0.2;
 }
 
-.seat-ring {
-  fill: var(--deck);
-  stroke: var(--faint);
+.chair {
+  fill: #0c100f;
+  stroke: var(--rule);
   stroke-width: 1;
+}
+
+.body {
+  fill: #121a18;
+  stroke: var(--faint);
+  stroke-width: 1.2;
   transition: stroke 160ms linear;
 }
-.seat.live .seat-ring { stroke: currentColor; }
+.head {
+  fill: #151d1b;
+  stroke: var(--faint);
+  stroke-width: 1.2;
+  transition: stroke 160ms linear;
+}
+.person.live .body, .person.live .head { stroke: currentColor; }
 
-/* The measured ring. Its radius is RMS. Nothing else touches it. */
-.seat-level {
+/* The measured ring. Its radius is RMS from the audio actually playing.
+   Nothing else in this file touches it. */
+.level {
   fill: none;
   stroke: currentColor;
   stroke-width: 1.5;
   opacity: 0;
 }
 
-.seat-mono {
+.initial {
   font-family: var(--mono);
-  font-size: 17px;
+  font-size: 13px;
   font-weight: 600;
   fill: var(--dim);
-  letter-spacing: 0.02em;
   transition: fill 160ms linear;
 }
-.seat.live .seat-mono { fill: currentColor; }
+.person.live .initial { fill: currentColor; }
 
-.seat-name {
+/* Nameplates lie on the table, so they are the one thing here allowed to look
+   printed rather than drawn. */
+.plate-name {
   font-family: var(--mono);
-  font-size: 10.5px;
-  letter-spacing: 0.2em;
+  font-size: 11px;
+  letter-spacing: 0.18em;
   fill: var(--ink);
   text-transform: uppercase;
+  transition: fill 160ms linear;
 }
-.seat-role {
+.plate-role {
   font-family: var(--mono);
   font-size: 9px;
-  letter-spacing: 0.16em;
-  fill: var(--faint);
+  letter-spacing: 0.14em;
+  fill: var(--dim);
   text-transform: uppercase;
 }
-.seat-lessons {
+.plate.live .plate-name { fill: currentColor; }
+
+/* The screen at the head of the table. Everything on it is a real number read
+   off a real file - the budget, the archive log, the banked lessons. */
+#tv-frame { fill: #0b0f0e; stroke: var(--rule-lit); stroke-width: 1; }
+#tv-glass { fill: #0c1512; stroke: var(--rule); stroke-width: 1; }
+#tv-stand { stroke: var(--rule-lit); stroke-width: 2; }
+
+#tv-eyebrow {
   font-family: var(--mono);
-  font-size: 8.5px;
-  letter-spacing: 0.12em;
-  fill: var(--faint);
-}
-.seat.live .seat-role { fill: var(--dim); }
-
-/* Who is talking to you. Drawn only while someone speaks. */
-.link {
-  stroke: currentColor;
-  stroke-width: 1;
-  opacity: 0.34;
-  stroke-dasharray: 1 6;
-}
-
-#you-mark { fill: none; stroke: var(--phosphor); stroke-width: 1.4; }
-#you-ring { fill: none; stroke: var(--phosphor); stroke-width: 1.5; opacity: 0; }
-#you-label {
-  font-family: var(--mono); font-size: 10px; letter-spacing: 0.3em;
+  font-size: 9px;
+  letter-spacing: 0.3em;
   fill: var(--phosphor);
 }
-#you-focus {
-  font-family: var(--mono); font-size: 8px; letter-spacing: 0.18em;
-  fill: var(--faint);
+.tv-key {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  fill: var(--dim);
+  text-transform: uppercase;
 }
-
-.partial {
-  position: absolute;
-  left: 0; right: 0; bottom: 10px;
-  margin: 0;
-  padding: 0 40px;
-  text-align: center;
-  font-family: var(--sans);
-  font-size: 15px;
-  line-height: 1.5;
-  color: var(--dim);
-  min-height: 1.5em;
+.tv-val {
+  font-family: var(--mono);
+  font-size: 13px;
+  fill: var(--ink);
+  font-variant-numeric: tabular-nums;
 }
-.partial::after { content: ""; }
-.partial:not(:empty)::after {
-  content: "▌";
-  color: var(--phosphor);
-  animation: blink 1s steps(1) infinite;
-}
-@keyframes blink { 50% { opacity: 0 } }
+.tv-val.hot { fill: var(--amber); }
 
 /* ---------------------------------------------------------------- log */
 
@@ -290,7 +292,10 @@ button {
   transition: color 140ms, border-color 140ms;
 }
 button:hover { color: var(--ink); border-color: var(--phosphor); }
-.cut:hover { color: var(--amber); border-color: var(--amber); }
+/* Ending the call kills the process and releases the mic. It should look
+   like the one button here with consequences. */
+.end { color: #b4736b; border-color: #4a2f2c; }
+.end:hover { color: #ff8a7a; border-color: #ff8a7a; }
 
 .note {
   margin: 0;
@@ -310,5 +315,5 @@ button:hover { color: var(--ink); border-color: var(--phosphor); }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
-  .seat-level { display: none; }
+  .level { display: none; }
 }

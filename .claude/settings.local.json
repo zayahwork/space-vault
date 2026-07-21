@@ -17,7 +17,13 @@
       "PowerShell(Start-Process \"C:\\\\Space\\\\06 Code\\\\output\\\\iss_maneuvers.png\")",
       "Bash(python multi_chart.py)",
       "PowerShell(Start-Process \"C:\\\\Space\\\\06 Code\\\\output\\\\starlink_maneuvers.png\")",
-      "PowerShell(Start-Process \"C:\\\\Space\\\\06 Code\\\\output\\\\goes18_maneuvers.png\")"
+      "PowerShell(Start-Process \"C:\\\\Space\\\\06 Code\\\\output\\\\goes18_maneuvers.png\")",
+
+      "Edit(06 Code/**)",
+      "Write(06 Code/**)",
+      "Read(06 Code/**)",
+      "Bash(git *)",
+      "Bash(python *)"
     ]
   }
 }

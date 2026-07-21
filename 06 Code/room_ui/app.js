@@ -1,15 +1,17 @@
 /* The room.
    One rule in here: nothing animates unless a measured number arrived to move it.
-   Every ring radius below is RMS from real audio - the mic, or the voice being
-   played. When it goes quiet, the ring goes still, because it is silent. */
+   Every ring below is RMS from real audio - the mic, or the voice being played.
+   When it goes quiet, the ring goes still, because it is silent. */
 
 const SVG = "http://www.w3.org/2000/svg";
 const NS = (n) => document.createElementNS(SVG, n);
 
-// The ellipse IS the table. The founder sits at its focus, not its centre -
-// where the primary body sits in a real orbit. c = sqrt(rx^2 - ry^2).
-const CX = 430, CY = 270, RX = 320, RY = 212;
-const FOCUS_X = CX - Math.sqrt(RX * RX - RY * RY);
+// The room, seen from your chair at the head of the table. Three down each side.
+// Perspective does the work: the far seats are smaller and sit closer together,
+// which is what makes this read as a room rather than a diagram.
+const LEFT = { far: [330, 302], near: [148, 508] };
+const RIGHT = { far: [570, 302], near: [752, 508] };
+const ALONG = [0.10, 0.46, 0.82];        // far end of the table first
 
 // Identity, not decoration: one muted hue each, so the eye learns the seat.
 // Brightness carries state; hue only carries who.
@@ -19,96 +21,132 @@ const HUE = {
 };
 
 const el = (id) => document.getElementById(id);
-const seatsG = el("seats"), linksG = el("links"), logEl = el("log");
+const chairsG = el("chairs"), peopleG = el("people"), platesG = el("plates");
+const logEl = el("log");
 const seats = new Map();
 let lineCount = 0;
 
 /* ------------------------------------------------------------- the table */
 
-function buildSeats(people) {
-  seatsG.textContent = "";
+function seatAt(side, t) {
+  // Walk the table edge from the far corner toward you, then step outward and
+  // up so the figure sits BESIDE the table and slightly behind its edge - which
+  // is what a person at a table looks like from the far end of it.
+  const x = side.far[0] + (side.near[0] - side.far[0]) * t;
+  const y = side.far[1] + (side.near[1] - side.far[1]) * t;
+  const out = side === LEFT ? -1 : 1;
+  const scale = 0.74 + t * 0.3;
+  return { x: x + out * 66 * scale, y: y - 34 * scale,
+           ex: x, ey: y, scale, out };
+}
+
+function buildRoom(people) {
+  [chairsG, peopleG, platesG].forEach((g) => { g.textContent = ""; });
   seats.clear();
-  const n = people.length;
+
   people.forEach((p, i) => {
-    // Start at the top and go clockwise, leaving the founder's side open.
-    const a = -Math.PI / 2 + (i * 2 * Math.PI) / n;
-    const x = CX + RX * Math.cos(a);
-    const y = CY + RY * Math.sin(a);
+    const side = i % 2 === 0 ? LEFT : RIGHT;
+    const pos = seatAt(side, ALONG[Math.floor(i / 2)]);
+    const s = pos.scale;
+    const hue = HUE[p.name] || "#d6e3dd";
 
-    // Labels sit radially OUTSIDE the track, or they collide with it - the seats
-    // at the sides are the ones that break a naive above/below rule.
-    const ox = Math.cos(a), oy = Math.sin(a);
-    const lx = Math.round(ox * 42);
-    const ly = Math.round(oy * 34) + (oy < -0.35 ? -30 : 22);
-    const anchor = ox > 0.35 ? "start" : ox < -0.35 ? "end" : "middle";
+    const chair = NS("path");
+    chair.setAttribute("class", "chair");
+    chair.setAttribute("d", "M-21,20 q0,-36 21,-36 q21,0 21,36 z");
+    chair.setAttribute("transform",
+      "translate(" + pos.x + " " + (pos.y + 22 * s) + ") scale(" + s.toFixed(3) + ")");
+    chairsG.appendChild(chair);
 
+    // Head and shoulders, deliberately plain. A drawn face would be a cartoon,
+    // and this is a console.
     const g = NS("g");
-    g.setAttribute("class", "seat");
-    g.setAttribute("transform", `translate(${x.toFixed(1)} ${y.toFixed(1)})`);
-    g.style.color = HUE[p.name] || "#d6e3dd";
+    g.setAttribute("class", "person");
+    g.setAttribute("transform",
+      "translate(" + pos.x + " " + pos.y + ") scale(" + s.toFixed(3) + ")");
+    g.style.color = hue;
 
-    const level = NS("circle");            // the measured ring
-    level.setAttribute("class", "seat-level");
-    level.setAttribute("r", 30);
+    const level = NS("circle");
+    level.setAttribute("class", "level");
+    level.setAttribute("cy", -16);
+    level.setAttribute("r", 16);
 
-    const ring = NS("circle");
-    ring.setAttribute("class", "seat-ring");
-    ring.setAttribute("r", 26);
+    const body = NS("path");
+    body.setAttribute("class", "body");
+    body.setAttribute("d", "M-24,26 q0,-26 24,-26 q24,0 24,26 z");
 
-    const mono = NS("text");
-    mono.setAttribute("class", "seat-mono");
-    mono.setAttribute("text-anchor", "middle");
-    mono.setAttribute("dy", "6");
-    mono.textContent = p.name[0];
+    const head = NS("circle");
+    head.setAttribute("class", "head");
+    head.setAttribute("cy", -16);
+    head.setAttribute("r", 13);
 
-    const label = (cls, dy, txt) => {
-      const t = NS("text");
-      t.setAttribute("class", cls);
-      t.setAttribute("text-anchor", anchor);
-      t.setAttribute("x", lx);
-      t.setAttribute("y", ly + dy);
-      t.textContent = txt;
-      return t;
-    };
-    const name = label("seat-name", 0, p.name);
-    const role = label("seat-role", 13, p.role);
-    const mem = label("seat-lessons", 25,
-                      p.lessons === 1 ? "1 lesson" : `${p.lessons} lessons`);
+    const initial = NS("text");
+    initial.setAttribute("class", "initial");
+    initial.setAttribute("text-anchor", "middle");
+    initial.setAttribute("y", -11);
+    initial.textContent = p.name[0];
 
-    g.append(level, ring, mono, name, role, mem);
-    seatsG.appendChild(g);
-    seats.set(p.name, { g, level, x, y });
+    g.append(level, body, head, initial);
+    peopleG.appendChild(g);
+
+    // Nameplate, lying on the table in front of them.
+    const plate = NS("g");
+    plate.setAttribute("class", "plate");
+    plate.setAttribute("transform",
+      "translate(" + (pos.ex - pos.out * 26 * s) + " " + (pos.ey + 18 * s) +
+      ") scale(" + s.toFixed(3) + ")");
+    plate.style.color = hue;
+
+    const nm = NS("text");
+    nm.setAttribute("class", "plate-name");
+    nm.setAttribute("text-anchor", "middle");
+    nm.textContent = p.name;
+
+    const rl = NS("text");
+    rl.setAttribute("class", "plate-role");
+    rl.setAttribute("text-anchor", "middle");
+    rl.setAttribute("y", 13);
+    rl.textContent = p.role;
+
+    plate.append(nm, rl);
+    platesG.appendChild(plate);
+
+    seats.set(p.name, { g, level, plate });
   });
 }
 
-function placeYou() {
-  const g = el("you");
-  g.setAttribute("transform", `translate(${FOCUS_X.toFixed(1)} ${CY})`);
-  // A diamond, not another circle - you are not one of the six.
-  el("you-mark").setAttribute("d", "M0,-19 L19,0 L0,19 L-19,0 Z");
-  el("you-label").setAttribute("y", 46);
-  el("you-focus").setAttribute("y", 60);
+/* -------------------------------------------------------------- the screen */
+
+function paintBoard(board) {
+  const body = el("tv-body");
+  body.textContent = "";
+  el("tv-eyebrow").textContent = board.title || "ON THE BOARD";
+  (board.rows || []).forEach((row, i) => {
+    const y = 106 + i * 26;
+
+    const k = NS("text");
+    k.setAttribute("class", "tv-key");
+    k.setAttribute("x", 316);
+    k.setAttribute("y", y);
+    k.textContent = row.k;
+
+    const v = NS("text");
+    v.setAttribute("class", "tv-val" + (row.hot ? " hot" : ""));
+    v.setAttribute("x", 584);
+    v.setAttribute("y", y);
+    v.setAttribute("text-anchor", "end");
+    v.textContent = row.v;
+
+    body.append(k, v);
+  });
 }
 
 /* --------------------------------------------------------------- levels */
 
 function setLevel(node, rms) {
   if (!node) return;
-  // 26 is the seat radius; the ring grows outward from the rim only.
-  node.setAttribute("r", (26 + rms * 22).toFixed(1));
+  // 16 is the head radius; the ring only ever grows outward from it.
+  node.setAttribute("r", (16 + rms * 15).toFixed(1));
   node.style.opacity = rms < 0.02 ? 0 : Math.min(0.9, 0.25 + rms * 0.8);
-}
-
-function link(name) {
-  linksG.textContent = "";
-  const s = seats.get(name);
-  if (!s) return;
-  const l = NS("line");
-  l.setAttribute("class", "link");
-  l.setAttribute("x1", s.x); l.setAttribute("y1", s.y);
-  l.setAttribute("x2", FOCUS_X); l.setAttribute("y2", CY);
-  l.style.color = HUE[name] || "#d6e3dd";
-  linksG.appendChild(l);
 }
 
 /* ------------------------------------------------------------ transcript */
@@ -123,7 +161,7 @@ function turn(who, role, text, kind) {
 
   const head = document.createElement("div");
   head.className = "turn-who";
-  head.innerHTML = `<b>${who}</b>${role ? " · " + role : ""}`;
+  head.innerHTML = "<b>" + who + "</b>" + (role ? " · " + role : "");
 
   const body = document.createElement("div");
   body.className = "turn-text";
@@ -133,7 +171,7 @@ function turn(who, role, text, kind) {
   logEl.appendChild(p);
   logEl.scrollTop = logEl.scrollHeight;
   lineCount += 1;
-  el("count").textContent = lineCount === 1 ? "1 line" : `${lineCount} lines`;
+  el("count").textContent = lineCount === 1 ? "1 line" : lineCount + " lines";
 }
 
 const STATE_TEXT = {
@@ -141,7 +179,7 @@ const STATE_TEXT = {
   hearing: "hearing you",
   thinking: "thinking",
   speaking: "speaking",
-  closed: "meeting closed",
+  closed: "call ended",
   idle: "idle",
 };
 
@@ -152,12 +190,13 @@ function setState(s) {
 
 /* ------------------------------------------------------------- the wire */
 
-/* ?snapshot=1 renders the room from a single /history fetch and never opens a
-   stream. A live SSE connection means a headless browser never finishes loading,
-   so this is the only way to screenshot-check the design. Live use never uses it. */
+/* ?snapshot=1 renders from a single /history fetch and never opens a stream. A
+   live SSE connection means a headless browser never finishes loading, so this
+   is the only way to screenshot-check the design. Live use never uses it. */
 function snapshot() {
   fetch("/history").then((r) => r.json()).then((d) => {
     handle(d.roster);
+    if (d.board) handle(d.board);
     d.events.forEach(handle);
     setState("listening");
   });
@@ -166,69 +205,77 @@ function snapshot() {
 function connect() {
   if (new URLSearchParams(location.search).has("snapshot")) return snapshot();
   const src = new EventSource("/events");
-
   src.onmessage = (e) => handle(JSON.parse(e.data));
   src.onerror = () => setState("idle");
 }
 
 function handle(ev) {
-    switch (ev.t) {
-      case "roster":
-        buildSeats(ev.people);
-        placeYou();
-        el("brain").textContent = ev.brain || "";
-        break;
+  switch (ev.t) {
+    case "roster":
+      buildRoom(ev.people);
+      el("brain").textContent = ev.brain || "";
+      break;
 
-      case "state":
-        setState(ev.room);
-        if (ev.room !== "speaking") linksG.textContent = "";
-        break;
+    case "board":
+      paintBoard(ev);
+      break;
 
-      case "mic":
-        setLevel(el("you-ring"), ev.rms);
-        break;
+    case "state":
+      setState(ev.room);
+      break;
 
-      case "partial":
-        el("partial").textContent = ev.text || "";
-        break;
+    case "mic":
+      // You are the camera, so there is no figure of you to light. Your own
+      // level lights the near edge of the table instead.
+      el("table-edge").style.opacity = (0.2 + ev.rms * 0.8).toFixed(2);
+      break;
 
-      case "you":
-        el("partial").textContent = "";
-        turn("You", "founder", ev.text, "mine");
-        break;
+    case "partial":
+      el("partial").textContent = ev.text || "";
+      break;
 
-      case "said":
-        turn(ev.who, ev.role, ev.text);
-        break;
+    case "you":
+      el("partial").textContent = "";
+      turn("You", "founder", ev.text, "mine");
+      break;
 
-      case "speak_start": {
-        setState("speaking");
-        const s = seats.get(ev.who);
-        if (s) s.g.classList.add("live");
-        link(ev.who);
-        break;
-      }
+    case "said":
+      turn(ev.who, ev.role, ev.text);
+      break;
 
-      case "speak_end": {
-        const s = seats.get(ev.who);
-        if (s) { s.g.classList.remove("live"); setLevel(s.level, 0); }
-        break;
-      }
-
-      case "level":
-        setLevel((seats.get(ev.who) || {}).level, ev.rms);
-        break;
-
-      case "cut":
-        linksG.textContent = "";
-        seats.forEach((s) => { s.g.classList.remove("live"); setLevel(s.level, 0); });
-        turn("Room", "", "You cut in.", "sys");
-        break;
-
-      case "error":
-        turn("Room", "", ev.text, "sys");
-        break;
+    case "speak_start": {
+      setState("speaking");
+      const s = seats.get(ev.who);
+      if (s) { s.g.classList.add("live"); s.plate.classList.add("live"); }
+      break;
     }
+
+    case "speak_end": {
+      const s = seats.get(ev.who);
+      if (s) {
+        s.g.classList.remove("live");
+        s.plate.classList.remove("live");
+        setLevel(s.level, 0);
+      }
+      break;
+    }
+
+    case "level":
+      setLevel((seats.get(ev.who) || {}).level, ev.rms);
+      break;
+
+    case "cut":
+      seats.forEach((s) => {
+        s.g.classList.remove("live");
+        s.plate.classList.remove("live");
+        setLevel(s.level, 0);
+      });
+      break;
+
+    case "error":
+      turn("Room", "", ev.text, "sys");
+      break;
+  }
 }
 
 /* ------------------------------------------------------------- controls */
@@ -241,8 +288,13 @@ el("composer").addEventListener("submit", (e) => {
   fetch("/say", { method: "POST", body: JSON.stringify({ text }) });
 });
 
-el("cut").addEventListener("click", () => fetch("/cut", { method: "POST" }));
+el("end").addEventListener("click", () => {
+  if (!confirm("End the call? This shuts the meeting down completely.")) return;
+  fetch("/end", { method: "POST" });
+  setState("closed");
+});
 
+// Escape still cuts them off mid-sentence. Ending the call is deliberate.
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") fetch("/cut", { method: "POST" });
 });
@@ -251,5 +303,4 @@ setInterval(() => {
   el("clock").textContent = new Date().toISOString().slice(11, 19);
 }, 1000);
 
-placeYou();
 connect();
