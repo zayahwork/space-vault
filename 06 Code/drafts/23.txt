@@ -1,0 +1,13 @@
+Subject: from up the road in Snohomish - a question about on-orbit behavior data
+
+Melissa,
+
+Congratulations on the space practice. I saw you're building it out of Seattle, which is the only reason I'm writing instead of wondering.
+
+I'm an ML engineer in Snohomish working on satellite behavior detection from free public tracking data - spotting when an object breaks its own routine. Here's the thing I measured that I think a broker would either find useful or enjoy arguing with: rank Starlink by how far the public catalog disagrees with the operators' own published orbits and about 4,900 objects look like they maneuvered. 89% of them didn't - the catalog entry was simply old. Most of what survived that filter was hardware being deliberately deorbited, which moves every day on purpose. What's actually left is roughly 490 satellites that were supposed to be holding station and moved anyway - and 378 of those were buried under the noise until the stale entries came out.
+
+That's measured on public data and not yet checked against operator ground truth, so treat it as a strong hint rather than a fact. I'd rather say that up front than oversell it.
+
+I'm not selling anything - there is nothing to buy yet. What I want is the question I can't answer from outside the market: when underwriters price in-orbit risk today, what do they actually get told about the behavior of the objects around the insured, and is anyone pricing on it - or is it still essentially launch and hull?
+
+Fifteen minutes on the phone, or coffee anywhere between Seattle and Snohomish, whichever is less of an imposition. Either way I'll send you the deorbit chart afterward - it's a clean before-and-after of one satellite that genuinely did move, and it makes the point faster than I do.
