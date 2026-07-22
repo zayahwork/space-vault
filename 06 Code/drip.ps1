@@ -27,7 +27,10 @@
 #   powershell -File drip.ps1 -DryRun         # show what would go, send nothing
 param(
     [int]$N = 0,                  # 0 = let the pacer decide
-    [int]$DailyTarget = 12,       # emails a day. The cap (25) is still the law.
+    [int]$DailyTarget = 8,        # emails a day. The cap (25) is still the law.
+                                  # 8, not 12, because that is what the queue can
+                                  # actually feed - see Volume Pass - What the Drip
+                                  # Can Actually Reach. Raise it when inventory allows.
     [int]$MaxJitterMin = 25,      # upper bound on the pre-send wait
     [int]$SkipChance = 15,        # percent of runs that send nothing even when behind
     [int]$OpenHour = 8,           # no sends before this hour, local
@@ -49,7 +52,19 @@ function Say($msg) {
 }
 
 Set-Location $here
-Say "=== run start (N=$N, jitter<=${MaxJitterMin}m, skip=${SkipChance}%, dryrun=$DryRun)"
+Say "=== run start (target=$DailyTarget/day, jitter<=${MaxJitterMin}m, skip=${SkipChance}%, dryrun=$DryRun)"
+
+# PREFLIGHT. Both of these fail in ways that look like "a quiet day": missing
+# credentials means every send dies inside Python, and an empty queue means the
+# drip runs all day and mails nobody. Both must be loud in the log, not silent.
+if (-not $DryRun -and -not (Test-Path (Join-Path $here "gmail_auth.json"))) {
+    Say "STOP: no gmail_auth.json in $here - nothing can send from this tree."
+    exit 1
+}
+try {
+    $ready = [int](& $py "outreach.py" "--count-ready" | Select-Object -Last 1)
+    if ($ready -lt 5) { Say "LOW QUEUE: only $ready sendable rows left - refill outreach_targets.csv." }
+} catch { }
 
 if (-not $NoJitter) {
     # Weekend and after-hours guards come BEFORE the sleep - no point waiting
