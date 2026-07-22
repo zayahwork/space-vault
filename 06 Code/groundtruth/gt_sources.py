@@ -156,7 +156,9 @@ def geotab():
 
 
 def gcat_phases(norad, which="satcat"):
-    """All GCAT phases for one object. `which` is 'satcat' (in orbit) or 'rcat' (reentered).
+    """All GCAT phases for one object. `which` is 'satcat' (orbital objects, including
+    reentered ones) or 'rcat' (the Suborbital Rocket (Exoatmospheric) Catalog - apogee
+    >= 80 km; NOT reentries). Reentries are satcat rows with Status R and a DDate.
 
     CAREFUL - this bit me. GCAT rows are PHASES, not objects. DDate is the end of
     a phase and Status is the event that ended it, so the first row for an object
@@ -174,7 +176,7 @@ def gcat_phases(norad, which="satcat"):
     return hits
 
 
-def gcat_updated(which="rcat"):
+def gcat_updated(which="satcat"):
     """When McDowell last refreshed a catalog - decides whether a non-match means
     'he disagrees' or just 'he hasn't got to it yet'. It was the latter for the
     five Starlink reentries in ground_truth.csv."""
@@ -205,6 +207,6 @@ if __name__ == "__main__":
             print(f"  {r['Name'].strip():24} SDate={r['SDate'].strip():18} "
                   f"DDate={r['DDate'].strip():18} Status={r['Status'].strip()}")
     elif cmd == "updated":
-        print(gcat_updated(sys.argv[2] if len(sys.argv) > 2 else "rcat"))
+        print(gcat_updated(sys.argv[2] if len(sys.argv) > 2 else "satcat"))
     else:
         print(__doc__)
