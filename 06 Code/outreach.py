@@ -387,6 +387,34 @@ def read_log():
     return out
 
 
+# Which segment matters most when the day's quota has to be split. Operators are
+# our declared validation customers and the fastest yes; academics are last here
+# only because their template is deliberately unsendable until a human writes the
+# question, so they never actually compete for a slot.
+SEGMENT_PRIORITY = ["operator", "partner", "insurer", "gov", "contract", "academic"]
+
+
+def interleave(pool):
+    """Round-robin the pool across segments instead of walking the CSV in order.
+
+    The CSV is grouped by segment because that is how it was written, so a
+    straight walk sends nine insurers in a row, then nine operators. That is
+    both worse marketing - a bad segment wastes a whole day before we notice -
+    and a worse experiment, because a day's results can't be compared.
+    """
+    buckets = {}
+    for r in pool:
+        buckets.setdefault(r["segment"], []).append(r)
+    order = ([s for s in SEGMENT_PRIORITY if s in buckets]
+             + sorted(s for s in buckets if s not in SEGMENT_PRIORITY))
+    out = []
+    while any(buckets[s] for s in order):
+        for s in order:
+            if buckets[s]:
+                out.append(buckets[s].pop(0))
+    return out
+
+
 def sent_today(log=None):
     """How many actually went out today, per the log - not per the CSV.
 
@@ -540,6 +568,8 @@ def send_batch(rows, args):
     for r in pool:
         (held if blockers(r, checks, mailed, ignore_status=bool(args.ids))
          else ready).append(r)
+    if args.mix and not args.ids:
+        ready = interleave(ready)      # --ids means "this order", so never reshuffle it
 
     already = sent_today(log)
     left = max(0, DAILY_CAP - already)
@@ -661,6 +691,10 @@ def main():
     ap.add_argument("--ids", nargs="+", default=None, metavar="ID",
                     help="hand-send exactly these rows, in this order, whatever "
                          "their status. Every other safety still applies.")
+    ap.add_argument("--mix", action="store_true",
+                    help="round-robin across segments instead of CSV order")
+    ap.add_argument("--count-today", action="store_true",
+                    help="print how many went out today, per the audit log, and exit")
     ap.add_argument("--live", action="store_true",
                     help="really send. Requires --send and gmail_auth.json.")
     ap.add_argument("--smtp-host", default="smtp.gmail.com")
@@ -698,6 +732,9 @@ def main():
     if args.ids and not args.send:
         print("\n  --ids only means something with --send. Refusing.\n")
         return 2
+    if args.count_today:
+        print(sent_today())          # bare integer: the drip reads this to pace itself
+        return 0
     if args.check_bounces:
         return check_bounces(rows, args)
     if args.send:

@@ -26,9 +26,10 @@
 #   powershell -File drip.ps1 -NoJitter       # fire immediately (manual runs)
 #   powershell -File drip.ps1 -DryRun         # show what would go, send nothing
 param(
-    [int]$N = 0,                  # 0 = roll for it (1 or 2)
+    [int]$N = 0,                  # 0 = let the pacer decide
+    [int]$DailyTarget = 12,       # emails a day. The cap (25) is still the law.
     [int]$MaxJitterMin = 25,      # upper bound on the pre-send wait
-    [int]$SkipChance = 20,        # percent of runs that send nothing
+    [int]$SkipChance = 15,        # percent of runs that send nothing even when behind
     [int]$OpenHour = 8,           # no sends before this hour, local
     [int]$CloseHour = 19,         # or after it
     [switch]$Weekends,            # allow Sat/Sun (off: nobody cold-mails Sunday)
@@ -78,14 +79,39 @@ if (-not $NoJitter) {
 }
 
 if ($N -le 0) {
-    # Mostly one, sometimes two. Averages a bit over one an hour, which across a
-    # jittered eleven-hour window lands comfortably under the 25/day cap and
-    # looks like someone working through a list, not a mail merge.
-    $N = Get-Random -InputObject @(1, 1, 1, 2, 2)
+    # PACING. A fixed 1-2 per run either misses the daily number or overshoots it,
+    # because runs get skipped, jitter drops some, and the sendable pool changes
+    # under us. So each run asks a different question: given the time of day, how
+    # far behind the daily target are we, and send that much.
+    #
+    # Behind pace -> catch up (bounded by MAX_PER_RUN inside outreach.py).
+    # On pace     -> usually nothing, sometimes one, so the rhythm stays uneven.
+    # The result is a day that reliably lands near the target without ever
+    # looking like a scheduler: bursty early, quiet mid-afternoon, a straggler at 5.
+    $already = 0
+    try { $already = [int](& $py "outreach.py" "--count-today" | Select-Object -Last 1) } catch { }
+
+    $now = Get-Date
+    $windowHours = $CloseHour - $OpenHour
+    $elapsed = [Math]::Max(0.0, [Math]::Min(1.0,
+        (($now.Hour - $OpenHour) + ($now.Minute / 60.0)) / $windowHours))
+    # +1 so the first run of the day isn't told it's already on pace at zero sent.
+    $expected = [Math]::Ceiling($DailyTarget * $elapsed) + 1
+    $deficit  = [int]$expected - $already
+
+    if ($deficit -ge 1) {
+        $N = [Math]::Min($deficit, 3)          # never more than 3 in one burst
+    } else {
+        $N = Get-Random -InputObject @(0, 0, 1)
+    }
+    Say ("pace: $already sent, ~$expected expected by {0:HH:mm} -> N=$N" -f $now)
+    if ($N -le 0) { Say "on pace - nothing this run."; exit 0 }
 }
 $gap = Get-Random -Minimum 35 -Maximum 95
 
-$sendArgs = @("outreach.py", "--send", "-n", "$N", "--gap", "$gap")
+# --mix rotates across segments so a day is never nine insurers in a row: a bad
+# segment shows up the same day instead of burning the whole queue first.
+$sendArgs = @("outreach.py", "--send", "--mix", "-n", "$N", "--gap", "$gap")
 if (-not $DryRun) { $sendArgs += "--live" }
 
 Say "sending up to $N, ${gap}s apart"

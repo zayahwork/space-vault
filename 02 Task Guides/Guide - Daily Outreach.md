@@ -52,10 +52,28 @@ each run rolls dice before it does anything:
 | `1 or 2` emails | not always the same number |
 | `35–95s` between sends | not a metronome |
 
-Averages a bit over one an hour across eleven hours — well under the cap, and shaped like
-someone working a list between other things. Weekends are skipped (`-Weekends` overrides), and
-a jitter roll that would land after 7pm is dropped rather than sent late. `-NoJitter` fires
-immediately, for when you're running it by hand.
+Weekends are skipped (`-Weekends` overrides), and a jitter roll that would land after 7pm is
+dropped rather than sent late. `-NoJitter` fires immediately, for when you're running it by hand.
+
+### It chases a daily number, not a per-run number (since 2026-07-22)
+
+`-DailyTarget` is **12**. Each run asks *"given the time of day, how far behind are we?"* and
+sends that much, up to 3 in one burst:
+
+- **behind pace** → catch up
+- **on pace** → usually nothing, sometimes one, so the rhythm stays uneven
+- the **25/day cap is still the law** and still counted from the audit log
+
+A fixed 1–2 per run either misses the target or overshoots, because runs get skipped and the
+sendable pool moves under us. Chasing the number means the day lands near 12 while still
+looking nothing like a scheduler — bursty early, quiet mid-afternoon, a straggler at five.
+
+### It rotates segments (`--mix`)
+
+The CSV is grouped by segment because that's how it was written, so a plain walk sends nine
+insurers in a row, then nine operators. `--mix` round-robins across segments by priority
+(operator → partner → insurer → gov → contract → academic). A bad segment now shows up the
+same day instead of burning the whole queue first, and a day's results can actually be compared.
 
 **The schedule is a suggestion; the cap is the law.** `outreach.py` counts today's sends from
 its own audit log and refuses to exceed `DAILY_CAP` (25), so a scheduler misfire cannot become
