@@ -32,6 +32,16 @@
       from past snapshots, provenance in `baselines.json`); `quiet.py` watches for satellites
       that STOP maneuvering and honestly refuses until ~Jul 29 (needs 7 days of archive).
       → [[RESULTS - The Quiet Detector]]
+- [x] ✅ **The 11.3x HARDENED (2026-07-22 pm).** Whole flagged list (all 489) checked on a
+      second, independent snapshot: same shape, top-75 at **68% vs 11%** over the bar. The
+      median ratio is volatile (11.3x → 23.8x) — **quote the over-the-bar rate, not the "x".**
+      → [[RESULTS - Checked Against History]]
+- [x] ✅ **Left Starlink (2026-07-22 pm).** Full pipeline on OneWeb + GEO. **OneWeb: works,
+      80% vs 10%** — the method is not a Starlink quirk. **Intelsat: 3/3 promising. SES: no
+      signal yet** (n=3, verifier half-blind at GEO — said first, by us). → [[RESULTS - Beyond Starlink]]
+- [x] ✅ **Daily run AUTOMATED (2026-07-22 pm).** `Maneuver Alert` scheduled task scores every
+      new snapshot in alert mode (all 4 groups, per-group baselines) 30 min after each archive
+      cycle and appends to [[RESULTS - Alert Log]]. **Jul 29 demo builds itself from here.**
 - [ ] 🕒 **~Jul 29: run `python quiet.py`** — cadence verdicts unlock once the archive spans
       7 days. Also re-learn the bar weekly: `python detect.py --learn-baseline --pct 99`.
 - [x] ~~Re-run the detector once a second catalog snapshot is banked~~ — done, see above (`python detect.py`
