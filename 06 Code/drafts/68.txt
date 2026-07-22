@@ -1,0 +1,11 @@
+Subject: would a "these objects probably moved" prior help tracklet association?
+
+Professor Schildknecht,
+
+I read your ESA conference paper with Siminski and Fiedler on the best-hypotheses search for track association, using the ZimSMART survey of the geostationary ring. The framing that stuck with me is that a survey gives you tracklets with line-of-sight and rates but no full state, so everything downstream depends on associating them correctly - and a manoeuvre between two tracklets is precisely what makes that association wrong in a way that looks like a new object.
+
+I've been working the manoeuvre side, in LEO and from free public data only, so I should say up front that my regime isn't yours. I rank objects by how far the public catalog disagrees with the operators' own published ephemerides. About 4,900 Starlink objects look like they moved; 89% of that is the age of the catalog entry rather than the spacecraft. Roughly 490 station-keepers survive as genuine candidates, and checked independently against 30 days of altitude history, as of 22 July ~68-72% of the top suspects show a real burn signature against ~10% of matched controls. Two of my own methods agreeing - not operator ground truth, and I'd rather say that plainly.
+
+My question is whether that output has any value as an input to association work: a daily, free, ranked list of which catalogued objects most likely manoeuvred recently, i.e. which correlations should be distrusted tonight. In LEO that seems obviously useful to me, but I don't know whether GEO survey work is limited by that at all, or by something else entirely - and you have decades of actually running a survey telescope against my few months of reading about it.
+
+I'm an ML engineer working on this independently in Washington State. If the honest answer is that this isn't a real bottleneck, that's genuinely useful to me and I won't take more of your time.

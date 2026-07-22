@@ -1,0 +1,11 @@
+Subject: detection metrics when there is no covariance at all - a question on your SDC9 paper
+
+Dr Siminski,
+
+Your SDC9 paper with Montilla and Vazquez on state representations for anomaly detection answers a question I can't currently ask properly. You compare Cartesian, EQCM and GEqOE for keeping the k2 statistic honest, and land on GEqOE with the Unscented Transform detecting burns down to 15-20 cm/s while holding false positives near 8-9% against a theoretical 5%. What struck me is that you report the gap rather than the headline - the measured false positive rate, not just the sensitivity.
+
+My situation is the degenerate case of yours: I have no covariance whatsoever. I work only from free public data - the catalog plus the operators' own published ephemerides for Starlink and OneWeb - and rank objects by how far the two disagree. About 4,900 Starlink objects look like they moved; 89% of that is the age of the catalog entry rather than the spacecraft. Roughly 490 station-keepers survive as candidates.
+
+Having no uncertainty to propagate, I substituted a matched control group: objects in the same shell, same altitude band, same epoch window, with no reason to have manoeuvred. Checked against 30 days of altitude history, as of 22 July ~68-72% of the top suspects show a real burn signature against ~10% of matched controls. I've been treating that ~10% as my empirical false positive rate - the closest thing I have to your 8-9%. It is two of my own methods agreeing, not operator ground truth.
+
+The question, and it's the reason I'm writing to you specifically: is an empirical matched-control base rate a defensible substitute for a calibrated k2 when no covariance exists, or is it a number that will quietly mislead me? And if you were being shown a detector reported that way, what would you want to see before you believed it? I'm an ML engineer working outside an institution, and this is my open question rather than a pitch - a blunt answer is exactly what would help.

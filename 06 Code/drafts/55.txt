@@ -1,0 +1,11 @@
+Subject: scoring an unsupervised manoeuvre detector without labels - a question about your autoencoder paper
+
+Enrico,
+
+Your SDC9 paper with Cipollone and Di Lizia names the problem I keep hitting: there aren't enough manoeuvre histories to label, so supervised methods don't generalise, and you went unsupervised with a Bi-LSTM autoencoder on [a, e, i, omega, B*] instead. The part I found most useful was the honesty about the limitation - TLE noise degrades the reconstruction, and the semi-supervised Sentinel-3A/3B campaign was the only place you had something like truth.
+
+I've come at the same wedge from a cruder angle and hit the same wall. I rank LEO objects by disagreement between the public catalog and the operators' own published ephemerides; about 4,900 Starlink objects look like they moved, but 89% of that is the catalog entry being stale rather than the spacecraft moving. What's left is roughly 490 station-keepers that moved when they shouldn't have. No labels there either.
+
+So my scoring workaround, and the thing I'd like your opinion on: instead of labels I built a matched control group - same shell, same altitude band, same epoch window, objects with no reason to have manoeuvred - and checked both groups against 30 days of altitude history. As of 22 July, ~68-72% of the top suspects show a real burn signature against ~10% of matched controls, and I've been treating that ~10% as an empirical false positive rate. Two of my own methods agreeing, not operator ground truth. Is a matched-control base rate a defensible way to score an unsupervised detector when no manoeuvre log exists, or does it just move the assumption somewhere less visible? You've thought harder about the no-labels problem than I have.
+
+If a real-data test set would be useful to you, I'll send the candidate list and the controls - it's derived entirely from public data, so there's nothing to negotiate. I'm an ML engineer working on this independently in the US, and I'd rather be told the method is naive now than later.

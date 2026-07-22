@@ -1,0 +1,11 @@
+Subject: your GEO cataloguing paper - why without external catalogues, and an offer of contract hands
+
+Paula,
+
+Your SDC9 paper on cataloguing manoeuvrable satellites is the mirror image of what I've been doing, which is why I'm writing. You detect and estimate GEO manoeuvres in quasi-real time from optical tracks and batch least-squares OD, deliberately without relying on external catalogues, and validate on ASTRA5B. I work in LEO and I lean on the public catalog entirely - I have no sensor of my own.
+
+What I do is rank objects by how far the public catalog disagrees with the operators' own published ephemerides. About 4,900 Starlink objects look like they moved; 89% of that turns out to be the age of the catalog entry rather than the spacecraft, which is really a statement about how badly a catalogue ages between updates. Roughly 490 station-keepers survive. Checked separately against 30 days of altitude history, as of 22 July ~68-72% of the top suspects show a real burn signature against ~10% of matched controls - two of my own methods agreeing, not operator ground truth.
+
+The question I'd like to ask you: is the no-external-catalogue constraint in your approach driven by accuracy - catalogue latency being unacceptable for quasi-real-time GEO work - or by the customer, in the sense that a European sovereign capability can't be built on someone else's catalogue? I ask because it decides whether free catalogue-derived work like mine is a useful prior for people like you or fundamentally the wrong input, and I'd rather know that from someone who does it operationally than guess.
+
+And directly: if Indra ever brings in contract help on detection, cataloguing or the ML side of it, I'd like to be considered. I'm an ML engineer working independently in the US, and I'd sooner start with a scoped paid week than a long sales conversation.
