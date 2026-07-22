@@ -1,0 +1,11 @@
+Subject: your ML detection paper - a free-data companion result, and a contract question
+
+Paul,
+
+Your SDC8 paper with the SnT group on ML detection and identification of on-orbit objects has been open on my desk for a week. I'm working the same problem from the cheapest possible input: no sensors at all, just the public catalog against the operators' own published orbits.
+
+The result worth your time is a negative one. Ranking Starlink by catalog-versus-operator disagreement produces thousands of apparent maneuvers, and about five in six of them are stale element sets rather than movement. Any model trained on raw catalog disagreement is therefore mostly learning data latency. As of July 22, ~68-72% of the top suspects show a real, independently-checked burn signature versus ~10% of matched controls, checked against 30 days of altitude history with controls matched on shell, altitude band and epoch window. Two of my own methods agreeing, not operator ground truth - I'd rather say that than have you find it.
+
+What I'd like to know from someone doing this with real sensing behind them: does that staleness artefact reach you at all, or does the sensor data wash it out before it can bias anything? If it does reach you, it's removable for free and I'll show you how.
+
+And directly: MDA is a prime and I'm an ML engineer working alone. If there's ever contract work on detection, identification or the data-cleaning underneath it, I'd like to be considered - starting with a scoped paid week rather than a long sales process.

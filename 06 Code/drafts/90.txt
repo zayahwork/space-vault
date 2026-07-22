@@ -1,0 +1,11 @@
+Subject: probabilistic scoring for maneuver detection when there is no ground truth
+
+Dr Baydin,
+
+You were the ML researcher on the Kessler paper with Acciarini and Letizia, which is why I'm asking you a modelling question rather than an orbital one.
+
+I detect satellite maneuvers from free public data - the public catalog against the operators' own published ephemerides. Roughly five in six apparent maneuvers are stale catalog entries rather than real movement. As of July 22, ~68-72% of the top suspects show a real, independently-checked burn signature versus ~10% of matched controls, checked against 30 days of altitude history with controls matched on shell, altitude band and epoch window. Two of my own methods agreeing, not operator ground truth - I'd rather say that than have you find it.
+
+The difficulty is that there is no public record of maneuvers, so there is no label set, and I cannot measure a false-positive rate directly. What I have instead is a matched control group - same shell, same altitude band, same epoch window, no reason to have maneuvered - whose ~10% hit rate I use as an empirical floor. My question is whether that is a legitimate estimator or a comfortable fiction, and whether the probabilistic-programming framing you use in the collision-avoidance work would give a better answer than my crude one.
+
+I'm an ML engineer working independently, and being told the estimator is wrong would be genuinely useful. Everything I have is public-data derived and I'm glad to share it.

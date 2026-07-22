@@ -1,0 +1,11 @@
+Subject: your ML on-orbit detection paper - one question, and an offer of contract hands
+
+Hello,
+
+You were lead author on the SDC8 paper on ML detection and identification of on-orbit objects, with the SnT group in Luxembourg. I work the same problem from the opposite end of the budget: free public catalog data, no sensors, one person.
+
+The honest headline from my side is a caution rather than a result. Rank Starlink by how far the public catalog disagrees with the operators' own published orbits and thousands of objects look like they maneuvered - but around five in six of those are simply stale catalog entries. As of July 22, ~68-72% of the top suspects show a real, independently-checked burn signature versus ~10% of matched controls, checked against 30 days of altitude history with controls matched on shell, altitude band and epoch window. Two of my own methods agreeing, not operator ground truth - I'd rather say that than have you find it.
+
+The question I'd genuinely like answered by someone at a small SSA company rather than in a paper: what makes a detection *useful* to your customers - the fact that something moved, or the confidence that it didn't? I keep finding the rejections are worth more than the detections, and I'd like to know if that matches what people pay for.
+
+And since LMO is the size of company that subcontracts: if ML help on detection is ever worth buying by the week, I'd like to be on that list.

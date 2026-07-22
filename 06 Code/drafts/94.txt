@@ -1,0 +1,11 @@
+Subject: light curves as an independent check on a catalog-only maneuver detector
+
+Nadine,
+
+Your SDC9 paper on feature extraction for single-photon light-curve classification caught my attention for a self-interested reason: light curves are an observable that is completely independent of the one I use, and independence is exactly what my work is short of.
+
+I detect maneuvers from free public data alone - the public catalog against the operators' own published ephemerides. About five in six apparent maneuvers turn out to be stale catalog entries rather than movement. As of July 22, ~68-72% of the top suspects show a real, independently-checked burn signature versus ~10% of matched controls, checked against 30 days of altitude history with controls matched on shell, altitude band and epoch window. Two of my own methods agreeing, not operator ground truth - I'd rather say that than have you find it. The caveat matters here: both of my checks come from the same catalog, so they can agree while both being wrong.
+
+The question: would a maneuver leave any signature in a light curve at all - an attitude change around a burn, a change in the rotation state - or is the timescale hopeless? If there's any signal there, then a handful of your observations could confirm or destroy a claim my method can only ever infer.
+
+I'm an ML engineer working independently, and I'd take "no, that isn't visible" as a genuinely useful answer.

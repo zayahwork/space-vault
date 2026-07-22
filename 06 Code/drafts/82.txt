@@ -1,0 +1,11 @@
+Subject: your collision-avoidance decision paper - would a free "which objects moved" prior help?
+
+Shrouti,
+
+Your SDC9 paper on deciding and designing collision-avoidance maneuvers is about the layer I think my work would feed rather than compete with, so I wanted to ask you directly rather than guess.
+
+I build maneuver detection from free public data only - the public catalog against the operators' own published ephemerides. Rank Starlink that way and about 4,900 objects look like they moved, but roughly five in six of those are stale catalog entries rather than movement, leaving around 490 real candidates. As of July 22, ~68-72% of the top suspects show a real, independently-checked burn signature versus ~10% of matched controls, checked against 30 days of altitude history. Two of my own methods agreeing, not operator ground truth - I'd rather say that than have you find it.
+
+I should be straight about what I am: one ML engineer, no sensors, no funding, and NorthStar operates its own space-based sensing - so I'm not a competitor and definitely not a customer. The question is genuine: in your decision pipeline, is a free daily prior on which catalogued objects most likely maneuvered recently a useful input, or is it something your own data already answers better? If it's redundant, that's a real answer and saves me months.
+
+Happy to send the candidate list and the controls so you can judge it against what you already see. It's all public-data derived, so there's nothing to arrange.

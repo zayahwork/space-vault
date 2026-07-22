@@ -1,0 +1,11 @@
+Subject: scoring a detector when nobody will tell you the truth - a question on your SnT work
+
+Prof. Aouada,
+
+Your group's SDC8 paper on ML detection and identification of on-orbit objects is the closest thing I've found to a serious treatment of learning about space objects from imperfect observations, which is the corner I'm stuck in.
+
+I work from free public data only: the catalog against operators' own published ephemerides. Five in six apparent maneuvers turn out to be stale catalog entries rather than movement. As of July 22, ~68-72% of the top suspects show a real, independently-checked burn signature versus ~10% of matched controls, checked against 30 days of altitude history with controls matched on shell, altitude band and epoch window. Two of my own methods agreeing, not operator ground truth - I'd rather say that than have you find it.
+
+My actual question is a methods one, and it's the reason I'm writing to you rather than to an operator. There is no public maneuver log, so a supervised model has nothing to learn from and an unsupervised one has nothing to be scored against. My workaround is a matched control group whose ~10% hit rate I treat as an empirical false-positive floor. Is that a defensible substitute for ground truth in your view, or does it just relocate the assumption somewhere I can no longer see it?
+
+I'm an ML engineer working outside a university, so being told plainly that this is naive would be worth more to me than agreement. Happy to send the candidate list and the controls - all of it derives from public data, so there's nothing to arrange.
