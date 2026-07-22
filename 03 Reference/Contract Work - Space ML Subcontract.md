@@ -94,7 +94,56 @@ through the last two years of AMOS papers from these three companies would likel
 several *working engineer* addresses — better targets than a CTO, because the engineer knows
 exactly what's stuck and has a manager who'd rather buy hours than wait for a req to close.
 
-Worth an hour, and it doubles as product research. **Not started.**
+Worth an hour, and it doubles as product research. **Ran it — see below.**
+
+### The AMOS pass — ran it 22 Jul, and the idea was wrong
+
+Pulled the 2023 and 2024 AMOS technical-paper listings, found every paper from our three
+target companies, downloaded **22 PDFs**, and extracted the text of each front page.
+
+**Result: zero email addresses. AMOS papers don't print them.** Different venues have
+different house style, and AMOS puts a copyright line where other conferences put author
+contacts. The hypothesis was reasonable and it is dead — recording it here so nobody spends
+the hour again.
+
+Two things worth having came out of it anyway.
+
+**1. The Slingshot bench, by name and by paper.** These people work on exactly our problem:
+
+| Paper (AMOS 2024) | Authors, all Slingshot Aerospace |
+|---|---|
+| *Action-Free Inverse Reinforcement Learning for Evaluating Satellite Similarity and **Anomaly Detection*** | D. Witman, T. Olson, B. Williams, D. Kesler, B. Marchand |
+| *Contextual Predictive Model for Early Identification of High-Covariance Conjunctions* | **T. Olson**, C. Reid, J. Stauch, C. Grey, D. Kesler, B. Marchand |
+
+**Timothy Olson is the target.** Lead author on one, co-author on the other — anomaly detection
+*and* conjunction prediction, which is our exact overlap. Better than writing the Chief of AI:
+Olson is the person whose backlog the contract hours would actually clear.
+
+Revised route for Slingshot: their contact form, asking for **Tim Olson by name and citing the
+paper**. A form message that names a specific engineer and a specific paper doesn't read as
+spam, and it gets forwarded.
+
+**2. Two companies we didn't know were in this business:**
+
+- **Auria** — *Machine Learning for Space Domain Awareness Sensor Scheduling* (Dhingra, DeJac,
+  McGuire, AMOS 2024). Doing ML for SDA in production.
+- **Data Fusion & Neural Networks, LLC** (Carlsbad CA) — *Neural Network Enhanced Numerical
+  Propagation*, by **Duane DeSieno, CTO**. A tiny company whose CTO writes the papers is
+  exactly the shape that subcontracts.
+
+> [!note] Correction to the target table above
+> The listing-page scrape mis-attributed several papers to Numerica by proximity. Checked
+> against the PDFs themselves: Dhingra is **Auria**, Vanslette is **RTX BBN**, DeSieno is
+> **Data Fusion & Neural Networks**, Shepperd is **Iridium**, Magnus is **Office of Space
+> Commerce**. Numerica had no matching AMOS 2024 paper. The Numerica names in the table above
+> came from their own earlier papers and still stand.
+
+### Where author emails *are* printed: ESA, not AMOS
+
+`hendrix@exoanalytic.com` came off an **ESA Space Debris Conference** paper, and that venue
+prints author contacts as house style. **SDC9 (Bonn, April 2025)** proceedings are public at
+`conference.sdo.esoc.esa.int/proceedings/sdc9/`. Same method, better-chosen venue — that is the
+next hour to spend, and it applies to product outreach as much as contract work.
 
 ### Conflicted — a product email already went out; different human or wait
 
