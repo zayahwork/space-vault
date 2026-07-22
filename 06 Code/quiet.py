@@ -61,6 +61,16 @@ MIN_ARCHIVE_DAYS = 7.0
 # spike-to-spike interval.
 QUIET_FACTOR = 2.5
 
+# A rhythm cannot be measured finer than we sample, and station-keeping cadence is
+# measured in days. Without this floor the check inverts on exactly the objects that
+# matter most: a suspect flagged on three consecutive 6-hourly snapshots gets a
+# "typical interval" of 0.25 days, so the next ordinary overnight gap (0.7 days) reads
+# as 2.8x its rhythm and the satellite is reported as having stopped station-keeping.
+# Measured: judge() called that object WENT QUIET with silent_days=0.70. The objects
+# most likely to spike on consecutive looks are the persistent suspects - the ones the
+# product exists to watch - so the false positive lands precisely on the paying case.
+MIN_TYPICAL_DAYS = 1.0
+
 
 def object_histories(group, pct, min_km, max_km, stored):
     """Per-object independent-look history across every scoreable snapshot.
@@ -93,7 +103,9 @@ def judge(history, now_jd):
     if len(spikes) < MIN_SPIKES:
         return {"status": "no rhythm yet", "spikes": len(spikes)}
     intervals = np.diff(spikes)
-    typical = float(np.median(intervals))
+    # Floored: see MIN_TYPICAL_DAYS. A burst of spikes inside one day describes our
+    # sampling, not the satellite's rhythm, and must not become the bar it is judged by.
+    typical = max(float(np.median(intervals)), MIN_TYPICAL_DAYS)
     silence = now_jd - spikes[-1]
     verdict = "WENT QUIET" if silence > QUIET_FACTOR * typical else "on rhythm"
     return {"status": verdict, "spikes": len(spikes),
