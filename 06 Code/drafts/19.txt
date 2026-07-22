@@ -1,6 +1,6 @@
 Subject: your vehicles maneuver for a living — mine is the detector watching them
 
-Hi,
+Hi — hoping this reaches Andrea Testore's service operations team, or whoever watches your vehicles in flight.
 
 I built a maneuver detector that runs on free public tracking data, and checked it with a second method: 30 days of altitude history against a matched control group. Flagged objects move 11.3× more than ordinary ones; 72% show a real burn signature versus 11% of controls. The caveat I give everyone: two of my own methods agreeing, not operator ground truth.
 
