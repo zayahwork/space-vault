@@ -332,6 +332,46 @@ a satellite 1 km above geostationary drifts west at **0.01284 °/day** (publishe
 All three get better automatically: the daily task ([[RESULTS - Alert Log]]) banks every
 snapshot, and a week of GEO data supports a real n and a real rhythm.
 
+## The lag-aware window is now what ships (issue 018, 2026-07-22)
+
+The referee's winning configuration is no longer harness-only. `verify.py` and
+`verify_geo.py` take the window from one table, keyed by regime, and it is **one-sided**:
+
+| regime | window | basis |
+|---|---|---|
+| LEO | −3 / +3 d | unchanged — measured catalog update interval **median 0.27 d** (Starlink, n=2,701); the LEO catalog is not late |
+| GEO | **−3 / +14 d** | documented GEO lag up to **+10.98 d** (Intelsat 33e); 14 d clears it |
+| MEO · mixed | −3 / +14 d | ⚠️ **UNVALIDATED** — no MEO ground truth; borrowing GEO's window is a judgement, like the 1.0 km floor |
+
+Each run now prints the fleet's own measured update interval, the window, and the basis
+string, so the constant can be argued with from the output instead of the source.
+
+> [!danger] The honest part: **this change moves no live number today, and cannot**
+> A forward-looking window can only be evaluated in retrospect. The newest snapshot is
+> **two hours old**, so of the +14 day reach, **0.08 days has been published**. Recomputing
+> all 80 cached objects under the old ±3 d and the new −3/+14 d gives **identical steps on
+> 80 of 80**. The runs say so themselves — every one printed
+> `** PROVISIONAL: only 0.08 d of the +14 d forward reach has been published yet **`.
+>
+> The change is still correct and still worth shipping: on the 14 documented maneuvers it
+> takes verification from 10/14 to 13/14 (2/6 → 5/6 double-sourced). It pays off when a
+> snapshot has aged past the window, not on the day it is taken. **Anyone quoting a
+> same-day GEO verification is quoting a window that has not happened yet.**
+
+**SES moved — and it was not this change.** The live SES run now shows suspects at 21.8×
+the controls' median step, 50% vs 13% over the bar, where the earlier run read *NO SIGNAL*
+(0.8×, 1/3 vs 1/3). Since the two windows are provably identical on today's data, the
+difference is the **archive and the suspect list**, not the window: this run had 4 suspects
+against 15 controls, the earlier one 3 against 3. That is a change worth chasing, not a
+result worth quoting — n=4, and the SES miss stays formally unexplained until it is
+reproduced on a snapshot deep enough to score.
+
+Intelsat, same run: 1.1× median, 50% vs 25%, n=2 suspects. Still an anecdote.
+
+Regression covered by `06 Code/_test_verify_window.py`, 31 cases — including that LEO is
+untouched, that the GEO window refuses a step landing before the event, and that a fresh
+snapshot is reported provisional rather than silently under-reaching.
+
 ## Alert mode now covers all four
 
 Per-group baselines learned at the 99th percentile (`baselines_starlink.json`,

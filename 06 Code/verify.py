@@ -62,7 +62,103 @@ MU = 398600.4418
 
 BATCH = 40            # NORADs per GP_HISTORY request - the API takes a comma list
 POLITE_SEC = 3.0      # Space-Track allows ~30/min; we stay well under it
-WINDOW_DAYS = 3.0     # how close to the snapshot a step has to be to count
+WINDOW_DAYS = 3.0     # legacy symmetric default; see VERIFY_WINDOWS for what runs now
+
+
+# ------------------------------------------------------------------ the verify window
+#
+# This used to be one number, WINDOW_DAYS = 3.0, applied everywhere. Issue 015 scored that
+# choice against 14 externally documented GEO maneuvers and it threw away real signal on
+# three of them: the public catalog does not publish a GEO burn the day it happens. The
+# measured lags, from press-release / Space Force / NASA-dated events:
+#
+#   Intelsat 33e breakup   +10.98 d      Intelsat 29e   +5.2 d      AMC 11 N-S   +0.1 d
+#   MEV-2 docking           +5.6 d       Intelsat 1002  +5.2 d      AMC-9        +2.4 d
+#
+# Two properties fall out of that, and both matter:
+#
+# 1. REGIME-AWARE. LEO's catalog is not late - the one documented LEO event landed at lag
+#    0 and the constellation is re-fitted several times a day. Widening LEO would only
+#    feed the control bar more noise and move a headline number for no reason. LEO stays
+#    at 3/3.
+#
+# 2. ASYMMETRIC. Catalog lateness runs one way: an orbit determination can be published
+#    days after a burn, never days before it. A symmetric +/-14d window does not model
+#    lateness, it just takes the biggest thing in four weeks - and measured that way, the
+#    MEV-2 and Intelsat 1002 dockings both "verify" on inclination steps that landed 12.3
+#    days BEFORE the docking, at 5.2x and 5.0x their bars. So the fix is a one-sided
+#    window, not a wider one.
+#
+# The forward reach is 14 rather than 10 because Intelsat 33e's step lands at +10.98 days
+# and ground_truth.csv rounds that lag column to 10 - which is exactly what made 10 look
+# sufficient.
+VERIFY_WINDOWS = {
+    "LEO": (3.0, 3.0,
+            "unchanged: LEO catalog lag measured at ~0 d (issue 015), re-fit several "
+            "times a day"),
+    "GEO": (3.0, 14.0,
+            "lag-aware: documented GEO catalog lag up to +10.98 d (issue 015, Intelsat "
+            "33e); 14 d clears it"),
+    "MEO": (3.0, 14.0,
+            "UNVALIDATED - no MEO ground truth exists; borrowing GEO's conservative "
+            "window as a judgement, not a measurement"),
+    "mixed": (3.0, 14.0,
+              "UNVALIDATED - population straddles regimes; using the most conservative "
+              "(GEO) window so no half is judged by the other half's timing"),
+}
+
+
+def window_for_regime(regime):
+    """(days before, days after, why) for one regime. Unknown regimes answer loudly.
+
+    Returns the widest defensible window rather than the narrowest, because the failure
+    this exists to fix was a window that was too tight to see a real signal.
+    """
+    if regime in VERIFY_WINDOWS:
+        return VERIFY_WINDOWS[regime]
+    before, after, _ = VERIFY_WINDOWS["GEO"]
+    return (before, after,
+            f"UNRECOGNISED REGIME {regime!r} - using the conservative GEO window, which "
+            f"may be wrong for this population")
+
+
+def lag_profile(history):
+    """How often the catalog actually republishes these objects, in days.
+
+    This is the measurement printed next to the chosen window: it is not the same
+    quantity as maneuver-detection lag (that needs ground truth, which only GEO has), but
+    it is the part of the lag we can measure on every fleet, every run. If the median
+    update interval ever approaches the window's forward reach, the window is no longer
+    generous - it is barely one update wide, and the run should say so.
+    """
+    gaps = []
+    for pts in history.values():
+        for (t0, _), (t1, _) in zip(pts, pts[1:]):
+            gaps.append((t1 - t0).total_seconds() / 86400.0)
+    if not gaps:
+        return {"n": 0, "median_days": None, "p95_days": None, "max_days": None}
+    gaps.sort()
+    return {"n": len(gaps),
+            "median_days": statistics.median(gaps),
+            "p95_days": gaps[min(len(gaps) - 1, int(0.95 * (len(gaps) - 1)))],
+            "max_days": gaps[-1]}
+
+
+def observable_window(centre, after_days, now=None):
+    """How much of the window's forward half actually exists yet.
+
+    THE POINT OF THIS FUNCTION. A forward-looking window can only be evaluated in
+    retrospect. Verifying a snapshot two hours old with a +14 day reach asks for orbit
+    determinations nobody has published, so the widened window changes nothing at all on
+    a fresh run - it pays off later, when the snapshot has aged. Shipping the wider
+    window without saying that would look like an improvement and be a no-op.
+    """
+    now = now or datetime.now(timezone.utc)
+    elapsed = (now - centre).total_seconds() / 86400.0
+    observable = max(0.0, min(after_days, elapsed))
+    return {"observable_after_days": observable,
+            "provisional": observable < after_days - 1e-9,
+            "settles_in_days": max(0.0, after_days - observable)}
 
 
 # ------------------------------------------------------------------ space-track
@@ -133,14 +229,21 @@ def get_history(session, norads, days):
 
 # ------------------------------------------------------------------ the measures
 
-def biggest_step_km(points, centre, window_days=WINDOW_DAYS):
+def biggest_step_km(points, centre, before_days=WINDOW_DAYS, after_days=None):
     """Largest altitude change between consecutive records near `centre`.
 
     A burn shows up in the catalog as a step: the orbit was one thing, then it was
     another. Restricted to a window around the snapshot so we measure what the
     detector was reacting to, not something that happened last month.
+
+    The window is one-sided by default at GEO (see VERIFY_WINDOWS): the catalog reports
+    burns late, never early, so reaching backwards as far as forwards only invites steps
+    that cannot have been caused by what we are verifying. `after_days=None` keeps the
+    old symmetric meaning so existing callers read exactly what they always did.
     """
-    lo, hi = centre - timedelta(days=window_days), centre + timedelta(days=window_days)
+    if after_days is None:
+        after_days = before_days
+    lo, hi = centre - timedelta(days=before_days), centre + timedelta(days=after_days)
     best = 0.0
     for (t0, a0), (t1, a1) in zip(points, points[1:]):
         if lo <= t1 <= hi:
@@ -213,8 +316,9 @@ def run_flags(session, rows, centre, days):
     return {"decaying": decaying, "flat": flat, "nodata": nodata}
 
 
-def run_top(session, rows, centre, days, top):
+def run_top(session, rows, centre, days, top, regime="LEO"):
     """2b - suspects vs a matched control group of objects we called ordinary."""
+    before, after, basis = window_for_regime(regime)
     suspects = sorted([r for r in rows if not r["falling"] and r.get("flagged")],
                       key=lambda r: r["gap_km"] / max(r["band_cut_km"], 1e-9),
                       reverse=True)[:top]
@@ -240,14 +344,32 @@ def run_top(session, rows, centre, days, top):
             if len(pts) < 5:
                 skipped += 1
                 continue
-            steps.append(biggest_step_km(pts, centre))
+            steps.append(biggest_step_km(pts, centre, before, after))
             rates.append(descent_km_per_day(pts))
         return steps, rates, skipped
 
     s_steps, s_rates, s_skip = measure(suspects)
     c_steps, c_rates, c_skip = measure(controls)
 
-    print(f"\n  biggest altitude step within +/-{WINDOW_DAYS:g} days of the snapshot:")
+    # Say what window ran, why, and how much of it actually exists yet. The forward half
+    # of a lag-aware window is unobservable until the snapshot has aged - printing the
+    # window without printing that would advertise a reach the run does not have.
+    lag = lag_profile(hist)
+    obs = observable_window(centre, after)
+    print(f"\n  catalog update interval, measured on this fleet's own GP_HISTORY:")
+    if lag["n"]:
+        print(f"    median {lag['median_days']:.2f} d   95th {lag['p95_days']:.2f} d   "
+              f"max {lag['max_days']:.2f} d   (n={lag['n']} intervals)")
+    else:
+        print("    no intervals measurable - too little history")
+    print(f"  window: -{before:g} / +{after:g} days   [{regime}]")
+    print(f"    basis: {basis}")
+    if obs["provisional"]:
+        print(f"    ** PROVISIONAL: only {obs['observable_after_days']:.2f} d of the "
+              f"+{after:g} d forward reach has been\n       published yet, so a late step "
+              f"cannot be seen. Re-run in {obs['settles_in_days']:.1f} d "
+              f"to settle it. **")
+    print(f"\n  biggest altitude step in that window:")
     print(summarise("SUSPECTS", s_steps))
     print(summarise("CONTROLS", c_steps))
     if s_skip or c_skip:
@@ -311,7 +433,7 @@ def main():
     if args.flags:
         run_flags(session, rows, centre, args.days)
     if args.top:
-        run_top(session, rows, centre, args.days, args.top)
+        run_top(session, rows, centre, args.days, args.top, res.get("regime", "LEO"))
 
     print("\n  CAVEAT: GP_HISTORY is the public catalog's own history, so this shares "
           "the\n  catalog side with detect.py. It is independent of the operator data, "

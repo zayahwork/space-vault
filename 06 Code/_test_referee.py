@@ -102,7 +102,7 @@ def test_matches_shipped_verify():
     alt_pts = [(t, a) for t, a, _ in p]
     for w in (3.0, 10.0, 14.0):
         mine, _, _ = R.step_in_window(p, T0, 1, w)
-        theirs = verify.biggest_step_km(alt_pts, T0, window_days=w)
+        theirs = verify.biggest_step_km(alt_pts, T0, w, w)
         check(f"altitude step agrees with verify.py at +/-{w:g}d", mine, theirs, 1e-12)
 
 
@@ -118,13 +118,19 @@ def test_matches_shipped_verify_geo():
     geo_pts = [(t, i, a) for t, a, i in p]      # (epoch, inclination, <other>)
     for w in (3.0, 10.0):
         mine, _, _ = R.step_in_window(p, T0, 2, w)
-        theirs = verify_geo.biggest_step(geo_pts, T0, 1, window_days=w)
+        theirs = verify_geo.biggest_step(geo_pts, T0, 1, w, w)
         check(f"inclination step agrees with verify_geo.py at +/-{w:g}d",
               mine, theirs, 1e-12)
-    check("verify_geo's shipped default window is still 3 days",
-          verify_geo.WINDOW_DAYS, 3.0, 1e-12)
-    check("verify's shipped default window is still 3 days",
-          verify.WINDOW_DAYS, 3.0, 1e-12)
+    # UPDATED DELIBERATELY (issue 018). This used to assert both verifiers shipped a
+    # symmetric 3.0. They no longer do, and that is the point of 018: the configuration
+    # the referee measured as best is now the configuration that ships. If someone
+    # narrows the GEO window back, this fails and says why.
+    check("shipped GEO window is the referee's winning config (-3/+14d)",
+          verify.window_for_regime("GEO")[:2], (3.0, 14.0))
+    check("both verifiers read that window from the same table",
+          verify_geo.window_for_regime("GEO"), verify.window_for_regime("GEO"))
+    check("LEO deliberately unchanged at +/-3d",
+          verify.window_for_regime("LEO")[:2], (3.0, 3.0))
 
 
 # ---------------------------------------------------------------- the bar
@@ -228,9 +234,17 @@ def test_rate_ignores_unscoreable():
 def test_load_geo_events():
     evs = R.load_geo_events(str(Path(__file__).resolve().parent / "ground_truth.csv"))
     roles = [e["role"] for e in evs]
-    check("14 scoreable GEO events", roles.count("scoreable"), 14)
     check("1 excluded (MEV-1)", roles.count("excluded"), 1)
     check("1 documented null (AMC 18)", roles.count("null"), 1)
+    # NOT a hardcoded count. ground_truth.csv is owned by the research lane and grew from
+    # 16 to 19 GEO rows after issue 015 ran; pinning "14 scoreable" made this suite fail
+    # for a data change rather than a code change. The invariant worth holding is that
+    # every GEO row lands in exactly one role - see issue 026 for re-scoring the new rows.
+    check("every GEO row is classified into exactly one role",
+          roles.count("scoreable") + roles.count("excluded") + roles.count("null"),
+          len(evs))
+    check("scoreable is everything that is neither excluded nor a null",
+          roles.count("scoreable"), len(evs) - 2)
     dbl = [e for e in evs if e["double_sourced"]]
     check("7 double-sourced GEO rows in the CSV", len(dbl), 7)
     check("but only 6 of them are scoreable - MEV-1 is excluded",
