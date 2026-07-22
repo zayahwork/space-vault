@@ -1,0 +1,9 @@
+Subject: local question about what happens after you deliver a satellite to orbit
+
+Hi,
+
+I'm up the road in Snohomish, building a maneuver-detection tool from free public catalog data. This isn't your problem directly — you get things to orbit, and my question starts after that.
+
+You talk to a lot of operators right around the moment they first have satellites to keep track of. Would you be willing to point me at one or two people who deal with the tracking and conjunction headaches once a bird is flying? Even a first name and a company would help; I'm trying to learn how this is handled in practice rather than guess at it.
+
+Happy to return the favour by showing whoever that is what I've built — 15 minutes, no pitch. And if this is the wrong thing to ask a launch company, just say so and I'll stop.

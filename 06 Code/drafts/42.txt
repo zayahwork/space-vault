@@ -1,0 +1,9 @@
+Subject: using SPLID as an answer key — and one thing it surfaced
+
+Prof. Linares,
+
+I've been leaning on your SPLID devkit as ground truth while building a maneuver detector that runs on free public catalog data. Something fell out of it that might actually matter to the dataset itself. When I rank Starlink by catalog-versus-operator disagreement, it looks like thousands of maneuvers — 3,555 of them. Then I account for how old each catalog entry is, and all but 541 disappear. They were never movement, just stale elements.
+
+That ratio bothers me. If it holds, then any detector trained on raw catalog disagreement is mostly learning data latency rather than physics, and I'd like to know whether that's a known result in your group or whether I've made an error I can't see from here.
+
+Fifteen minutes to tell me whether I'm fooling myself? I can send the plots and the method beforehand, including a picture of STARLINK-3200 breaking into a real deorbit that the same approach caught.

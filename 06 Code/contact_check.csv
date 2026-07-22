@@ -1,4 +1,44 @@
 id,company,route,kind,ok,detail
+1,Planet Labs,press@planet.com,email,YES,"planet.com	MX preference = 10, mail exchanger = aspmx.l.google.com"
+2,Spire Global,https://spire.com/contact/,form,YES,200 https://spire.com/about-us/contact-us/
+3,ICEYE,https://www.iceye.com/contact,form,YES,200 
+4,Capella Space,info@capellaspace.com,email,YES,"capellaspace.com	MX preference = 0, mail exchanger = capellaspacecorp.mail.protection.office365.us"
+5,BlackSky,https://www.blacksky.com/contact/,form,YES,200 https://blacksky.com/company/contact-us/
+6,HawkEye 360,https://www.he360.com/contact/,form,BLOCK,403  | http error
+7,Kepler Communications,info@kepler.space,email,YES,"kepler.space	MX preference = 0, mail exchanger = kepler-space.mail.protection.outlook.com"
+8,Loft Orbital,sales@loftorbital.com,email,YES,"loftorbital.com	MX preference = 1, mail exchanger = aspmx.l.google.com"
+9,Muon Space,https://www.muonspace.com/contact,form,NO,404  | http error
+10,Pixxel,contact@pixxel.space,email,YES,"pixxel.space	MX preference = 10, mail exchanger = aspmx.l.google.com"
+11,Satellogic,info@satellogic.com,email,YES,"satellogic.com	MX preference = 1, mail exchanger = aspmx.l.google.com"
+12,Umbra,https://umbra.space/contact/,form,BLOCK,403  | http error
+13,Orbital Sidekick,https://www.orbitalsidekick.com/contact,form,PAGE,200 
+14,Sidus Space,info@sidusspace.com,email,YES,"sidusspace.com	MX preference = 0, mail exchanger = sidusspace-com.mail.protection.office365.us"
+15,Open Cosmos,info@open-cosmos.com,email,YES,"open-cosmos.com	MX preference = 1, mail exchanger = aspmx.l.google.com"
+16,AAC Clyde Space,https://www.aac-clyde.space/contact,form,BLOCK,403  | http error
+17,GomSpace,info@gomspace.com,email,YES,"gomspace.com	MX preference = 0, mail exchanger = gomspace-com.mail.protection.outlook.com"
+18,NanoAvionics,info@nanoavionics.com,email,YES,"nanoavionics.com	MX preference = 0, mail exchanger = nanoavionics-com.mail.protection.outlook.com"
+19,D-Orbit,info@dorbit.space,email,YES,"dorbit.space	MX preference = 0, mail exchanger = dorbit-space.mail.protection.outlook.com"
+20,Turion Space,https://turionspace.com/contact,form,PAGE,200 https://www.turionspace.com/contact
+21,AXA XL,https://axaxl.com/insurance/products/space,form,NO,404  | http error
+22,Marsh (Space Projects),https://www.marsh.com/en/industries/aviation-aerospace.html,form,NO,404  | http error
+23,Gallagher (Aerospace),https://www.ajg.com/industries/aviation-aerospace/,form,PAGE,200 
+24,Lockton (Space),https://global.lockton.com/us/en/industries/aviation-aerospace,form,NO,404  | http error
+25,Global Aerospace,https://www.global-aero.com/contact/,form,YES,200 
+26,Munich Re (Space),https://www.munichre.com/en/solutions/for-industry-clients/space.html,form,NO,404  | http error
+27,Allianz Commercial,https://commercial.allianz.com/,form,BLOCK,403  | http error
+28,Beazley,https://www.beazley.com/en-US/contact-us/,form,YES,200 
+29,LeoLabs,https://leolabs.space/contact/,form,NO,404  | http error
+30,COMSPOC,https://comspoc.com/contact/,form,NO,404  | http error
+31,ExoAnalytic Solutions,info@exoanalytic.com,email,YES,"exoanalytic.com	MX preference = 0, mail exchanger = andurilind.mail.protection.office365.us"
+32,Vyoma,https://vyoma.space/contact/,form,NO,404  | http error
+33,Neuraspace,https://www.neuraspace.com/contact,form,YES,200 
+34,Digantara,https://www.digantara.co.in/contact,form,NO,404  | http error
+35,Scout Space,https://www.scout.space/contact,form,YES,200 
+36,ASTRIAGraph / UT Austin,https://sites.utexas.edu/moriba/,form,YES,200 
+37,MIT ARCLab,https://arclab.mit.edu/,form,PAGE,200 https://aeroastro.mit.edu/arclab/
+38,CelesTrak (T.S. Kelso),https://celestrak.org/webmaster.php,form,YES,200 
+39,Space-Track / 18 SDS,https://www.space-track.org/,form,PAGE,200 
+40,Office of Space Commerce (TraCSS),https://www.space.commerce.gov/contact/,form,PAGE,200 https://space.commerce.gov/about/contact-us/
 41,Advanced Space (Patrick Miga),patrick.miga@advancedspace.com,email,YES,"advancedspace.com	MX preference = 0, mail exchanger = advancedspace.mail.protection.office365.us"
 42,MIT ARCLab (Dr. Richard Linares),linaresr@mit.edu,email,YES,"mit.edu	MX preference = 100, mail exchanger = mit-edu.mail.protection.outlook.com"
 43,Digantara,info@digantara.co.in,email,YES,"digantara.co.in	MX preference = 0, mail exchanger = digantara-co-in.mail.protection.outlook.com"
@@ -8,6 +48,6 @@ id,company,route,kind,ok,detail
 47,Vyoma,contact@vyoma.space,email,YES,"vyoma.space	MX preference = 0, mail exchanger = vyoma-space.mail.protection.outlook.com"
 48,Neuraspace,info@neuraspace.com,email,YES,"neuraspace.com	MX preference = 1, mail exchanger = aspmx.l.google.com"
 49,Scout Space,https://www.scout.space/contact,form,YES,200 
-50,Aerospace Corporation,https://aerospace.org/contact-us,form,BLOCK,403  | http error
-51,RBC Signals,https://rbcsignals.com/contact/,form,BLOCK,403  | http error
+50,Aerospace Corporation,https://aerospace.org/contact-us,form,PAGE,200 
+51,RBC Signals,https://rbcsignals.com/contact/,form,YES,200 
 52,Stoke Space,info@stokespace.com,email,YES,"stokespace.com	MX preference = 0, mail exchanger = stokespace.mail.protection.office365.us"

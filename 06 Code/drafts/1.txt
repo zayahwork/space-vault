@@ -1,0 +1,11 @@
+Subject: measured: 5 of 6 "maneuvers" in the public catalog are stale data
+
+Hi,
+
+I built a maneuver detector that runs on free public tracking data, and then checked it with a second, independent method — 30 days of altitude history, with a matched control group. The suspects it flags move 11.3× more than satellites it calls ordinary, and 72% of them show a real burn signature against 11% of controls. The honest caveat: that's two of my own methods agreeing, not operator ground truth.
+
+The finding underneath is the one I suspect matters to a fleet Planet's size: about five of six apparent maneuvers in the public catalog aren't maneuvers at all, just stale element sets. If your conjunction screening consumes that data, a lot of the noise is avoidable by construction.
+
+I'd like to test that against reality: when something near one of your satellites changes its behaviour, how do you find out today — a tool, or a person watching screens?
+
+Fifteen minutes with whoever carries that load would help me a lot. Not selling anything — I want to know if what I measured matches what you live with.
