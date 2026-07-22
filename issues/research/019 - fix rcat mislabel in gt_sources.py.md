@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 type: AFK
 owner: Randy (research)
 blocked-by: []
@@ -30,3 +30,18 @@ with a `DDate`. Verify with `python gt_sources.py updated` returning the `satcat
 files are committed and present in HEAD but marked `skip-worktree` in the research worktree
 by the lane's sparse-checkout config. No behaviour outside the docstring/default should
 change; the data-fetching logic itself is correct.
+
+**Closed 2026-07-22 (night, ralph).** The `06 Code/groundtruth/` files turned out to be
+present in this lane's worktree tree but flagged `skip-worktree`; materialized
+`gt_sources.py` with `git update-index --no-skip-worktree` + checkout (no cross-lane reach
+needed). All three done-whens applied:
+- `gcat_phases()` docstring now describes `rcat` correctly (Suborbital Rocket
+  (Exoatmospheric) Catalog, apogee >= 80 km; NOT reentries) and records that reentries are
+  `satcat` rows with Status `R` and a `DDate`.
+- `gcat_updated()` defaults to `"satcat"`; the CLI `updated` command's fallback changed to
+  match (it hardcoded `"rcat"` separately from the function default).
+- Feedback loop run: `python gt_sources.py updated` returned
+  `# Updated 2026 Jul 17 2011:55` - exactly the `satcat.tsv` stamp issue 026 recorded from
+  its fresh pull (geotab's stamp is `2058:25`, so the right catalog is being read).
+No data-fetching logic changed. The file stays materialized in this worktree so the fix is
+visible; the lane's sparse config is otherwise untouched.
