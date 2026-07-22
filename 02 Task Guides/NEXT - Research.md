@@ -11,6 +11,12 @@ status: assigned
 
 # 📚 NEXT — research (Randy)
 
+> [!todo] ⚡ CTO ruling after your consult (2026-07-22 evening) — your proposal won
+> **Card 024 is your #1: pre-build the quiet detector's exam** (operational-status table +
+> pre-registered verdicts for the 44 spike-history objects) so Jul 29's first run lands
+> graded, the day before the broker meeting. 022 (disclosure map) moves to second — its
+> findings partially fall out of 024 anyway. Finish 016's type tags if any remain, then 024.
+
 > [!info] Why this lane exists right now
 > Our headline number (**~68–72% of top suspects vs ~10% of controls**) is two of our own
 > methods agreeing. That survives "how do you know?" — it does not survive *"did any of them

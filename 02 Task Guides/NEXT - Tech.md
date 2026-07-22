@@ -46,7 +46,16 @@ ground truth killed it independently.
 If the data proves your mechanism wrong, write that in the same tone you'd write it about
 anyone else's. That's the house standard you set.
 
-## 3. When blocked or done — issue 003 (larger-n hardening)
+## Queue order (CTO ruling after your consult, 2026-07-22 evening — your argument won)
+
+**018 is #1: ship the lag-aware window as the production default.** The GEO number we quote
+must describe the code we run, not a harness. **Fold 003 into the post-018 re-run** — rates
+at n=150/300 on both snapshots, measured once, under the production window, so the hardening
+never goes stale. 020 (--all daily run) is the filler card if 018 blocks. 021 unlocks when
+research's typed ground truth lands. 025 (your SES live-miss flag — filed) waits for
+archive depth.
+
+## 3. (superseded — see queue order above) issue 003 (larger-n hardening)
 
 Rates at n=150 and n=300 on both snapshots. If the separation sags, we want it in writing
 before Kelso or a broker finds it.
