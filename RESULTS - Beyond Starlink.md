@@ -17,9 +17,13 @@ snapshot: 2026-07-22 0800Z
 > longitude drift instead, and **SES, previously a flat miss, now separates from its controls
 > on both**; Intelsat separates on drift.
 >
-> **Still not proven.** n=4 suspects per fleet, and the most dramatic column (drift) is the
-> least independent of the detector, while the most independent one (Intelsat inclination)
-> came back *negative*. Early corroboration, not a result.
+> **Still not proven, and one measure is now discredited.** Running the GEO verifier on LEO
+> as a negative control showed the *longitude drift* column returns the same ~63–70× on every
+> fleet from 475 km to GEO — it is reflecting the detector's own selection axis, not
+> independent physics. **Inclination is the column that varies (1.21×–15×) and the one to
+> quote.** Best independent evidence in the set: **OneWeb inclination, 11.5×, 70% vs 13%**,
+> agreeing with the altitude verifier's separate 80%-vs-10% on the same fleet. GEO itself is
+> still n=4.
 
 Everything before today was one constellation. Same pipeline — detect (age-aware ranking),
 persistence (independent looks), verify (Space-Track altitude history vs matched controls) —
@@ -123,14 +127,48 @@ Same control-group discipline as `verify.py`: suspects against objects `detect.p
 ordinary, drawn from the same catalog-age range, identical logic, bar set at the controls'
 90th percentile. 60 days of GP_HISTORY, steps taken within ±3 days of the snapshot.
 
-| | Intelsat | SES |
-|---|---|---|
-| **inclination** (N–S, the big burn) | median 1.21×, **0/4 over bar vs 13%** → *no signal* | median **15.0×**, 1/4 vs 2/15 → separation |
-| **longitude drift** (E–W) | median **2.24×**, **2/4 (50%) vs 13%**, 3.75× | median **63.0×**, **4/4 (100%) vs 13%**, 7.50× |
+### Run across all four fleets — LEO included, as a negative control
+
+| fleet | regime | n | **inclination** (independent) | **longitude drift** (weak) |
+|---|---|---|---|---|
+| starlink | LEO | 15 | 1.56×, **6/15 (40%)** | 63.8×, 15/15 (100%) |
+| oneweb | LEO | 10 | **11.50×, 7/10 (70%)** | 69.9×, 10/10 (100%) |
+| intelsat | GEO | 4 | 1.21×, **0/4 (0%)** → *no signal* | 2.24×, 2/4 (50%) |
+| ses | mixed | 4 | 15.00×, 1/4 (25%) | 63.0×, 4/4 (100%) |
+
+> [!danger] The negative control paid off: **the drift column is near-circular**
+> Running the GEO verifier on LEO fleets was meant as a sanity check. Instead it exposed the
+> drift measure. It returns **63.8× / 69.9× / 63.0×** — essentially the same dramatic number
+> — in 475 km of thick air *and* in the geostationary belt, with 100% of suspects over the
+> bar in all three. **A measure that cannot tell those two places apart is not describing
+> them.** It is reflecting the detector's own selection axis (along-track ≈ mean motion) back
+> at us.
+>
+> Inclination over the same four fleets gives **1.56× / 11.50× / 15.00× / 1.21×**, and ranges
+> from 70% of suspects over the bar down to 0%. **It varies.** That is what an observable
+> carrying independent information looks like, and it is the column to quote.
+>
+> Practical upshot: **stop quoting the 63× numbers.** They are the least informative thing in
+> this table despite being the largest.
+
+> [!warning] A second correction — the controls' bar-clearing rate is arithmetic, not evidence
+> Every run above shows controls at **exactly 2/15**. That is not a coincidence and not a
+> measurement: the bar *is* the controls' 90th percentile, so with 15 controls exactly 2 sit
+> above it, always, whatever the data says. `verify.py` already flagged this ("← 10% by
+> construction"); `verify_geo.py` now prints it too.
+>
+> So the "clears the bar N× as often" figure is the suspects' own fraction rescaled by a
+> constant — **not a second independent reading**, which is how I described it when I first
+> committed this. Requiring both statistics is still right, because they fail differently
+> (median moves with a bulk shift, bar-clearing with the tail — Intelsat's inclination had a
+> 1.21× median with *nothing* in the tail). But two views of the same two samples is not
+> corroboration.
 
 **What changed and what didn't.** SES — the fleet the altitude verifier called a flat miss —
 separates on both observables. Intelsat separates on drift only, and its inclination result
-is *negative*: suspects cleared the controls' bar **less** often than the controls did.
+is *negative*: suspects cleared the controls' bar **less** often than the controls did. The
+strongest independent evidence in the whole table is **OneWeb's inclination: 11.50×, 70% vs
+13%** — and it agrees with the altitude verifier's independent 80%-vs-10% on the same fleet.
 
 > [!warning] The two observables are NOT equally independent — read before quoting
 > `detect.py` ranks on RMS position difference over 6 h, which is dominated by **along-track**
@@ -188,7 +226,9 @@ for all four groups. Bars are 3 snapshots old — **re-learn weekly** as the arc
 |---|---|
 | "the method is constellation-agnostic in LEO" | ✅ OneWeb, 80% vs 10% |
 | "we monitor GEO, where the insured value is" | ✅ runs daily, bar auditable |
-| "we *detect verified maneuvers* at GEO" | ⚠️ partial — GEO-shaped verifier separates suspects from controls on both Intelsat and SES, but n=4 per fleet and the strongest column is the least independent. Say "early corroboration, n=4, not operator ground truth" |
+| "we *detect verified maneuvers* at GEO" | ⚠️ partial — quote **inclination only**: SES 15.0x (1/4 over bar), Intelsat *negative*. n=4. Say "early corroboration, n=4, not operator ground truth" |
+| "the maneuvers we flag show up in an independent observable" | ✅ strongest at **OneWeb: inclination 11.5x, 70% vs 13%**, matching the altitude verifier's separate 80%-vs-10% |
+| any claim resting on the **63x drift** figures | ❌ do not use — same number at every altitude, near-circular with the detector |
 
 ## Reproduce it
 
@@ -198,5 +238,6 @@ python detect.py --group oneweb            # or intelsat / ses
 python verify.py --group oneweb --top 10   # suspects vs matched controls
 python detect.py --group ses --mode alert  # fixed bar, zero is an answer
 python verify_geo.py --group intelsat      # GEO-shaped: inclination + longitude drift
+python verify_geo.py --group oneweb        # LEO negative control - exposed the drift issue
 python _test_verify_geo.py                 # 21 cases
 ```

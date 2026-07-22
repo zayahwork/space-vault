@@ -45,6 +45,17 @@ over six hours, so an inclination step is much closer to genuinely independent e
 When these two disagree, believe inclination. When drift alone is dramatic, treat it as
 the weaker claim, however good the ratio looks.
 
+MEASURED 2026-07-22, AND IT IS WORSE THAN THAT
+Run across four fleets spanning LEO to GEO, the drift column returns essentially the same
+answer every time - 63.8x (starlink), 69.9x (oneweb), 63.0x (ses), and 100% of suspects
+over the bar in all three. A measure that gives the same dramatic number in 475 km of
+thick air and in the geostationary belt is not describing those two places; it is
+reflecting the detector's own selection axis back at us.
+
+Inclination, over the same four fleets, gives 1.56x / 11.50x / 15.00x / 1.21x and ranges
+from 70% of suspects over the bar down to 0%. It VARIES. That is what an observable
+carrying independent information looks like, and it is the column to quote.
+
 Usage:
   python verify_geo.py --group intelsat --top 15
   python verify_geo.py --group ses --top 15 --days 60
@@ -175,13 +186,20 @@ def compare(label, unit, s_vals, c_vals):
     print(f"    bar (90th pct of CONTROLS) = {bar:.6f} {unit}")
     print(f"    suspects over the bar  {over_s:>3}/{len(s_vals)} "
           f"({100 * over_s / len(s_vals):.0f}%)   "
-          f"controls {over_c:>3}/{len(c_vals)} ({100 * over_c / len(c_vals):.0f}%)")
+          f"controls {over_c:>3}/{len(c_vals)} ({100 * over_c / len(c_vals):.0f}%) "
+          f"<- fixed by construction, not measured")
     print(f"    suspects move {med_ratio:.2f}x the controls' median, and clear the bar "
           f"{rate_ratio:.2f}x as often")
-    # A signal has to survive BOTH readings. A median ratio on its own is easy to get
-    # from four objects, and it means nothing if those objects clear the controls' bar
-    # LESS often than the controls do - that is evidence against separation being read
-    # as evidence for it. Requiring both is the difference between a result and a story.
+    # A signal has to survive both readings. Be precise about what that does and does not
+    # buy: the controls' share above their OWN 90th percentile is arithmetic, not a
+    # measurement - with 15 controls it is always exactly 2, whatever the data says. So
+    # rate_ratio is the suspects' bar-clearing fraction rescaled by a constant, NOT a
+    # second independent reading.
+    #
+    # It is still worth requiring, because the two statistics fail differently: the median
+    # ratio moves with a bulk shift, the bar-clearing fraction with the tail. Intelsat's
+    # inclination had a 1.21x median while NO suspect cleared the bar - a bulk nudge with
+    # nothing in the tail. Demanding both catches that. It does not make them independent.
     signal = med_ratio >= 1.2 and rate_ratio >= 1.5
     if not signal:
         if med_ratio >= 1.2 > rate_ratio:
