@@ -17,6 +17,22 @@ Open Command Prompt (or PowerShell), type **`t`**, press Enter. Four Claude Code
 
 `t C:\SomeOtherFolder` opens the grid in a different repo. Script lives at [t.ps1](../06 Code/t.ps1).
 
+## It remembers where you were
+
+Each window slot owns a permanent conversation. Close everything, type `t` tomorrow —
+each of the 4 windows picks up its own conversation right where it left off.
+- **`t -Fresh`** = start all 4 with blank conversations (the old ones stay on disk;
+  `claude --resume` inside any window can still find them).
+- The windows are color-coded so you can tell them apart at a glance:
+  **HIGH = black**, **MEDIUM = dark blue**, **LOW = dark green**, all in big Consolas text.
+
+## Branches (set up 2026-07-22)
+
+The repo has a branch per work stream: **`detector`** (maneuver detection), **`outreach`**
+(emails + contact checking), **`room`** (the crew tooling). Vault notes stay on `master`.
+Careful: all 4 windows share one checkout — `git switch` in one window switches ALL of them.
+When one window needs its own stream, give it a worktree: `/wt detector`.
+
 ## Status line
 
 Every Claude window shows at the bottom: model | effort | folder | branch | context left.
