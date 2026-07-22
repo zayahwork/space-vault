@@ -1,9 +1,17 @@
 ---
-status: open
+status: done
+completed: 2026-07-22
 type: AFK
 owner: Mark (marketing)
 blocked-by: []
 ---
+
+> [!done] Done 2026-07-22 — `06 Code/reply_watch/`, verified by `python check_reply_watch.py`
+> 16 reply drafts, 16 nudge drafts, and `STATUS.md` covering every in-flight contact.
+> The linter enforces the language rules below and passes clean. **Zero sends.**
+> Also required to make the card honest: the retired multiple was still sitting in all
+> 16 queued outreach drafts, so it was swept out of those too (commit "Retire the 11.3x
+> language"). Otherwise re-enabling the drip would have mailed retired numbers to real people.
 # Reply-watch drafts + nudge queue (draft everything, send nothing)
 
 **Goal:** every plausible reply to the ~60 emails now in flight has a ready answer, and every silent contact has a drafted nudge — so responses go out in minutes when the founder says go.
