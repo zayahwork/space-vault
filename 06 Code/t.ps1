@@ -42,13 +42,13 @@ $h  = [math]::Floor($wa.Height / 2)
 $darkGrey = 0x2B2B2B   # conhost stores colours as 0x00BBGGRR - grey reads the same either way
 # The crew: each window is a persona on its OWN branch in its OWN worktree.
 # They are walled off from each other - Zayah is the only one who merges to master.
-# Model/effort split (usage balancing): CTO and Randy think hard on Fable, Tim builds
-# on Fable high, Mark drafts on Opus medium - marketing needs voice, not peak reasoning.
+# Model split (usage balancing): Fable 5 is reserved for the CTO - the decision layer.
+# Everyone else runs Opus 4.8; effort tiers still differ per role.
 $layout = @(
     @{ Effort = 'high';   Model = 'fable'; Col = 0; Row = 0; Title = 'Claude - CTO';   Branch = 'cto';   Persona = 'cto';   Colors = 0x0F },
-    @{ Effort = 'high';   Model = 'fable'; Col = 1; Row = 0; Title = 'Claude - TIM';   Branch = 'tim';   Persona = 'tim';   Colors = 0x0F },
+    @{ Effort = 'high';   Model = 'opus';  Col = 1; Row = 0; Title = 'Claude - TIM';   Branch = 'tim';   Persona = 'tim';   Colors = 0x0F },
     @{ Effort = 'medium'; Model = 'opus';  Col = 0; Row = 1; Title = 'Claude - MARK';  Branch = 'mark';  Persona = 'mark';  Colors = 0x0F },
-    @{ Effort = 'high';   Model = 'fable'; Col = 1; Row = 1; Title = 'Claude - RANDY'; Branch = 'randy'; Persona = 'randy'; Colors = 0x0F }
+    @{ Effort = 'high';   Model = 'opus';  Col = 1; Row = 1; Title = 'Claude - RANDY'; Branch = 'randy'; Persona = 'randy'; Colors = 0x0F }
 )
 
 # --- Persona system prompts (regenerated every launch so edits here take effect).
