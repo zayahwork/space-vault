@@ -4,6 +4,13 @@ owner: OUTREACH window (marketing — research + emails)
 status: items 1, 3, 4 DONE (~04:00) — item 2 still gated on the founder
 ---
 
+> [!warning] 🚪 Workspace rule (standing)
+> Work ONLY in this folder, on your own branch. Never run git commands against other
+> branches, never merge or pull master unless the CTO note tells you to, and never open
+> files outside your lane. Facts you need from elsewhere arrive in THIS note — if something
+> is missing, say BLOCKED and stop; the CTO will supply it.
+
+
 > [!done] Progress — 2026-07-22 ~04:00
 > 1. ✅ **All 16 unsent drafts rewritten around the number** — every one leads with "built
 >    and checked" and carries 11.3× / 72%-vs-11% plus the honest caveat, verbatim. That's the
