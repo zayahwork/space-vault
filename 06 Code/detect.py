@@ -103,6 +103,18 @@ MIN_PER_BIN = 25          # below this a percentile is noise, so we widen instea
 # detections, so a nonsense 5,337 km "maneuver" can't reach a customer dashboard.
 MAX_PLAUSIBLE_KM = 500.0
 
+# An object losing altitude faster than this is on its way down, not holding station.
+# The number is deorbit_check.py's, kept deliberately identical so the two tools cannot
+# drift into disagreeing about what "falling" means.
+#
+# This matters more than it sounds. Objects falling this fast are ~9.5% of the Starlink
+# population but were producing ~79% of the maneuver candidates - a median gap of 19.7 km
+# against 4.0 km for everything else. A satellite being deliberately deorbited fights the
+# catalog every single day; that is decay doing its job, not a maneuver worth anyone's
+# attention. Judged against the general population it looks extraordinary. Judged against
+# other deorbiting hardware it looks like exactly what it is.
+FALLING_KM_PER_DAY = -0.4
+
 # How many snapshots back to look, and how many INDEPENDENT looks must agree before a
 # candidate is called persistent. Two is the minimum that means anything: one look is
 # a measurement, two is a measurement that repeated.
@@ -125,8 +137,14 @@ def newest_snapshot_dir():
 
 
 def load_omm(text):
-    """Parse OMM CSV into {norad: Satrec}. Later duplicates win."""
-    sats = {}
+    """Parse OMM CSV into {norad: Satrec}, plus the raw fields we reason about.
+
+    Returns (sats, meta) where meta[norad] = (mean_motion, mean_motion_dot). Those
+    two don't come back off a Satrec in a form that's pleasant to read, and both are
+    needed to tell a satellite holding station from one on its way down.
+    Later duplicates win.
+    """
+    sats, meta = {}, {}
     for fields in omm.parse_csv(io.StringIO(text)):
         sat = Satrec()
         try:
@@ -134,7 +152,12 @@ def load_omm(text):
         except (ValueError, KeyError):
             continue
         sats[sat.satnum] = sat
-    return sats
+        try:
+            meta[sat.satnum] = (float(fields["MEAN_MOTION"]),
+                                float(fields["MEAN_MOTION_DOT"]))
+        except (KeyError, TypeError, ValueError):
+            pass
+    return sats, meta
 
 
 _GP_CACHE = {}
@@ -191,6 +214,27 @@ def epoch_jd(sat):
     return sat.jdsatepoch + sat.jdsatepochF
 
 
+MU_KM3_S2 = 398600.4418
+EARTH_RADIUS_KM = 6378.14
+
+
+def altitude_km(mean_motion_rev_day):
+    """Circular altitude implied by a mean motion, in km."""
+    period_s = 86400.0 / mean_motion_rev_day
+    semi_major = (MU_KM3_S2 * (period_s / (2 * np.pi)) ** 2) ** (1.0 / 3.0)
+    return semi_major - EARTH_RADIUS_KM
+
+
+def descent_km_per_day(mean_motion, mean_motion_dot):
+    """How fast this object is losing altitude, in km/day. Negative = falling.
+
+    MEAN_MOTION_DOT in an OMM is n-dot/2 in rev/day^2, so the mean motion changes by
+    twice it over a day. Convert both to altitudes and take the difference - no drag
+    model, just the element set's own statement about where it is going.
+    """
+    return altitude_km(mean_motion + 2.0 * mean_motion_dot) - altitude_km(mean_motion)
+
+
 def rms_difference(sat_a, sat_b):
     """RMS position difference in km over the span, or None if propagation fails."""
     start = max(epoch_jd(sat_a), epoch_jd(sat_b))
@@ -216,8 +260,19 @@ def capture_jd(snap_dir):
 
 # ------------------------------------------------------------------ the call
 
-def classify(rows, pct, min_km, max_km=MAX_PLAUSIBLE_KM):
+# The two things a flagged object can be. Kept as constants because persistence
+# rewrites verdict strings and string-matching on them was already getting fragile.
+SUSPECT = "MANEUVER SUSPECT"
+FALLING_SUSPECT = "DESCENDING (extreme even for hardware on the way down)"
+
+
+def classify(rows, pct, min_km, max_km=MAX_PLAUSIBLE_KM, flag=SUSPECT):
     """Attach a verdict to every row, using its own age bin as the yardstick.
+
+    Call this once per orbital regime. Objects holding station and objects being
+    deorbited disagree with the catalog for completely different reasons and at
+    completely different scales, so mixing them means the deorbiting ones set a
+    threshold the station-keepers can never reach - and sail over it themselves.
 
     A hard plausibility gate runs first: any gap >= max_km is physically impossible
     for a real maneuver and is flagged as a data-quality issue, then excluded from
@@ -253,12 +308,28 @@ def classify(rows, pct, min_km, max_km=MAX_PLAUSIBLE_KM):
             r["band_cut_km"] = cut
             r["band_median_km"] = float(np.median(gaps[sel]))
             if r["gap_km"] >= cut and r["gap_km"] >= min_km:
-                r["verdict"] = "MANEUVER SUSPECT"
+                r["verdict"] = flag
+                r["flagged"] = True
             elif r["gap_km"] >= min_km:
                 r["verdict"] = "stale (big gap, but normal for its age)"
             else:
                 r["verdict"] = "agrees"
     return bands
+
+
+def pooled_comparison(rows, pct, min_km, max_km):
+    """What the list would look like if both regimes were ranked together.
+
+    This is the claim the regime split has to earn, so it gets measured rather than
+    asserted. Returns (pooled_total, how_many_were_falling, station_keepers_the
+    _pooled_ranking_never_showed).
+    """
+    copy = [dict(r, verdict="agrees", flagged=False) for r in rows]
+    classify(copy, pct, min_km, max_km)
+    pooled = {r["norad"] for r in copy if r["flagged"]}
+    falling_in_pooled = sum(1 for r in copy if r["flagged"] and r["falling"])
+    now = {r["norad"] for r in rows if not r["falling"] and r.get("flagged")}
+    return len(pooled), falling_in_pooled, len(now - pooled)
 
 
 def analyze(snap_dir, group, pct, min_km, max_km, allow_live=True):
@@ -271,17 +342,22 @@ def analyze(snap_dir, group, pct, min_km, max_km, allow_live=True):
     if not sup_file.exists():
         return None
     now_jd = capture_jd(snap_dir)
-    gp, gp_src, _ = load_gp(snap_dir, group, now_jd, allow_live)
-    if gp is None:
+    gp_loaded, gp_src, _ = load_gp(snap_dir, group, now_jd, allow_live)
+    if gp_loaded is None:
         return {"dir": snap_dir, "rows": [], "bands": [], "skipped": gp_src}
+    gp, gp_meta = gp_loaded
 
-    sup = load_omm(gzip.open(sup_file, "rt", encoding="utf-8").read())
+    sup, _ = load_omm(gzip.open(sup_file, "rt", encoding="utf-8").read())
     rows, failed = [], 0
     for norad in sorted(set(sup) & set(gp)):
         gap = rms_difference(sup[norad], gp[norad])
         if gap is None:
             failed += 1
             continue
+        # Is it holding station, or on its way down? Straight off the catalog's own
+        # element set - the object tells us which population it belongs to.
+        mm = gp_meta.get(norad)
+        drop = descent_km_per_day(*mm) if mm else 0.0
         rows.append({
             "norad": norad,
             "gap_km": gap,
@@ -289,11 +365,23 @@ def analyze(snap_dir, group, pct, min_km, max_km, allow_live=True):
             "sup_age_h": (now_jd - epoch_jd(sup[norad])) * 24.0,
             "sup_epoch": epoch_jd(sup[norad]),
             "gp_epoch": epoch_jd(gp[norad]),
+            "km_per_day": drop,
+            "altitude_km": altitude_km(mm[0]) if mm else float("nan"),
+            "falling": drop < FALLING_KM_PER_DAY,
             "verdict": "agrees",
+            "flagged": False,
         })
-    bands = classify(rows, pct, min_km, max_km)
+
+    # Each regime gets its own baseline. A deorbiting satellite is only interesting
+    # if it is extreme among OTHER deorbiting satellites.
+    on_station = [r for r in rows if not r["falling"]]
+    falling = [r for r in rows if r["falling"]]
+    bands = classify(on_station, pct, min_km, max_km, flag=SUSPECT)
+    classify(falling, pct, min_km, max_km, flag=FALLING_SUSPECT)
+
     return {"dir": snap_dir, "rows": rows, "bands": bands, "failed": failed,
-            "gp_src": gp_src, "n_sup": len(sup), "n_gp": len(gp), "skipped": None}
+            "gp_src": gp_src, "n_sup": len(sup), "n_gp": len(gp), "skipped": None,
+            "n_falling": len(falling), "n_station": len(on_station)}
 
 
 # --------------------------------------------------------- temporal persistence
@@ -322,9 +410,9 @@ def independent_looks(runs):
         looks = [r for _, r in kept]
         out[norad] = {
             "looks": len(looks),
-            "flags": sum(1 for r in looks if r["verdict"] == "MANEUVER SUSPECT"),
+            "flags": sum(1 for r in looks if r.get("flagged")),
             "gaps": [r["gap_km"] for r in looks],
-            "flagged_now": looks[-1]["verdict"] == "MANEUVER SUSPECT",
+            "flagged_now": bool(looks[-1].get("flagged")),
         }
     return out
 
@@ -341,7 +429,7 @@ def apply_persistence(rows, looks, min_looks=MIN_LOOKS):
             continue
         r["looks"] = h["looks"]
         r["flagged_looks"] = h["flags"]
-        if r["verdict"] != "MANEUVER SUSPECT":
+        if not r.get("flagged"):
             continue
         if h["looks"] < 2:
             r["verdict"] = "SUSPECT (single look - nothing to corroborate against)"
@@ -425,7 +513,13 @@ def main():
                   "     them apart. Fix: archive gp_active.csv.gz alongside every SupGP\n"
                   "     snapshot, then re-run - two scoreable snapshots is all it needs.")
 
-    print("  what a NORMAL gap looks like, by how old the catalog entry is:")
+    print(f"  splitting the population by what it is DOING:")
+    print(f"    holding station    {latest['n_station']:>6}"
+          f"   - judged against each other")
+    print(f"    on the way down    {latest['n_falling']:>6}"
+          f"   - losing > {abs(FALLING_KM_PER_DAY):g} km/day, judged separately\n")
+
+    print("  what a NORMAL gap looks like for a STATION-KEEPING object, by catalog age:")
     print(f"  {'age (h)':>12}  {'objects':>8}  {'median km':>10}  {'flag above':>11}")
     for b in bands:
         hi = "inf" if b["hi"] > 1e8 else f"{b['hi']:g}"
@@ -434,12 +528,15 @@ def main():
               f"  {b['cut_km']:>11.2f}{star}")
 
     by_strength = lambda r: r["gap_km"] / max(r["band_cut_km"], 1e-9)
-    persistent = sorted([r for r in rows if r["verdict"] == "PERSISTENT SUSPECT"],
+    station = [r for r in rows if not r["falling"]]
+    persistent = sorted([r for r in station if r["verdict"] == "PERSISTENT SUSPECT"],
                         key=by_strength, reverse=True)
-    unconfirmed = sorted([r for r in rows if r["verdict"].startswith("SUSPECT (")],
+    unconfirmed = sorted([r for r in station if r["verdict"].startswith("SUSPECT (")],
                          key=by_strength, reverse=True)
-    single = sorted([r for r in rows if r["verdict"] == "MANEUVER SUSPECT"],
+    single = sorted([r for r in station if r["verdict"] == SUSPECT],
                     key=by_strength, reverse=True)
+    descending = sorted([r for r in rows if r["falling"] and r.get("flagged")],
+                        key=by_strength, reverse=True)
     suspects = persistent + unconfirmed + single
     stale = [r for r in rows if r["verdict"].startswith("stale")]
     flagged = sorted([r for r in rows if r["verdict"].startswith("DATA QUALITY")],
@@ -483,11 +580,14 @@ def main():
         print(f"  cleared            {cleared:>5}  - flagged in an earlier look, normal "
               f"now (catalog caught up, or it was noise)")
     else:
-        print(f"  MANEUVER SUSPECTS  {len(single):>5}  of {len(rows)} "
-              f"({100*len(single)/len(rows):.1f}%)  - UNCORROBORATED, one snapshot only")
+        print(f"  MANEUVER SUSPECTS  {len(single):>5}  of {len(station)} station-keepers"
+              f"  - UNCORROBORATED, one snapshot only")
+    print(f"  on the way down    {len(descending):>5}  - extreme among deorbiting "
+          f"hardware, but they are SUPPOSED to be moving")
     print(f"  big gap but stale  {len(stale):>5}  "
           f"- would have been false positives on gap alone")
-    print(f"  agrees             {len(rows)-len(suspects)-len(stale)-len(flagged):>5}")
+    print(f"  agrees             "
+          f"{len(rows)-len(suspects)-len(descending)-len(stale)-len(flagged):>5}")
     print(f"  DATA QUALITY FLAG  {len(flagged):>5}  "
           f"- gap >= {args.max_km:g} km, physically impossible; likely decay or bad TLE")
     if flagged:
@@ -496,15 +596,27 @@ def main():
     if failed:
         print(f"  propagation failed {failed:>5}  (usually reentering)")
 
-    caught = len(suspects) + len(stale)
+    caught = len(suspects) + len(descending) + len(stale)
     if caught:
+        n_pooled, n_falling, n_new = pooled_comparison(rows, args.pct, args.min_km,
+                                                       args.max_km)
         print(f"\n  Ranking on raw gap alone would have surfaced {caught} objects."
-              f"\n  Age-aware ranking cuts that to {len(suspects)} "
+              f"\n  Age-aware ranking cuts that to {n_pooled} "
               f"- {100*len(stale)/caught:.0f}% of the naive list was just old data.")
+        print(f"\n  Separating the regimes does NOT shorten the list. At the "
+              f"{args.pct:g}th percentile about\n  {100-args.pct:g}% of each cohort gets "
+              f"flagged whatever happens up there. What it changes\n  is WHO is on it:")
+        print(f"    {n_falling:>5}  of those {n_pooled} "
+              f"({100*n_falling/max(n_pooled,1):.0f}%) were hardware being deliberately "
+              f"deorbited.\n           They move every day, on purpose. Judged against "
+              f"their own kind,\n           only {len(descending)} are unusual.")
+        print(f"    {n_new:>5}  station-keepers are on the list that the pooled ranking "
+              f"never\n           showed at all - they were crowded out by falling hardware.")
         if len(runs) > 1 and suspects:
-            print(f"  Demanding the flag repeat cuts that again to {len(persistent)} "
-                  f"- {100*(len(suspects)-len(persistent))/len(suspects):.0f}% of the "
-                  f"age-aware list did not survive a second look.")
+            print(f"    {len(persistent):>5}  of the {len(suspects)} survived a second "
+                  f"independent look.")
+        print(f"\n  A satellite holding station that moved when it shouldn't have is the "
+              f"only\n  part anyone would pay for. Everything else now has a name.")
 
     if args.csv or args.chart:
         OUT.mkdir(exist_ok=True)
@@ -531,22 +643,26 @@ def chart(rows, bands, group, snap_dir):
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots(figsize=(10, 6))
-    is_suspect = lambda r: r["verdict"] == "PERSISTENT SUSPECT" \
-        or r["verdict"] == "MANEUVER SUSPECT" or r["verdict"].startswith("SUSPECT (")
-    persisted = [r for r in rows if r["verdict"] in
-                 ("PERSISTENT SUSPECT", "MANEUVER SUSPECT")]
-    once = [r for r in rows if r["verdict"].startswith("SUSPECT (")]
-    other = [r for r in rows if not is_suspect(r)]
-    ax.scatter([r["gp_age_h"] for r in other], [r["gap_km"] for r in other],
-               s=6, alpha=0.25, c="#888", label="normal for its age")
+    station = [r for r in rows if not r["falling"]]
+    falling = [r for r in rows if r["falling"]]
+    hit = lambda r: r["verdict"] in ("PERSISTENT SUSPECT", SUSPECT)
+    once = [r for r in station if r["verdict"].startswith("SUSPECT (")]
+    persisted = [r for r in station if hit(r)]
+    quiet = [r for r in station if not hit(r) and not r["verdict"].startswith("SUSPECT (")]
+
+    ax.scatter([r["gp_age_h"] for r in quiet], [r["gap_km"] for r in quiet],
+               s=6, alpha=0.25, c="#888", label="holding station - normal for its age")
+    ax.scatter([r["gp_age_h"] for r in falling], [r["gap_km"] for r in falling],
+               s=7, alpha=0.30, c="#9467bd",
+               label=f"on the way down (>{abs(FALLING_KM_PER_DAY):g} km/day) - judged separately")
     if once:
         ax.scatter([r["gp_age_h"] for r in once], [r["gap_km"] for r in once],
                    s=14, alpha=0.6, c="#ff7f0e", label="flagged once - unconfirmed")
     checked = any("looks" in r for r in rows)
     ax.scatter([r["gp_age_h"] for r in persisted], [r["gap_km"] for r in persisted],
-               s=18, alpha=0.9, c="#d62728",
-               label="suspect, flag repeated" if checked
-                     else "maneuver suspect (single snapshot)")
+               s=20, alpha=0.95, c="#d62728",
+               label="station-keeper that moved, flag repeated" if checked
+                     else "station-keeper that moved (single snapshot)")
     for b in bands:
         hi = min(b["hi"], max(r["gp_age_h"] for r in rows))
         ax.plot([b["lo"], hi], [b["cut_km"]] * 2, c="#1f77b4", lw=1.5)

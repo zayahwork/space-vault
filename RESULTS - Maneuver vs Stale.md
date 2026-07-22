@@ -6,12 +6,17 @@ code: "06 Code/detect.py"
 
 # 🛰️ RESULTS — telling a maneuver apart from a stale catalog
 
-> [!success] The headline
-> Ranking Starlink on raw SupGP-vs-catalog disagreement surfaces **3,555 objects**.
-> Ranking with catalog age taken into account surfaces **541** — of which **17** are
-> physically impossible (RMS jumps of thousands of km) and are gated out as data-quality
-> flags, leaving **524 real maneuver candidates**.
-> **85% of the naive list was just old data, not movement.**
+> [!success] The headline (updated 2026-07-22)
+> Ranking Starlink on raw disagreement with the catalog surfaces **~4,900 objects**. Three
+> filters explain almost all of it:
+> 1. **Old data** — 89% of the naive list was just a stale catalog entry, not movement.
+> 2. **Falling hardware** — 79% of what survived was satellites being deliberately deorbited.
+>    They move every day, on purpose, and nobody pays to hear it.
+> 3. **Didn't repeat** — a real maneuver still disagrees next time you look. *(Built and
+>    tested, but blocked — see below.)*
+>
+> What's left: **490 satellites holding station that moved when they shouldn't have** — and
+> **378 of those were invisible** under the old ranking, crowded out by falling junk.
 
 ## The problem this fixes
 
@@ -106,6 +111,52 @@ Rehearsed end-to-end on a throwaway copy of the archive (plumbing proof, **not a
 it used a time-travelled catalog): the machinery runs, and on that rehearsal 18% of the
 age-aware list failed to repeat. Logic is covered by `06 Code/_test_detect.py` — six cases
 including the fake-corroboration trap. All pass.
+
+## 🪂 Third filter — separating "moved" from "falling" (added 2026-07-22)
+
+**Plain version:** most of what the detector was excited about was satellites being thrown
+away on purpose.
+
+SpaceX retires dead Starlinks by slowly dropping them until they burn up. That takes months,
+and the whole time the satellite is sinking — so the public catalog is *permanently* behind it.
+Huge gap, every single day, forever. Not a maneuver. Just a satellite in the bin.
+
+Measured on 2026-07-22:
+
+| | share of population | share of the candidate list |
+|---|---|---|
+| falling faster than 0.4 km/day | **9.5%** | **79%** |
+
+Those objects sit ~356 km up (the working satellites are ~475 km), they're 558 days old on
+average, and they lose altitude **12x faster** than everything else. Median gap **19.7 km** vs
+**4.0 km** for the rest.
+
+> [!note] Why 0.4 km/day
+> That's not a new number — it's the exact threshold `deorbit_check.py` already uses to call
+> a satellite "in sustained descent." Reusing it deliberately, so the two tools can never
+> drift into disagreeing about what "falling" means.
+
+The fix is the same move as the age filter: **judge like against like.** A satellite on its way
+down is only interesting if it's extreme compared to *other satellites on their way down*.
+
+> [!warning] What this did NOT do — shorten the list
+> The threshold is a percentile, so ~5% of each group gets flagged **no matter what happens up
+> there**. Separating the groups doesn't cut the list, it **swaps who's on it**:
+> - **428 of the old 540** candidates were deorbiting hardware → now judged separately, only
+>   **53** are unusual for their own kind
+> - **378 station-keeping satellites** are now on the list that the old ranking **never showed
+>   at all** — they were buried under falling junk
+>
+> Old list: 79% garbage, and it surfaced only 112 of the satellites we actually care about.
+> New list: 490 station-keepers, 378 of them newly visible.
+
+> [!danger] The open problem this exposes
+> Because the cut is a percentile, **the detector can never say "quiet day."** It will hand you
+> ~5% every time you run it, even if nothing in orbit moved at all. That's fine for ranking and
+> wrong for alerting. Needs an absolute threshold before anyone gets an alert from this.
+
+Sanity check: run on OneWeb (1,200 km, nothing decaying) and the falling group is **0 objects** —
+the filter doesn't fire where it shouldn't.
 
 > [!warning] Hard plausibility gate (added 2026-07-21)
 > `detect.py` now applies a **hard 500 km gate** before the age-aware statistics. No
