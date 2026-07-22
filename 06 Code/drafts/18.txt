@@ -2,7 +2,7 @@ Subject: what do your bus customers ask about tracking? (I have a number for the
 
 Hi,
 
-I built a maneuver detector on free public tracking data and just verified it with an independent method — 30 days of altitude history against a matched control group. The flagged satellites move 11.3× more than the ordinary ones, and 72% show a burn signature versus 11% of controls. Plainly said: two of my own methods agreeing, not operator ground truth yet.
+I built a maneuver detector on free public tracking data and just verified it with an independent method — 30 days of altitude history against a matched control group. As of July 22, ~68–72% of the top suspects show a real, independently-checked burn signature versus ~10% of matched controls. Plainly said: two of my own methods agreeing, not operator ground truth yet.
 
 NanoAvionics sits upstream of many first-time operators, so you likely hear the same questions as customers discover what they didn't plan for. I'd like to know whether "is that other object going to be a problem?" is among them — and what you tell them today.
 
