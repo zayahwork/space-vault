@@ -52,6 +52,20 @@ When "ctx % left" gets low, run `/compact` (squeeze the conversation down) or `/
 - **`/wt <name>`** — makes a *git worktree* (jargon: a separate temporary copy of the repo) so two windows can edit the same files without colliding. Lands in `~\.claude\worktrees\`. Status line shows `[worktree]` when you're inside one.
 - **`/wt-done <name>`** — cleans the worktree up when the stream is finished (refuses if there are unsaved changes).
 
+## The Pocock pipeline (added 2026-07-22)
+
+For anything bigger than a quick fix: **`/grill` → `/prd` → `/issues` → ralph**.
+- **`/grill <idea>`** — the AI interviews you relentlessly, one question at a time, with a
+  recommended answer each time, until you two share one mental model. Use it for features,
+  emails, founder decisions — anything where misalignment is expensive. This is the big one.
+- **`/prd`** — turns the grilling into a short destination doc in `issues/` (don't polish it).
+- **`/issues`** — splits the PRD into small issue files with blocked-by links, tagged
+  **AFK** (agent can do alone) or **HITL** (needs you).
+- **`/ralph`** in a window — does ONE issue while you watch. When you trust the loop:
+  **`.\ralph.ps1 -Loop 5`** in `06 Code` runs the night shift headless (fresh context per
+  issue, test-first, auto-commits, stops on NO MORE TASKS).
+- Delete PRDs/issues once done — stale docs mislead future agents.
+
 ## Rules of thumb (from the video, worth keeping)
 
 - Four streams max — that's a human attention limit, not a tool limit.

@@ -44,8 +44,8 @@ $darkGrey = 0x2B2B2B   # conhost stores colours as 0x00BBGGRR - grey reads the s
 $layout = @(
     @{ Effort = 'high';   Col = 0; Row = 0; Title = 'Claude 1 - PLAN - HIGH';       Branch = $null;       Colors = 0x0F },
     @{ Effort = 'high';   Col = 1; Row = 0; Title = 'Claude 2 - DETECTOR - HIGH';   Branch = 'detector';  Colors = 0x0F },
-    @{ Effort = 'medium'; Col = 0; Row = 1; Title = 'Claude 3 - OUTREACH - MEDIUM'; Branch = 'outreach';  Colors = 0x1F },
-    @{ Effort = 'low';    Col = 1; Row = 1; Title = 'Claude 4 - ROOM - LOW';        Branch = 'room';      Colors = 0x8F }
+    @{ Effort = 'medium'; Col = 0; Row = 1; Title = 'Claude 3 - OUTREACH - MEDIUM'; Branch = 'outreach';  Colors = 0x0F },
+    @{ Effort = 'low';    Col = 1; Row = 1; Title = 'Claude 4 - ROOM - LOW';        Branch = 'room';      Colors = 0x0F }
 )
 
 # --- Console look: per-title registry settings (conhost picks these up because the
