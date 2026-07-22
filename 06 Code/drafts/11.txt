@@ -1,0 +1,11 @@
+Subject: measured the noise in conjunction data — does it match Satellogic's experience?
+
+Hi,
+
+I built a maneuver detector on free public tracking data and checked it against 30 days of altitude history with a matched control group. The satellites it flags move 11.3× more than the ones it calls ordinary, and 72% show a burn signature versus 11% of controls. Said honestly: that's two of my own methods agreeing, not operator ground truth.
+
+Satellogic interests me because you run a substantial fleet on a deliberately lean operation — exactly where triage cost shows up as time somebody doesn't have. And the measurement underneath my work says about five in six apparent maneuvers in the public catalog are stale elements, not movement. If true, much of the alert load is artifact.
+
+Is that fair to your experience? When a nearby object starts behaving oddly, how do you find out today?
+
+Fifteen minutes with whoever handles this would be a real help. Nothing to sell.

@@ -1,0 +1,9 @@
+Subject: a free-data pre-filter that would feed your radar, not compete with it
+
+Hi,
+
+Quick one from someone with no hardware, which I realise is an odd way to open a note to a radar company.
+
+I built a maneuver detector that runs on free public catalog data alone. The useful part isn't the detections — it's the rejections. 85% of what looks like a maneuver in that data is just a stale catalog entry, and throwing those out is cheap. That makes it a first pass that narrows down where something interesting might be happening, which is only worth anything if someone then actually looks with a real sensor.
+
+That's your half, not mine. Would someone spend 10 minutes on the output and tell me straight whether a free pre-filter is useful to how LeoLabs already tasks its radars, or whether you solved this years ago? Happy to send a picture of one real deorbit it caught.

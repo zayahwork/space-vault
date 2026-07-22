@@ -4,10 +4,39 @@ type: working-doc
 created: 2026-07-21
 parent: Outreach Emails.md
 tags: [outreach, ssa, batch-2]
-status: drafted, not sent
+status: 8 of 12 sent
 ---
 
-# Outreach Emails — Batch 2 (drafted, not sent)
+# Outreach Emails — Batch 2 (8 sent 2026-07-22, 4 blocked)
+
+> **ALL EIGHT REACHABLE TARGETS SENT — 2026-07-22.** The first emails this project has ever
+> sent by machine rather than by hand. Every one is in `06 Code/outreach_log.jsonl` with its
+> Message-ID, and copies are in Gmail Sent.
+>
+> | # | Who | Address |
+> |---|-----|---------|
+> | 41 | Advanced Space — Patrick Miga | `patrick.miga@advancedspace.com` |
+> | 42 | MIT ARCLab — Dr. Richard Linares | `linaresr@mit.edu` |
+> | 43 | Digantara | `info@digantara.co.in` |
+> | 45 | LeoLabs | `sales@leolabs.space` |
+> | 46 | COMSPOC | `info@comspoc.com` |
+> | 47 | Vyoma | `contact@vyoma.space` |
+> | 48 | Neuraspace | `info@neuraspace.com` |
+> | 52 | Stoke Space | `info@stokespace.com` |
+>
+> **Still blocked — no address:** #44 Kratos, #49 Scout Space, #50 Aerospace Corp, #51 RBC
+> Signals. All four are browser-only contact forms (two of them WAF-blocked at 403). They
+> need a human to open the form by hand, or `contact_find.py` to turn up a real inbox.
+>
+> **#37 parked as a duplicate of #42** — same lab, same person. It had no address so the
+> automatic dedupe (which matches on address) would not have caught it; Linares was one
+> careless run away from getting the same pitch twice.
+>
+> **The text below is no longer the source of truth.** The sent versions live in
+> `06 Code/drafts/41.txt`–`52.txt` and were rewritten before sending: each one now opens
+> differently and states the finding in its own terms, because Digantara, Vyoma and Neuraspace
+> move in the same small circle and seven identical "85%" openings would have read as a
+> mailmerge. See [[Guide - Daily Outreach]].
 
 > Batch 1 (10 sent, 2 replies — Moriba Jah, T.S. Kelso) lives in [[Outreach Emails]]. This batch
 > is new people, not already contacted. Same rules: **email, contact forms, X/Twitter only — never

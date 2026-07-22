@@ -1,0 +1,9 @@
+Subject: pattern-of-life from the orbit catalog instead of RF — now with a control group
+
+Hi,
+
+Your AMOS paper on passive-RF pattern-of-life detection got me started on the same behaviour-baseline idea from a different, free input: the public orbit catalog. It's past the idea stage now. Out of 10,780 Starlink satellites, 3,555 looked like they'd maneuvered; 541 survived once I corrected for catalog age. Then I checked those suspects with an independent method — 30 days of altitude history against matched controls. They move 11.3× more than ordinary satellites, and 72% show a real burn signature versus 11% of controls.
+
+That's two of my own methods agreeing, not ground truth — which is partly why I'm writing. RF and catalog statistics fail in different places, and I want to know whether my approach overlaps yours or covers a blind spot in it.
+
+Could I get 15 minutes with whoever owns this on your side? I'll bring the worked example.

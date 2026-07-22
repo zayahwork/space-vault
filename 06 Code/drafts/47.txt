@@ -1,0 +1,9 @@
+Subject: peer to peer — a free-data finding I want a sanity check on
+
+Hi,
+
+We're at roughly the same stage, so I'll skip the throat-clearing. I'm doing maneuver and pattern-of-life detection out of free catalog data — no radar, no telescopes, one person.
+
+The result I can't stop poking at: the majority of catalog-versus-operator disagreement turns out to be data latency rather than real movement. Controlling for entry age killed about five sixths of my Starlink candidates. It felt like a finding for a week, and now I'm worried it's something every European SSA team already knows and files under "obviously."
+
+Which is it? A team like Vyoma's would know instantly. Happy to show the output and have you tell me I'm kidding myself — I'd rather hear that from a peer now than from a customer later. Not selling anything.

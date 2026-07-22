@@ -1,0 +1,9 @@
+Subject: does catalog staleness bite your collision-avoidance models too?
+
+Hi,
+
+I've been heads-down on maneuver detection from free public catalog data — no proprietary feeds — and hit something that seems like it should matter to anyone doing collision avoidance.
+
+Of 10,780 Starlink satellites, 3,555 looked like they'd maneuvered when I ranked them by how far the public catalog had drifted from the operator's own orbit. Only 541 held up once I accounted for the age of each catalog entry. Five percent, not a third.
+
+Neuraspace sits much closer to the operational end of this than I do. Does that latency problem show up in your screening as false conjunctions, or does your data pipeline make it moot? I'd value fifteen minutes and an honest "old news" if that's the answer. Happy to send a worked deorbit example along.

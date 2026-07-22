@@ -38,6 +38,7 @@ import datetime
 import email
 import imaplib
 import json
+import mimetypes
 import re
 import smtplib
 import ssl
@@ -54,6 +55,7 @@ for _s in (sys.stdout, sys.stderr):
         pass
 
 HERE = Path(__file__).resolve().parent
+DRAFTS_DIR = HERE / "drafts"
 CSV_PATH = HERE / "outreach_targets.csv"
 AUTH_PATH = HERE / "gmail_auth.json"
 LOG_PATH = HERE / "outreach_log.jsonl"
@@ -62,8 +64,16 @@ FIELDS = ["id", "segment", "company", "why_them", "contact_route", "email",
           "status", "sent_on", "notes"]
 
 FROM_NAME = "Zayah Nelson"
-MAX_PER_RUN = 15          # hard ceiling. A loop bug costs 15 emails, not 500.
-DAILY_CAP = 15            # across every run today, counted from the audit log.
+MAX_PER_RUN = 5           # hard ceiling per run. A loop bug costs 5 emails, not 500.
+DAILY_CAP = 25            # across every run today, counted from the audit log.
+#
+# Why 25 and not more: Gmail's own SMTP limit for a free account is 500
+# recipients a day, so volume is not what gets an account restricted. What gets
+# it restricted is the PATTERN - cold mail to addresses that never reply, spam
+# complaints, and bounces. 25/day from a personal address is invisible to the
+# rate limiter and slow enough that a bad batch is caught before it repeats.
+# MAX_PER_RUN is deliberately far below DAILY_CAP so the drip has to run many
+# times to reach the cap; that is what spreads the send out across the day.
 GAP_SECONDS = 20          # Gmail dislikes bursts, and so does a human reader.
 
 # A Message-ID inside a bounce report is the one thing that survives intact -
@@ -80,49 +90,41 @@ SIGN = """Zayah Nelson
 
 # One template per segment. All of them ask a question and sell nothing - the
 # scoreboard is people describing their pain unprompted, not pitches delivered.
+#
+# Each paragraph is ONE unbroken line on purpose. Hard-wrapping at 75 columns
+# looks tidy in a terminal and broken in a mail client: the reader's window wraps
+# it a second time, so every paragraph comes out as a ragged staircase, worst on
+# a phone. Let the client do the wrapping - it knows the screen width and we do not.
 TEMPLATES = {
     "operator": (
         "how do you handle a neighbour that changes its behaviour?",
         """Hi,
 
-I'm working on detecting when a satellite breaks its own routine - a maneuver, a
-drift, anything off its normal pattern - using only public tracking data.
+I'm working on detecting when a satellite breaks its own routine - a maneuver, a drift, anything off its normal pattern - using only public tracking data.
 
-I'm trying to understand the operator side before I build any further. When
-something near one of your satellites starts behaving differently, how do you
-find out today, and how much of that is someone watching screens versus a tool
-telling you?
+I'm trying to understand the operator side before I build any further. When something near one of your satellites starts behaving differently, how do you find out today, and how much of that is someone watching screens versus a tool telling you?
 
-Genuinely just trying to learn how this works in practice - not selling anything.
-Fifteen minutes would help me a lot.
+Genuinely just trying to learn how this works in practice - not selling anything. Fifteen minutes would help me a lot.
 
 Thanks,"""),
     "insurer": (
         "question about how orbital behavior figures into space underwriting",
         """Hi,
 
-I'm an ML engineer working on detecting satellite behavior - when objects
-maneuver or act outside their normal pattern - from public tracking data.
+I'm an ML engineer working on detecting satellite behavior - when objects maneuver or act outside their normal pattern - from public tracking data.
 
-I'm trying to understand the insurance side: when a LEO mission gets priced, how
-much does the actual behavior of the objects around it factor in, and where does
-that information come from today?
+I'm trying to understand the insurance side: when a LEO mission gets priced, how much does the actual behavior of the objects around it factor in, and where does that information come from today?
 
-Would someone on your space team have 15 minutes for a couple of questions? Not
-selling anything - genuinely trying to learn how underwriters see this.
+Would someone on your space team have 15 minutes for a couple of questions? Not selling anything - genuinely trying to learn how underwriters see this.
 
 Thanks,"""),
     "partner": (
         "public-data maneuver detection - comparing notes",
         """Hi,
 
-I'm building maneuver detection and pattern-of-life from free public orbit data
-(GP history / OMM), and I'd rather learn from people already doing this than
-guess.
+I'm building maneuver detection and pattern-of-life from free public orbit data (GP history / OMM), and I'd rather learn from people already doing this than guess.
 
-Two things I keep hitting: public GP data is smoothed around maneuvers by design,
-and the labelled datasets available are partly simulated. How do you handle
-either of those - or do you consider them solved?
+Two things I keep hitting: public GP data is smoothed around maneuvers by design, and the labelled datasets available are partly simulated. How do you handle either of those - or do you consider them solved?
 
 Happy to share what I've measured, including where my own approach falls over.
 
@@ -131,11 +133,9 @@ Thanks,"""),
         "question from someone working on maneuver detection from public data",
         """Hi,
 
-I'm working on maneuver detection and pattern-of-life using only free public
-orbit data, and I've run into a question your work speaks to directly.
+I'm working on maneuver detection and pattern-of-life using only free public orbit data, and I've run into a question your work speaks to directly.
 
-[ONE specific question about their paper or dataset - replace this line. A
-generic email to a researcher is a wasted email.]
+[ONE specific question about their paper or dataset - replace this line. A generic email to a researcher is a wasted email.]
 
 I'd rather ask than assume. Thanks for any steer.
 
@@ -144,12 +144,9 @@ Thanks,"""),
         "question about public orbit data availability",
         """Hi,
 
-I'm building maneuver detection from free public orbit data and I'm trying to
-understand where that data is heading - what's expected to stay public, and what
-changes are planned.
+I'm building maneuver detection from free public orbit data and I'm trying to understand where that data is heading - what's expected to stay public, and what changes are planned.
 
-Is there someone who handles questions like this? Happy to be pointed at a
-document rather than take anyone's time.
+Is there someone who handles questions like this? Happy to be pointed at a document rather than take anyone's time.
 
 Thanks,"""),
 }
@@ -168,23 +165,92 @@ def save(rows):
 
 
 def draft(row):
-    subject, body = TEMPLATES.get(row["segment"], TEMPLATES["operator"])
+    subject, body = compose(row)
+    hand = read_draft(row)
     to = row["email"] or f"(find a contact: {row['contact_route']})"
+    attached = ", ".join(p.name for p in attachments_for(row))
     return (
         f"{'─' * 74}\n"
-        f"#{row['id']}  {row['company']}   [{row['segment']}]\n"
+        f"#{row['id']}  {row['company']}   [{row['segment']}]"
+        + ("  (hand-written)" if hand else "") + "\n"
         f"why them : {row['why_them']}\n"
         f"to       : {to}\n"
-        f"subject  : {subject}\n\n"
-        f"{body}\n{SIGN}\n"
+        f"subject  : {subject}\n"
+        + (f"attached : {attached}\n" if attached else "")
+        + f"\n{body}"
         + (f"\n⚠ {row['notes']}\n" if row["notes"] else "")
     )
 
 
+def read_draft(row):
+    """A hand-written email for this one row, or None to use the segment template.
+
+    The segment templates are deliberately generic - they are a starting point for
+    fifteen cold rows a day. But the targets worth the most are the ones where a
+    real reason to write exists: an author of a paper we lean on, the person whose
+    dataset we used as an answer key. Those emails get written by hand, and until
+    now they lived only in the vault markdown, which meant the sender could not
+    actually send them - it would silently fall back to the generic text.
+
+    drafts/<id>.txt, headers then a blank line then the body:
+
+        Subject: your low-latency maneuver paper - something I stumbled into
+        Attach: output/starlink_deorbit_detected.png
+
+        Patrick,
+        ...
+
+    Attach is optional and repeatable; paths are relative to 06 Code. The
+    signature is appended by compose(), same as the templates, so drafts must
+    not repeat it.
+    """
+    path = DRAFTS_DIR / f"{str(row['id']).strip()}.txt"
+    if not path.exists():
+        return None
+    text = path.read_text(encoding="utf-8")
+    head, _, body = text.partition("\n\n")
+    subject, attachments = None, []
+    for line in head.splitlines():
+        key, sep, val = line.partition(":")
+        if not sep:
+            continue
+        key, val = key.strip().lower(), val.strip()
+        if key == "subject":
+            subject = val
+        elif key == "attach" and val:
+            attachments.append(val)
+    if not subject:
+        raise SystemExit(f"\n  {path.name} has no 'Subject:' header line.\n")
+    return subject, body.strip("\n"), attachments
+
+
 def compose(row):
     """The actual email, as it would land: (subject, body)."""
+    hand = read_draft(row)
+    if hand is not None:
+        subject, body, _ = hand
+        return subject, f"{body}\n\n{SIGN}\n"
     subject, body = TEMPLATES.get(row["segment"], TEMPLATES["operator"])
     return subject, f"{body}\n{SIGN}\n"
+
+
+def attachments_for(row):
+    """Resolved attachment paths for this row. Missing file = hard stop.
+
+    A silently dropped attachment is worse than no email: the body says "here is
+    the picture" and the picture is not there, to the one contact who mattered.
+    """
+    hand = read_draft(row)
+    if hand is None:
+        return []
+    out = []
+    for rel in hand[2]:
+        p = (HERE / rel).resolve()
+        if not p.is_file():
+            raise SystemExit(f"\n  drafts/{row['id']}.txt attaches {rel!r}, "
+                             f"which does not exist.\n")
+        out.append(p)
+    return out
 
 
 def validation():
@@ -249,8 +315,9 @@ def blockers(row, checks=None, mailed=None):
     if row["status"] not in ("todo", "drafted"):
         bad.append(f"status is {row['status']}, not todo/drafted")
     # draft() quietly falls back to the operator template for unknown segments.
-    # Fine when a human is reading it first; not fine when nobody is.
-    if row["segment"] not in TEMPLATES:
+    # Fine when a human is reading it first; not fine when nobody is. A
+    # hand-written draft is the row's own text, so no segment is needed.
+    if row["segment"] not in TEMPLATES and read_draft(row) is None:
         bad.append(f"no template for segment {row['segment']!r}")
     _, body = compose(row)
     for p in PLACEHOLDERS:
@@ -283,6 +350,11 @@ def build_message(row, from_addr):
     msg["Date"] = formatdate(localtime=True)
     msg["Message-ID"] = make_msgid(domain=from_addr.split("@")[-1])
     msg.set_content(body)
+    for path in attachments_for(row):
+        ctype, _ = mimetypes.guess_type(path.name)
+        maintype, _, subtype = (ctype or "application/octet-stream").partition("/")
+        msg.add_attachment(path.read_bytes(), maintype=maintype,
+                           subtype=subtype, filename=path.name)
     return msg
 
 

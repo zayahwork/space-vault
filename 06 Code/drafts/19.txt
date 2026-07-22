@@ -1,0 +1,11 @@
+Subject: your vehicles maneuver for a living — mine is the detector watching them
+
+Hi,
+
+I built a maneuver detector that runs on free public tracking data, and checked it with a second method: 30 days of altitude history against a matched control group. Flagged objects move 11.3× more than ordinary ones; 72% show a real burn signature versus 11% of controls. The caveat I give everyone: two of my own methods agreeing, not operator ground truth.
+
+Which is exactly why D-Orbit is the most useful company I could talk to. Your vehicles maneuver deliberately and often — you're the ground truth my verification lacks. When you fly a transfer, how well does the public catalog keep up? Do you see your own vehicles represented accurately, or lagging?
+
+And the question I ask every operator: when something near one of your vehicles behaves oddly, how do you find out today?
+
+Fifteen minutes would help me more than you'd guess. Nothing to sell.

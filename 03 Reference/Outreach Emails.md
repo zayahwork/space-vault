@@ -59,7 +59,7 @@ Zayah Nelson
 
 ---
 
-## 3 — Moriba Jah (Privateer) · moriba@utexas.edu (or LinkedIn in/jahniverse)
+## 3 — Moriba Jah (Privateer) · moriba@utexas.edu <!-- LinkedIn removed: banned channel, never suggest it -->
 
 **Subject:** you're the person everyone points me to
 
