@@ -28,7 +28,7 @@ if (-not (Test-Path (Join-Path $Path 'issues'))) {
 # iterations per calendar day, shared across ALL lanes via one counter file. Calibrate
 # DailyCap against the /usage page; the counter resets itself at midnight.
 $BudgetFile = 'C:\Space\06 Code\ralph_budget.json'
-$DailyCap   = 24
+$DailyCap   = 16
 function Get-Budget {
     $today = Get-Date -Format 'yyyy-MM-dd'
     $b = if (Test-Path $BudgetFile) { Get-Content $BudgetFile -Raw | ConvertFrom-Json } else { $null }
