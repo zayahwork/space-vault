@@ -98,6 +98,11 @@ a number we can't defend.
 > because "which satellites in your book are behaving abnormally" is an *alerting* claim, and
 > an alert that fires at a fixed rate regardless of reality isn't an alert. A fixed, defensible
 > threshold has to replace the percentile cut **before** anything is priced as monitoring.
+>
+> **Update, same day:** the fix is built ([[Plan - The Quiet Detector]] →
+> [[RESULTS - The Quiet Detector]]). Alert mode with stored baselines works now; per-object
+> "went quiet" detection needs a week of archive and unblocks itself **~July 29** — which makes
+> July 29 the earliest honest date for an insurer demo.
 
 ## Related
 
