@@ -1,0 +1,11 @@
+Subject: how you built the consulting side - from someone trying to do the same thing
+
+Duncan,
+
+You appear on the GMV NSL lightcurve/AI characterisation paper as an outside contributor, which is exactly the position I'm trying to work out how to reach - so this is a question, not a pitch, and there's nothing I want to sell you.
+
+I'm an ML engineer running a small space-data project of my own: manoeuvre detection from free public tracking data, checked against the catalog's own history with a matched control group rather than self-graded. To fund it, I want to take contract work inside this industry, and the space-adjacent consulting route looks like the one that actually pays.
+
+If you have ten minutes some time: how did that practice start - inbound from published work, an old contact, or deliberate outreach? And is subcontracting into the primes' funded projects the realistic entry, or is it usually more direct than that?
+
+Happy to be told it was mostly luck. And if anything ever overflows your desk, I'd be glad to be someone you can point at.

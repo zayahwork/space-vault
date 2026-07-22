@@ -1,0 +1,13 @@
+Subject: your conjunction-support engineering work - contract ML hands
+
+Daniel,
+
+You wrote the paper on the web-based engineering solution supporting conjunction analysis, which tells me CGI builds and maintains the tooling underneath other people's space-safety work. That's the layer I've spent months in.
+
+Briefly, what I do: ML on orbital data, built from free public tracking data only. A manoeuvre detector that ranks objects which broke their own routine, checked against the catalog's own altitude history with a matched control group instead of grading itself - about two-thirds of the top candidates show independent movement against a ~10% control base rate. It has tests, and when the archive is too short to answer honestly the tool refuses to answer rather than guessing.
+
+The one finding your teams might care about most: 89% of raw catalog-versus-operator disagreement turns out to be the age of the catalog entry, not the spacecraft. Any pipeline that treats disagreement as movement inherits that.
+
+I'm writing because consultancies carry work that outlasts their headcount. If CGI ever needs contract ML help on space-data projects, I'd like to be on that list - hourly or fixed scope, usually starting with one scoped paid week so the work speaks before the pitch does.
+
+A one-line "not our process" is a perfectly fine answer.
