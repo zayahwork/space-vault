@@ -101,7 +101,28 @@ python quiet.py                              # cadence; refuses until ~Jul 29
 python _test_detect.py                       # 9 cases - persistence logic
 python _test_quiet.py                        # 15 cases - cadence logic
 python _test_alert.py                        # 19 cases - alert mode's stored-bar path
+python _test_learn.py                        # 15 cases - learning the bar from the archive
 ```
+
+> [!success] ✅ `learn_baselines` tested (2026-07-22) — `_test_learn.py`, 15 cases, **no bugs found**
+> The last untested link in the alert-mode chain, and the highest-consequence one: it writes a
+> plausible number into a file stamped with real provenance, and every later run trusts it.
+> Nothing downstream can tell a poisoned bar from an honest one.
+>
+> The archive is faked so every expected percentile is checkable by hand (percentile set to 50
+> — a median of a known list can be verified by eye; a 99th of 30 values cannot).
+>
+> Pinned: a 5,000 km nonsense orbit is excluded from the bar **and** from the band's `n`
+> (leaking it would move the test median 15.5 → 16.0) · falling hardware learns a separate,
+> much higher bar and leaves the station-keepers' untouched (15.5 vs 114.5) · a thin band
+> (n=5) falls back to the whole regime instead of a percentile off five objects · bands are
+> half-open, so an age of exactly 24.0 h lands in 24–48 · a **negative** catalog age — the
+> time-travel bug `load_gp` exists to prevent — is dropped rather than folded into the lowest
+> band · every scoreable snapshot pools in, and skipped or empty ones are not claimed as
+> provenance · an empty archive exits loudly instead of writing a baseline full of nothing.
+>
+> **No defect found.** Worth stating plainly rather than dressing up: this one was already
+> correct.
 
 > [!warning] Test-count correction (2026-07-22)
 > This block previously claimed `_test_detect.py` was **"12 cases, incl. alert mode."** It is
