@@ -30,6 +30,21 @@ is measured separately at each width, from objects McDowell's GCAT classifies GE
 inclined-drifting, i.e. abandoned, no engine - and the bar is the largest step those
 objects ever produce, which is the rule Randy's 0.419 km bar was built on.
 
+THE BAR IS ALSO MATCHED PER EVENT, ON ERA AND ON TRACKING CADENCE
+A first pass measured one global bar from eight abandoned objects and got 1.51 km, nearly
+4x Randy's 0.419 km. The whole difference was two objects: Syncom 3 and Early Bird, 1960s
+spacecraft the size of a dustbin, updated 0.7 and 1.3 times a day against 2.5-3 for the
+rest. Sparse tracking means looser fits means bigger apparent steps, so those two were not
+measuring GEO catalog noise - they were measuring how badly a small target gets tracked.
+The four well-tracked objects gave 0.26-0.39 km, which reproduces Randy's number from a
+different sample.
+
+That is a trap, not a curiosity: the events being scored are large GEO comsats tracked
+1.1-3.4 times a day, and Galaxy 15 in 2010 is tracked less often than AMC 11 in 2026. So
+the bar for each event is measured from abandoned objects over the SAME +/-120 days, kept
+only if their catalog update rate is within 0.5x-2x of the event object's own. Every row
+reports the bar it was judged against and how many objects set it.
+
 WHAT THIS IS NOT
 GP_HISTORY is the public catalog's own history, so every column here shares the catalog
 side with detect.py. What makes this a referee is not independence from the catalog - it
@@ -68,13 +83,40 @@ GEOTAB_URL = "https://planet4589.org/space/gcat/tsv/derived/geotab.tsv"
 
 NARROW_DAYS = 3.0      # verify.py / verify_geo.py as shipped
 WIDE_DAYS = 10.0       # the largest catalog lag documented in ground_truth.csv
+# ...except the CSV rounds it. Intelsat 33e's step actually lands at +10.98 days, so a
+# +/-10 window misses the best-evidenced late signal in the set by 24 hours. 14 is the
+# width Randy's own write-up recommends and the one that survives the rounding.
+WIDER_DAYS = 14.0
 EVENT_PAD_DAYS = 25    # history pulled either side of an event date
+NULL_SPAN_DAYS = 120   # history pulled either side of an event to measure ITS bar
 NULL_STRIDE_DAYS = 5   # spacing of null window centres - deterministic, no sampling
+CADENCE_LO, CADENCE_HI = 0.5, 2.0   # null must be tracked 0.5x-2x as often as the event
+
+
+# Every window scored, as (days BEFORE the event, days AFTER, label).
+#
+# The lag-aware windows are ASYMMETRIC, and that is not a detail. Catalog lateness runs
+# one way: an orbit determination can be published days after the burn, never days before
+# it. A symmetric +/-14d window does not model lateness - it just looks at four weeks of
+# history and takes the biggest thing in it. Measured here, that difference is the whole
+# result on two rows: at +/-14d the MEV-2 and Intelsat 1002 dockings both "catch" on
+# inclination steps landing 12.3 days BEFORE the docking. Those are unrelated events being
+# credited to the docking by a window wide enough to swallow them.
+WINDOWS = [
+    (3.0, 3.0, "+/-3d"),        # verify.py / verify_geo.py exactly as shipped
+    (3.0, 10.0, "-3/+10d"),     # lag-aware to the largest lag ground_truth.csv records
+    (3.0, 14.0, "-3/+14d"),     # ...and to the width Randy's write-up actually recommends
+    (14.0, 14.0, "+/-14d"),     # the naive symmetric widening, for comparison
+]
+
+
+def key_for(comp, before, after):
+    return f"{comp}_{before:g}_{after:g}"
 
 
 # ------------------------------------------------------------------ the step math
 
-def step_in_window(points, centre, comp, window_days):
+def step_in_window(points, centre, comp, before_days, after_days=None):
     """Largest change in component `comp` between consecutive records near `centre`.
 
     Returns (size, offset_days, n_pairs): the step, how far after the event the catalog
@@ -85,7 +127,10 @@ def step_in_window(points, centre, comp, window_days):
     the LATER of its two epochs falls inside the window. _test_referee.py asserts that
     agreement against the shipped functions rather than trusting this comment.
     """
-    lo, hi = centre - timedelta(days=window_days), centre + timedelta(days=window_days)
+    if after_days is None:
+        after_days = before_days
+    lo = centre - timedelta(days=before_days)
+    hi = centre + timedelta(days=after_days)
     best, best_off, pairs = 0.0, None, 0
     for a, b in zip(points, points[1:]):
         if lo <= b[0] <= hi:
@@ -255,7 +300,30 @@ def geotab_text():
 
 # ------------------------------------------------------------------ the null
 
-def measure_null(hist, widths, stride_days=NULL_STRIDE_DAYS):
+def cadence(points, span_days):
+    """Catalog updates per day. The single best predictor of how big a step noise alone
+    can throw: a loosely-tracked object gets loosely-fitted orbits."""
+    return len(points) / float(span_days) if span_days else 0.0
+
+
+def cadence_matched(null_hist, event_cadence, span_days,
+                    lo=CADENCE_LO, hi=CADENCE_HI):
+    """Keep only null objects tracked at a rate comparable to the event object.
+
+    Returns (kept_hist, [(norad, cadence, kept)]) so the caller can print who set the bar
+    and who was thrown out - a bar nobody can audit is not a bar.
+    """
+    kept, audit = {}, []
+    for n, pts in sorted(null_hist.items()):
+        c = cadence(pts, span_days)
+        ok = event_cadence > 0 and lo * event_cadence <= c <= hi * event_cadence
+        if ok:
+            kept[n] = pts
+        audit.append((n, c, ok))
+    return kept, audit
+
+
+def measure_null(hist, windows, stride_days=NULL_STRIDE_DAYS):
     """Null step distribution per (component, width), from non-maneuvering objects.
 
     Window centres march across each object's history at a fixed stride, so the number of
@@ -265,53 +333,75 @@ def measure_null(hist, widths, stride_days=NULL_STRIDE_DAYS):
     """
     out = {}
     for comp, name in ((1, "alt"), (2, "inc")):
-        for w in widths:
-            out[f"{name}_{w:g}"] = []
+        for b, a, _ in windows:
+            out[key_for(name, b, a)] = []
+    pad = max(max(b, a) for b, a, _ in windows)
     for pts in hist.values():
         if len(pts) < 10:
             continue
         t0, t1 = pts[0][0], pts[-1][0]
-        centre = t0 + timedelta(days=max(widths))
-        while centre <= t1 - timedelta(days=max(widths)):
+        centre = t0 + timedelta(days=pad)
+        while centre <= t1 - timedelta(days=pad):
             for comp, name in ((1, "alt"), (2, "inc")):
-                for w in widths:
-                    size, _, pairs = step_in_window(pts, centre, comp, w)
+                for b, a, _ in windows:
+                    size, _, pairs = step_in_window(pts, centre, comp, b, a)
                     if pairs:
-                        out[f"{name}_{w:g}"].append(size)
+                        out[key_for(name, b, a)].append(size)
             centre += timedelta(days=stride_days)
     return out
 
 
 # ------------------------------------------------------------------ scoring
 
-def score_event(ev, pts, bars, widths=(NARROW_DAYS, WIDE_DAYS)):
-    """One event through all four measurements. Never drops a row for thin history."""
+def score_event(ev, pts, bars, windows):
+    """One event through every measurement. Never drops a row for thin history."""
     res = {"records": len(pts), "cols": {}}
     if pts:
         res["history_from"] = pts[0][0].isoformat()
         res["history_to"] = pts[-1][0].isoformat()
     for comp, name in ((1, "alt"), (2, "inc")):
-        for w in widths:
-            key = f"{name}_{w:g}"
-            size, off, pairs = step_in_window(pts, ev["date"], comp, w)
+        for b, a, _ in windows:
+            key = key_for(name, b, a)
+            size, off, pairs = step_in_window(pts, ev["date"], comp, b, a)
             bar = bars.get(key, {})
             if pairs == 0:
-                verdict = "NO DATA"
+                verdict = verdict_p99 = "NO DATA"
             elif bar.get("max") is None:
-                verdict = "NO BAR"
+                verdict = verdict_p99 = "NO BAR"
             else:
+                # Two bars, because "largest step ever observed" is the strict rule Randy
+                # used but is hostage to the single worst-fitted orbit in the null, while
+                # the 99th percentile is stable but lets ~1 window in 100 through. A
+                # result that flips between them is not a result; say which ones flip.
                 verdict = "caught" if size > bar["max"] else "missed"
+                verdict_p99 = "caught" if size > bar["p99"] else "missed"
             res["cols"][key] = {"step": size, "offset_days": off, "pairs": pairs,
-                                "verdict": verdict,
-                                "over_p99": (bar.get("p99") is not None
-                                             and size > bar["p99"])}
+                                "verdict": verdict, "verdict_p99": verdict_p99,
+                                "bar_max": bar.get("max"), "bar_p99": bar.get("p99")}
     return res
 
 
-def rate(rows, key):
-    scored = [r for r in rows if r["cols"][key]["verdict"] in ("caught", "missed")]
-    caught = [r for r in scored if r["cols"][key]["verdict"] == "caught"]
+def rate(rows, key, field="verdict"):
+    scored = [r for r in rows if r["cols"][key][field] in ("caught", "missed")]
+    caught = [r for r in scored if r["cols"][key][field] == "caught"]
     return len(caught), len(scored)
+
+
+def matched_bar(null_hist, event_cadence, span_days, windows):
+    """The bar for one event, relaxing the cadence match only as far as it has to.
+
+    Nothing here silently falls back to "all objects": each relaxation is returned so the
+    row can be marked. An unmatched bar is a weaker bar and the reader gets to know which
+    rows have one.
+    """
+    for lo, hi, tag in ((CADENCE_LO, CADENCE_HI, "matched"),
+                        (CADENCE_LO / 2, CADENCE_HI * 2, "widened"),
+                        (0.0, 1e9, "unmatched")):
+        kept, audit = cadence_matched(null_hist, event_cadence, span_days, lo, hi)
+        bars = bars_from_null(measure_null(kept, windows))
+        if any(b["n"] for b in bars.values()):
+            return bars, kept, audit, tag
+    return bars_from_null({}), {}, [], "none"
 
 
 # ------------------------------------------------------------------ main
@@ -319,14 +409,13 @@ def rate(rows, key):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--csv", default=str(HERE / "ground_truth.csv"))
-    ap.add_argument("--nulls", type=int, default=8,
-                    help="abandoned GEO/ID objects used to measure the bar")
-    ap.add_argument("--null-start", default="2025-07-01")
-    ap.add_argument("--null-end", default="2026-07-15")
+    ap.add_argument("--nulls", type=int, default=16,
+                    help="candidate abandoned GEO/ID objects; each event keeps the ones "
+                         "tracked at a comparable rate in its own era")
     ap.add_argument("--json", default="")
     args = ap.parse_args()
 
-    widths = (NARROW_DAYS, WIDE_DAYS)
+    windows = WINDOWS
     events = load_geo_events(args.csv)
     scoreable = [e for e in events if e["role"] == "scoreable"]
     print(f"\n  ground truth   {args.csv}")
@@ -340,78 +429,106 @@ def main():
     session = verify.login()
     print("  space-track login ok")
 
-    # --- the bar -----------------------------------------------------------
+    # --- candidate null pool ------------------------------------------------
     exclude = {e["norad"] for e in events}
-    nulls = abandoned_norads(parse_geotab(geotab_text()), exclude, args.nulls)
-    print(f"\n  null objects (GCAT GEO/ID, abandoned): {nulls}")
-    n_start = datetime.fromisoformat(args.null_start).replace(tzinfo=timezone.utc)
-    n_end = datetime.fromisoformat(args.null_end).replace(tzinfo=timezone.utc)
-    null_hist = fetch_range(session, nulls, n_start, n_end)
-    bars = bars_from_null(measure_null(null_hist, widths))
+    candidates = abandoned_norads(parse_geotab(geotab_text()), exclude, args.nulls)
+    print(f"\n  candidate null objects (GCAT GEO/ID, abandoned, near-belt): {candidates}")
+    print(f"  each event keeps those tracked {CADENCE_LO:g}x-{CADENCE_HI:g}x as often as "
+          f"the event object, over the same +/-{NULL_SPAN_DAYS}d")
 
-    print(f"\n  NOISE FLOOR  {args.null_start}..{args.null_end}, "
-          f"{sum(len(v) for v in null_hist.values())} catalog records")
-    print(f"  {'window':<16}{'n windows':>10}{'median':>12}{'99th':>12}{'largest':>12}")
-    for comp, unit in (("alt", "km"), ("inc", "deg")):
-        for w in widths:
-            b = bars[f"{comp}_{w:g}"]
-            if not b["n"]:
-                continue
-            print(f"  {comp} +/-{w:g}d{'':<7}{b['n']:>10}"
-                  f"{b['median']:>12.5f}{b['p99']:>12.5f}{b['max']:>12.5f}  {unit}")
-
-    # --- the events --------------------------------------------------------
+    # --- score each event against its own era- and cadence-matched bar ------
     print(f"\n  scoring {len(events)} GEO events")
     scored = []
     for ev in events:
         hist = fetch_range(session, [ev["norad"]],
                            ev["date"] - timedelta(days=EVENT_PAD_DAYS),
                            ev["date"] + timedelta(days=EVENT_PAD_DAYS))
-        res = score_event(ev, hist.get(ev["norad"], []), bars, widths)
+        pts = hist.get(ev["norad"], [])
+        ev_cad = cadence(pts, 2 * EVENT_PAD_DAYS)
+
+        null_hist = fetch_range(session, candidates,
+                                ev["date"] - timedelta(days=NULL_SPAN_DAYS),
+                                ev["date"] + timedelta(days=NULL_SPAN_DAYS))
+        bars, kept, audit, tag = matched_bar(null_hist, ev_cad, 2 * NULL_SPAN_DAYS,
+                                             windows)
+
+        res = score_event(ev, pts, bars, windows)
         res.update(ev)
         res["date"] = ev["date"].isoformat()[:10]
+        res["cadence"] = ev_cad
+        res["bars"] = bars
+        res["bar_match"] = tag
+        res["bar_objects"] = sorted(kept)
+        res["bar_audit"] = [{"norad": n, "cadence": c, "kept": k} for n, c, k in audit]
         scored.append(res)
 
-    hdr = (f"\n  {'object':<16}{'date':<12}{'src':<5}{'rec':>5}"
-           f"{'alt+/-3':>12}{'alt+/-10':>12}{'inc+/-3':>12}{'inc+/-10':>12}")
     for role, title in (("scoreable", "THE 14 SCOREABLE EVENTS"),
                         ("excluded", "EXCLUDED"), ("null", "NULL OBJECT")):
-        rows = [r for r in scored if r["role"] == role]
+        rows = sorted([r for r in scored if r["role"] == role],
+                      key=lambda x: (not x["double_sourced"], x["date"]))
         if not rows:
             continue
-        print(f"\n  == {title} ==")
-        print(hdr)
-        for r in sorted(rows, key=lambda x: (not x["double_sourced"], x["date"])):
-            cells = ""
-            for key in ("alt_3", "alt_10", "inc_3", "inc_10"):
-                c = r["cols"][key]
-                mark = {"caught": "Y", "missed": "n", "NO DATA": "?", "NO BAR": "-"}[
-                    c["verdict"]]
-                cells += f"{mark} {c['step']:>9.4f}" if c["pairs"] else f"{'? no data':>12}"
-            print(f"  {r['object']:<16}{r['date']:<12}"
-                  f"{'2src' if r['double_sourced'] else '1src':<5}{r['records']:>5}{cells}")
+        for comp, unit in (("alt", "km"), ("inc", "deg")):
+            keys = [key_for(comp, b, a) for b, a, _ in windows]
+            print(f"\n  == {title} == {comp.upper()} step ({unit}) and how many times "
+                  f"its own bar   Y = over, n = under")
+            print(f"  {'object':<15}{'date':<12}{'src':<5}{'rec/d':>6}{'bar':>9}"
+                  + "".join(f"{lab:>20}" for _, _, lab in windows)
+                  + f"{'lag':>8}")
+            for r in rows:
+                cells = ""
+                for key in keys:
+                    c = r["cols"][key]
+                    if not c["pairs"]:
+                        cells += f"{'? no data':>20}"
+                    elif c["bar_max"] is None:
+                        cells += f"{'- no bar':>20}"
+                    else:
+                        cells += (f"{c['step']:>10.4f}"
+                                  f"{c['step'] / max(c['bar_max'], 1e-12):>7.1f}x "
+                                  f"{'Y' if c['verdict'] == 'caught' else 'n'}")
+                off = r["cols"][keys[-1]]["offset_days"]
+                print(f"  {r['object']:<15}{r['date']:<12}"
+                      f"{'2src' if r['double_sourced'] else '1src':<5}"
+                      f"{r['cadence']:>6.1f}{r['bar_match']:>9}{cells}"
+                      + (f"{off:>+7.1f}d" if off is not None else f"{'-':>8}"))
+            print(f"  {'':<38}{'bar used:':>9}"
+                  + "".join(
+                      f"{r0.get(k, {}).get('max'):>13.4f} [{r0[k]['p99']:.3f}]"
+                      if (r0 := rows[0]['bars']).get(k, {}).get('max') is not None
+                      else f"{'-':>20}" for k in keys)
+                  + "   <- first row; per-row bars in --json")
 
     # --- the verdict -------------------------------------------------------
     sc = [r for r in scored if r["role"] == "scoreable"]
     dbl = [r for r in sc if r["double_sourced"]]
-    print(f"\n  == SCOREBOARD ==")
-    print(f"  {'measurement':<22}{'all scoreable':>16}{'double-sourced':>18}")
-    for key, label in (("alt_3", "altitude +/-3d"), ("alt_10", "altitude +/-10d"),
-                       ("inc_3", "inclination +/-3d"), ("inc_10", "inclination +/-10d")):
-        a, an = rate(sc, key)
+    print(f"\n  == SCOREBOARD ==   bar = largest null step  (99th-pct bar in brackets)")
+    print(f"  {'measurement':<22}{'all scoreable':>22}{'double-sourced':>22}")
+    labels = [(key_for(c, b, a),
+               ("altitude" if c == "alt" else "inclination") + " " + lab)
+              for c in ("alt", "inc") for b, a, lab in windows]
+    for key, label in labels:
+        got, n = rate(sc, key)
+        got99, n99 = rate(sc, key, "verdict_p99")
         d, dn = rate(dbl, key)
-        print(f"  {label:<22}{f'{a}/{an}':>16}{f'{d}/{dn}':>18}")
+        d99, dn99 = rate(dbl, key, "verdict_p99")
+        print(f"  {label:<22}{f'{got}/{n} [{got99}/{n99}]':>22}"
+              f"{f'{d}/{dn} [{d99}/{dn99}]':>22}")
 
-    nulls_row = [r for r in scored if r["role"] == "null"]
-    if nulls_row:
-        fa = {k: nulls_row[0]["cols"][k]["verdict"] for k in
-              ("alt_3", "alt_10", "inc_3", "inc_10")}
-        print(f"\n  false-alarm check on the documented null "
-              f"({nulls_row[0]['object']}): {fa}")
+    flips = [(r["object"], r["date"], k) for r in sc for k, _ in labels
+             if r["cols"][k]["verdict"] != r["cols"][k]["verdict_p99"]]
+    print(f"\n  rows whose verdict depends on which bar you pick ({len(flips)}): "
+          f"{flips if flips else 'none'}")
+
+    for role, label in (("null", "documented NULL (no maneuvers, must stay silent)"),
+                        ("excluded", "EXCLUDED from scoring")):
+        for r in [x for x in scored if x["role"] == role]:
+            fa = {k: r["cols"][k]["verdict"] for k, _ in labels}
+            print(f"  {label}: {r['object']} -> {fa}")
 
     if args.json:
         Path(args.json).write_text(json.dumps(
-            {"bars": bars, "nulls": nulls, "events": scored}, indent=2, default=str),
+            {"candidate_nulls": candidates, "events": scored}, indent=2, default=str),
             encoding="utf-8")
         print(f"\n  wrote {args.json}")
     print()
