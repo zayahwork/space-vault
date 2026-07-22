@@ -1,79 +1,115 @@
 ---
 date: 2026-07-22
 type: reference
-status: metadata verified · music/transitions NOT yet verified (see gap at bottom)
+status: COMPLETE — metadata, cut rate, loudness and frames all measured from the actual files
 ---
 
 # 🎬 Style teardown — the 3 references
 
-> [!warning] What I could and couldn't do
-> I pulled **hard metadata straight from YouTube** — titles, lengths, views, dates, tags,
-> descriptions. All of that below is real, not guessed.
-> **I could not watch them.** YouTube won't hand over the video or the captions to me, and
-> `yt-dlp` isn't installed on this machine. So the music and transition analysis you asked
-> for is *not* done yet — see [[#The gap]] for the 5-minute fix.
+All three downloaded to `C:\Users\Administrator\Videos\reference\` (outside the vault, not
+committed — they're someone else's copyrighted work, kept locally for study only).
+Everything below is **measured with ffmpeg**, not guessed.
 
-## The three
+| | Erik Cupsa | Alex Liu | Linq |
+|---|---|---|---|
+| Title | Realistic Week As A 22 Y/O Tech Startup Founder In Toronto (raw coding vlog) | building my startup as a solo founder | A Day In the life of a Tech Startup CTO |
+| **Views** | **76,064** | 19,695 | 34,874 |
+| Length | 8:43 | 16:38 | 11:21 |
+| **Cuts** | **119 (13.7/min)** | 97 (5.8/min) | **174 (15.3/min)** |
+| Median shot | **1.6s** | 4.9s | **2.0s** |
+| **Loudness** | **−12.1 LUFS** | −18.5 LUFS | −18.4 LUFS |
+| Silent gaps | **0** | **17** | **0** |
+| First spoken word | **2.1s** | 19.8s | 14.1s |
+| Category | Science & Tech | People & Blogs | People & Blogs |
 
-### 1. Erik Cupsa — *Realistic Week As A 22 Y/O Tech Startup Founder In Toronto (raw coding vlog)*
-`@SWErikCodes` · **8:43** · **76,064 views** · 2026-06-23 · Science & Technology
+## 🔑 The three findings that matter
 
-> Every single week is more busy than the last. Can't believe I shipped everything we did
-> in this week AND got it all documented […] #startup #ai #entrepreneur #founder
-> #techstartup #toronto #buildinginpublic #softwareengineer #coding #computerscience
+### 1. The hook is a cut-storm, and then the video calms down
 
-**Best performer of the three, and the closest to you.** Note what's doing the work in
-that title: **"Realistic"** and **"(raw coding vlog)"** — both are promises of *low
-polish*. He's selling access, not production value. Age in the title ("22 Y/O") is doing
-real work too, and **you're 19** — that's a sharper version of the same lever.
+Erik's cuts per minute, minute by minute:
 
-### 2. Alex Liu — *building my startup as a solo founder*
-`@AlexLiu1` · **16:38** · **19,695 views** · 2025-10-19 · People & Blogs
+```
+min:  0    1   2   3   4   5   6   7   8
+cuts: 38  12   5   7   2   3  15   8  29
+      ▲▲▲                        ▲▲
+    the hook                  the outro
+```
 
-> Episode 5 of how I'm building my startup / brand Zelos. From coding, marketing, content
-> creation I'll be showing you the entire process as I try to figure it out as a 25 year old
-> entrepreneur!
-> **camera: Sony ZV-E1 · editing: DaVinci Resolve**
+**38 of his 119 cuts — a third of the entire video — are in the first 60 seconds.** Then
+it drops to 2–7/min through the middle and spikes again at the end. Linq does the identical
+thing: 38 cuts in minute 0, tapering to 3 by minute 11.
 
-All-lowercase title, **numbered as a series** ("Episode 5") — the exact serial structure
-you're proposing with Day 1 / 3 / 6 / 9. He publishes his camera and editor in the
-description, which is a small trust move worth copying.
+Alex Liu, the weakest performer, is *flat* — 12 cuts in minute 0 and an even amble after.
 
-### 3. Linq — *A Day In the life of a Tech Startup CTO*
-`@thelinqapp` · **11:21** · **34,874 views** · 2025-09-20 · People & Blogs
+**This is the single most copyable thing here.** The hook isn't a slower version of the
+video, it's a different object: a trailer. Median shot in Erik's first 20s is well under a
+second; some are 0.2s. Then he lets shots run 13s+ in the body so you can actually follow
+the work.
 
-This one is **a company marketing video, not a solo founder vlog** — the description is a
-funnel to their app. Treat it as a *format* reference, not a voice reference. Its real
-lesson is the SEO: it's the only one of the three with a full tag stack, 20 of them:
+### 2. The audio floor never hits zero
 
-`day in the life cto` · `tech startup life` · `startup cto` · `day in the life tech executive` ·
-`startup culture` · `cto daily routine` · `software engineering leadership` ·
-`startup behind the scenes` · `coding at a startup` · `life of a cto` · `startup grind` ·
-`day in the life programmer` · `tech entrepreneur vlog` · `startup office tour` ·
-`day in the life engineer` · `building a startup` · `startup leadership` ·
-`tech startup vlog` · `what does a cto do` · `day in the life tech startup`
+Erik and Linq both have **literally zero silent gaps** across the whole video. Music runs
+wall to wall, ducking under speech and coming back up. Alex has 17 audible dropouts — and
+the lowest views of the three.
 
-## What the numbers actually tell us
+Erik masters at **−12.1 LUFS**, a full **6 dB louder** than the other two. (He's actually
+clipping — peak +2.9 dBFS. Don't copy that part.) YouTube normalises to about −14 LUFS, so
+Alex's −18.5 will play back noticeably quieter than everything around it.
 
-**Length: 8:43 · 16:38 · 11:21.** Our 9–12 min target sits right in it. The 76k video is
-the *shortest*. Don't pad.
+→ **Master at −14 LUFS, peak no higher than −1 dBFS, and never let the bed go silent.**
 
-**Titles — all three lead with the person, not the product.** Nobody's title mentions what
-the software does. Applied to you:
+### 3. Erik's cold open is other people's words over disconnected B-roll
+
+From the frames and the caption track, his first 20 seconds are:
+
+```
+0:02  "I can't believe we built this in 30 hours."   ← over a phone-screen product shot
+0:07  [music]
+0:09  "Whether it's your fault or not, like other circumstances…"  ← B&W insert, serious beat
+0:12  [music]
+0:15  "We've got a lot of big things coming."        ← walking shot, night city
+0:18  "Founder and CEO of Meuze. Welcome to the show." ← podcast/TV footage (social proof)
+```
+
+The audio is a **montage of the best lines from the whole week**, laid over visuals that
+have nothing to do with each other — city establishers, a hand on a keyboard, a phone
+screen, a desaturated black-and-white insert for the emotional line. Nothing in the cold
+open is in chronological order. He earns the next 8 minutes in 20 seconds.
+
+**Linq is the opposite and also works:** 14 seconds of *no talking at all* — pure music
+over a coffee run, with a title card ("DAY IN THE LIFE OF A TECH STARTUP CTO") burned over
+moving footage. Then section cards on black — **"COFFEE RUN"** — as chapter markers through
+the day.
+
+## What I'm stealing for us
+
+| Device | Where from | How it maps to you |
+|---|---|---|
+| **Cut-storm cold open** | Erik + Linq | 20s of your best lines from the 2 days over your best visuals. **The orbital charts belong here** — no other channel in this niche has them |
+| **Burned-in subtitles, always** | all three | Erik and Linq both burn captions the whole way. Non-negotiable for retention |
+| **Section cards on black** | Linq | Your day already has structure — `DEEP WORK 1` · `LIFT` · `THE SES PROBLEM`. Free chapter markers |
+| **B&W insert for the serious beat** | Erik | Use it exactly once: the SES miss. Desaturate, drop the music, let it breathe |
+| **Continuous music bed** | Erik + Linq | Never a silent frame |
+| **Body shots run long** | Erik (13s+ p90) | When you're explaining the detector, stop cutting. The hook earns you that patience |
+| **People & Blogs category** | 2 of 3 | The vlog framing beats the tech framing on this platform |
+
+## Titles — all three lead with the person, not the product
+
+Nobody's title says what the software does. Erik's title sells *low polish* twice
+("Realistic", "raw coding vlog") and puts his age in it. **You're 19** — a sharper version
+of the same lever.
+
 - ✅ *"Realistic Day Building a Space Startup at 19 (raw)"*
-- ✅ *"i tried to prove my satellite detector wasn't a fluke"* (Liu-style lowercase, series)
+- ✅ *"i tried to prove my satellite detector wasn't a fluke"* (Liu-style lowercase, serial)
 - ❌ *"Maneuver Detection Pipeline Validation"* — nobody clicks this
 
-**Your unfair advantages over all three:** you're younger than every one of them, and your
-subject is *satellites*, not another CRM or productivity app. Erik gets 76k for shipping
-web features. You're catching real spacecraft moving in orbit from free public data. Lean
-on the imagery — the charts in `06 Code/output/` are genuinely arresting and none of these
-channels have anything like them.
+## Tags — copy Linq's stack, swap the noun
 
-**Category:** two of three are **People & Blogs**, not Science & Tech. The vlog beats the
-tech framing on this platform. Ship as People & Blogs.
+Linq is the only one running full tag SEO, 20 of them: `day in the life cto`, `tech startup
+life`, `startup grind`, `what does a cto do`, `tech entrepreneur vlog`… Same shape works
+for us with `space startup` / `satellite` / `solo founder` / `19 year old founder`.
 
-## Description template (synthesised from all three)
+## Description template
 
 ```
 [1–2 sentences, first person, what actually happened in these 2 days.]
@@ -84,24 +120,17 @@ What I'm building: [one line, no jargon]
 
 camera: iPhone · screen: OBS · editing: Premiere Pro
 
-#startup #space #buildinginpublic #solofounder #satellites #entrepreneur
-#coding #spacetech #19yearold #dayinthelife
+#startup #space #buildinginpublic #solofounder #satellites
+#entrepreneur #coding #spacetech #dayinthelife
 ```
 
-## The gap — music & transitions, not yet analysed
+Alex publishes his camera and editor in the description — small trust move, worth copying.
 
-You said you like the music and the transitions, and that's the part I can't see from
-metadata. **The fix:** download the three videos to a local folder (any browser-side
-downloader, or `winget install yt-dlp`) and tell me the path. Then I can actually measure
-it with ffmpeg, not guess:
+## Reproduce any of this
 
-- **cut rate** — scene-change detection gives me cuts-per-minute and where the pace lifts
-- **music beds** — a loudness curve shows exactly where music enters, ducks under speech,
-  and drops out for the emotional beats
-- **transitions** — sampled frames across each cut boundary tell me whether it's a hard
-  cut, whip pan, zoom punch, or match cut
-- **hook** — frame-by-frame on the first 15 seconds of the 76k video is the single highest
-  value thing I can study
-
-That's a real teardown with numbers, and it takes me one pass. Until then I'm not going to
-invent descriptions of transitions I haven't seen.
+```bash
+cd "C:\Users\Administrator\Videos\reference"
+ffmpeg -i QMk2-tQJKyg.mp4 -an -vf "scale=320:-2,select='gt(scene,0.25)',metadata=print:file=cuts.txt" -f null -
+ffmpeg -i QMk2-tQJKyg.mp4 -af "ebur128=peak=true,silencedetect=n=-45dB:d=0.4" -f null -
+ffmpeg -ss 0 -t 20 -i QMk2-tQJKyg.mp4 -vf "fps=2,scale=320:-1,tile=6x7" -frames:v 1 hook.png
+```
