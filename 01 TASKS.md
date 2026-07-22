@@ -21,6 +21,11 @@
 - [x] Run the ISS maneuver chart — **✅ FIRST LIGHT: 3/3 maneuvers detected, $0 data** 🛰️ → [[RESULTS - First Charts]]
 - [x] Chart 2–3 more satellites — **✅ caught a Starlink mid-deorbit + found v0.1's two blind spots** → [[RESULTS - First Charts]]
 
+- [x] ✅ **CHECKED AGAINST REALITY (2026-07-22).** Top suspects move **11.3x** more than
+      satellites we called ordinary; **72%** clear a bar only **11%** of controls clear.
+      First number the detector didn't grade itself — **this is the number for Kelso and
+      Moriba.** Also caught us publishing a wrong reason for the >500 km gate.
+      → [[RESULTS - Checked Against History]]
 - [ ] 🕒 **Re-run the detector once a second catalog snapshot is banked** (`python detect.py`
       in `06 Code`). Temporal persistence is built and tested, but it needs **two** snapshots
       with a public catalog saved beside them and we only have one (`2026-07-22/0200Z`). The

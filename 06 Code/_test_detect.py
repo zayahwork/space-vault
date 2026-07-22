@@ -17,8 +17,8 @@ import detect  # noqa: E402
 
 def look(norad, sup, gp, gap, verdict="MANEUVER SUSPECT"):
     return {"norad": norad, "sup_epoch": sup, "gp_epoch": gp, "gap_km": gap,
-            "verdict": verdict, "band_cut_km": 20.0, "band_median_km": 4.0,
-            "gp_age_h": 12.0}
+            "verdict": verdict, "flagged": verdict == "MANEUVER SUSPECT",
+            "band_cut_km": 20.0, "band_median_km": 4.0, "gp_age_h": 12.0}
 
 
 def run(rows_per_snapshot, min_looks=2):
