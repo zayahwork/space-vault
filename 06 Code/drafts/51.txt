@@ -2,7 +2,7 @@ Subject: neighbor with a verified finding on satellite behavior
 
 Hi,
 
-I'm just up the road near Snohomish — an ML engineer who built a maneuver detector using only free public catalog data. It's checked now, not just claimed: against 30 days of altitude history with a matched control group, the satellites it flags move 11.3× more than ordinary ones, and 72% show a real burn signature versus 11% of controls. (Two of my own methods agreeing, not operator ground truth — I'm careful about the difference.)
+I'm just up the road near Snohomish — an ML engineer who built a maneuver detector using only free public catalog data. As of July 22, ~68–72% of the top suspects show a real, independently-checked burn signature versus ~10% of matched controls. (Two of my own methods agreeing, not operator ground truth — I'm careful about the difference.)
 
 The short version of what it found: 85% of apparent maneuvers in raw catalog data are just stale entries. Since you handle ground-station data for a lot of operators, you'd have a good read on whether "did it maneuver?" comes up as a real question for the people you work with — and whether a result like this is worth anything to them.
 

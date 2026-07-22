@@ -2,7 +2,7 @@ Subject: built a maneuver detector on free data — does it match what Kepler se
 
 Hi,
 
-I built a detector that flags satellites departing from their normal pattern, using free public tracking data only, and checked it with an independent method: 30 days of altitude history against a matched control group. The flagged objects move 11.3× more than the ordinary ones, and 72% show a real burn signature versus 11% of controls. That's two of my own methods agreeing — not operator ground truth, and I say so up front.
+I built a detector that flags satellites departing from their normal pattern, using free public tracking data only, and checked it with an independent method: 30 days of altitude history against a matched control group. As of July 22, ~68–72% of the top suspects show a real, independently-checked burn signature versus ~10% of matched controls. That's two of my own methods agreeing — not operator ground truth, and I say so up front.
 
 For a data-relay constellation the question lands differently than for imaging: a neighbour behaving oddly isn't just collision risk, it's potential disruption to a service someone pays for. Which makes me want your answer to the ground-truth question more than most.
 

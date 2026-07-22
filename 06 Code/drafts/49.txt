@@ -2,7 +2,7 @@ Subject: in-space sensing team — a free-data companion result, now checked
 
 Hi,
 
-I built maneuver detection purely from free public catalog data, and it now has a verified number behind it: the satellites it flags move 11.3× more than matched ordinary satellites over 30 days of altitude history, and 72% show a real burn signature versus 11% of controls. Two of my own methods agreeing — not operator ground truth, said plainly.
+I built maneuver detection purely from free public catalog data, and it now has a verified number behind it: checked against 30 days of altitude history with a matched control group, as of July 22, ~68–72% of the top suspects show a real, independently-checked burn signature versus ~10% of matched controls. Two of my own methods agreeing — not operator ground truth, said plainly.
 
 The reason it might matter to Scout: 85% of what looks like "movement" in raw catalog data is stale entries, not maneuvers. A cheap filter that strips those out could be a useful first pass in front of whatever your in-space sensors catch directly — pointing the expensive instrument at the 15% that's real.
 

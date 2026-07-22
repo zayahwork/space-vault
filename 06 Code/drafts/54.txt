@@ -1,0 +1,12 @@
+Subject: your TLE manoeuvre paper - the days-late impulse, measured from the other side
+Cc: camilla.colombo@polimi.it
+
+Yeerang (and Prof. Colombo),
+
+I read your SDC9 paper on manoeuvre identification from two-line elements, and one line in your conclusion is the thing I've spent two months bumping into from the opposite direction: because a TLE comes out of a batch fit, the full effect of an impulse only shows up days after it happened, so you concluded it isn't meaningful to estimate the manoeuvre epoch from TLEs at all.
+
+I've been measuring that lag rather than fighting it. I rank LEO objects by how far the public catalog disagrees with the operator's own published ephemerides - Starlink and OneWeb both publish theirs - and about 4,900 Starlink objects look like they moved. 89% of that turns out to be the age of the catalog entry rather than the spacecraft, which is your smearing effect showing up as a population statistic. What survives holds up under a separate check: against 30 days of the catalog's own altitude history, as of 22 July ~68-72% of the top suspects show a real burn signature, against ~10% of matched controls in the same shells and epoch windows. That is two of my own methods agreeing, not operator ground truth, and I'd rather say so than have you find it.
+
+The question I'd genuinely like your view on: is that lag a nuisance or a measurable quantity? For a given drag regime the delay between a burn and the catalog admitting it looks fairly consistent to me, which would suggest the epoch is recoverable as a distribution rather than lost - especially if the operator ephemeris is used as the second data source instead of TLEs alone. You'd know immediately whether that's naive.
+
+I'm an ML engineer in Washington State working on this outside a university, so being told where the astrodynamics is wrong is worth more to me than agreement. Happy to send the candidate list if it's useful to you as test data.

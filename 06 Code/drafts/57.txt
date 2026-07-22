@@ -1,0 +1,11 @@
+Subject: real low-thrust manoeuvre data for your catalogue-maintenance validation - and whether GMV takes contract help
+
+Alejandro,
+
+Your SDC9 paper on robust tracking of manoeuvring objects in catalogue maintenance ends by naming exactly what it lacks: validation on real rather than simulated data, more orbital regimes, and low-thrust manoeuvring, which the sequential filtering section covered but the other two approaches didn't. I may have something useful for the first and third of those.
+
+I build ML on orbital data and have spent the last few months on LEO manoeuvre detection from free public sources only - the catalog against the operators' own published ephemerides. Ranking Starlink by that disagreement, about 4,900 objects look like they moved, but 89% of it is the catalog entry being stale rather than the spacecraft. Filtering the deliberate deorbits leaves roughly 490 station-keepers that moved when they shouldn't have. Starlink is electric propulsion, so what's left is real low-thrust LEO manoeuvring, dated, with matched controls attached: as of 22 July, ~68-72% of the top suspects show a real burn signature against ~10% of matched controls, checked against 30 days of altitude history. That's two of my own methods agreeing rather than operator ground truth - I'd rather flag that than have you find it.
+
+I'm happy to send that list for nothing. It's derived from public data, so there's no arrangement to make, and if it's useful as a real-data test case against your covariance-inflation and MHT approaches I'd find the comparison more interesting than you would.
+
+And plainly, since GMV is a prime and I'm one person: if GMV ever brings in contract help on detection or catalogue work, I'd like to be on that list. I'm an ML engineer, months deep in this data, and I'd rather start with a scoped paid week than a long conversation. Either way, I'd welcome being told where the method is naive.
