@@ -4,6 +4,20 @@ owner: OUTREACH window (marketing — research + emails)
 status: items 1, 3, 4 DONE (~04:00) — item 2 still gated on the founder
 ---
 
+> [!todo] ⚡ FOUNDER ORDER 2026-07-22 evening — VOLUME MODE, manual, founder at the keyboard
+> Sending is authorized NOW, founder supervising live. In this order:
+> 1. **Fire today's full sendable queue** via `outreach.py --live`: every addressable open
+>    row, target ~25 today, in 2–3 humanized bursts (keep the dice timing) — Gmail-safe,
+>    reputation-safe. Named-human rows go first, role inboxes after.
+> 2. **The 6 paper-author emails (rows 54–58, 68)**: hand the founder the ready-to-send
+>    packet — those go out founder-voiced today.
+> 3. **Then straight into card 019** — 20 new named addresses. Volume mode dies without
+>    supply; this is the real bottleneck, treat it as today's main work.
+> 4. Standing: reply-watch stays hot; nudges fire on their dated windows (day-1 = Jul 23).
+> RULES UNCHANGED: no LinkedIn, no invented addresses, honest caveat in every mail, retired
+> numbers never. The autonomous loops still NEVER send — live sends happen only in this
+> supervised mode or the scheduled drip.
+
 > [!warning] 🚪 Workspace rule (standing)
 > Work ONLY in this folder, on your own branch. Never run git commands against other
 > branches, never merge or pull master unless the CTO note tells you to, and never open
