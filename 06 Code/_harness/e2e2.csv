@@ -1,0 +1,5 @@
+id,segment,company,why_them,contact_route,email,status,sent_on,notes
+201,operator,Dup A,harness,,dup@sink.localhost,sent,2026-07-21,
+202,insurer,Dup B same address,harness,,dup@sink.localhost,todo,,
+203,partner,Prev Sent,harness,,one@sink.localhost,todo,,
+204,gov,Fresh,harness,,fresh@sink.localhost,sent,2026-07-21,

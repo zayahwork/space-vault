@@ -1,0 +1,13 @@
+id,company,route,kind,ok,detail
+41,Advanced Space (Patrick Miga),patrick.miga@advancedspace.com,email,YES,"advancedspace.com	MX preference = 0, mail exchanger = advancedspace.mail.protection.office365.us"
+42,MIT ARCLab (Dr. Richard Linares),linaresr@mit.edu,email,YES,"mit.edu	MX preference = 100, mail exchanger = mit-edu.mail.protection.outlook.com"
+43,Digantara,info@digantara.co.in,email,YES,"digantara.co.in	MX preference = 0, mail exchanger = digantara-co-in.mail.protection.outlook.com"
+44,Kratos,https://www.kratosdefense.com/contact,form,YES,200 
+45,LeoLabs,sales@leolabs.space,email,YES,"leolabs.space	MX preference = 0, mail exchanger = leolabs.mail.protection.office365.us"
+46,COMSPOC,info@comspoc.com,email,YES,"comspoc.com	MX preference = 10, mail exchanger = comspoc-com.mail.protection.outlook.com"
+47,Vyoma,contact@vyoma.space,email,YES,"vyoma.space	MX preference = 0, mail exchanger = vyoma-space.mail.protection.outlook.com"
+48,Neuraspace,info@neuraspace.com,email,YES,"neuraspace.com	MX preference = 1, mail exchanger = aspmx.l.google.com"
+49,Scout Space,https://www.scout.space/contact,form,YES,200 
+50,Aerospace Corporation,https://aerospace.org/contact-us,form,BLOCK,403  | http error
+51,RBC Signals,https://rbcsignals.com/contact/,form,BLOCK,403  | http error
+52,Stoke Space,info@stokespace.com,email,YES,"stokespace.com	MX preference = 0, mail exchanger = stokespace.mail.protection.office365.us"

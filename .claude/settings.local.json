@@ -18,12 +18,15 @@
       "Bash(python multi_chart.py)",
       "PowerShell(Start-Process \"C:\\\\Space\\\\06 Code\\\\output\\\\starlink_maneuvers.png\")",
       "PowerShell(Start-Process \"C:\\\\Space\\\\06 Code\\\\output\\\\goes18_maneuvers.png\")",
-
       "Edit(06 Code/**)",
       "Write(06 Code/**)",
       "Read(06 Code/**)",
       "Bash(git *)",
-      "Bash(python *)"
+      "Bash(python *)",
+      "Write(.claude/agents/)",
+      "Edit(.claude/agents/)",
+      "Read(.claude/agents/)",
+      "Bash(PYTHONIOENCODING=utf-8 python -c ' *)"
     ]
   }
 }

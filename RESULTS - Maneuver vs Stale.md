@@ -8,7 +8,9 @@ code: "06 Code/detect.py"
 
 > [!success] The headline
 > Ranking Starlink on raw SupGP-vs-catalog disagreement surfaces **3,555 objects**.
-> Ranking with catalog age taken into account surfaces **541**.
+> Ranking with catalog age taken into account surfaces **541** — of which **17** are
+> physically impossible (RMS jumps of thousands of km) and are gated out as data-quality
+> flags, leaving **524 real maneuver candidates**.
 > **85% of the naive list was just old data, not movement.**
 
 ## The problem this fixes
@@ -50,10 +52,21 @@ about the population, which is checkable.
 | 48–96 h | 45 | 14.06 km | 58.68 km |
 
 ```
-MANEUVER SUSPECTS    541  of 10,780  (5.0%)
+MANEUVER SUSPECTS    524  of 10,780  (4.9%)
+DATA QUALITY FLAG     17  ← gap ≥ 500 km, physically impossible; likely decay or bad TLE
 big gap but stale  3,014  ← would have been false positives on gap alone
 agrees             7,225
 ```
+
+> [!warning] Hard plausibility gate (added 2026-07-21)
+> `detect.py` now applies a **hard 500 km gate** before the age-aware statistics. No
+> station-keeping burn moves an object hundreds of km RMS over 6 hours, so any larger gap
+> means the two element sets describe wholly different orbits — a decaying/reentering object
+> or a bad TLE, not a maneuver. The worst two (**8,412 km** and **5,337 km**) that used to sit
+> at the top of the candidate list are now bucketed as **data-quality flags**, never shown as
+> detections. They're also excluded from the per-age-bin baseline so a handful of nonsense
+> orbits can't distort the thresholds the honest candidates are judged against. Tune with
+> `--max-km`.
 
 ![[detect_starlink_2026-07-21_2157Z.png]]
 

@@ -27,6 +27,15 @@
       keeps the ledger (40 targets seeded: operators, insurers, peers, academics).
       It does NOT send — you find one human per contact route and send it yourself.
       → [[Guide - Daily Outreach]]
+- [ ] **📤 Batch 2 — 12 new targets drafted, not sent yet.** Fallback contact (Miga), MIT ARCLab
+      (SPLID author), 2 more AMOS competitor-paper authors (Digantara, Kratos), and 6 peer/bench
+      companies (LeoLabs, COMSPOC, Vyoma, Neuraspace, Scout, Aerospace Corp, RBC Signals, Stoke
+      Space). Find a human per contact form, send, then log with `--sent` → [[Outreach Emails - Batch 2]]
+      **Validated 2026-07-21: all 12 routes are live — none are dead.** 10 confirmed by MX
+      record or live contact form. 2 (Aerospace Corp #50, RBC Signals #51) return 403 to a
+      script but open fine in a browser — do those two by hand. Re-check any time with
+      `python contact_check.py --batch2` in `06 Code`; it writes `outreach_validation.jsonl`,
+      and `outreach.py` now refuses to draft or send anything that file marks unreachable.
 - [ ] Check inbox → reply fast → log it → [[Guide - Handling Replies]]
 - [ ] Send the short reply to Moriba + the booking email to his EA Deidra (`team.moriba@outlook.com`) — drafts in [[Guide - Moriba Jah Call]] / chat
 - [ ] **Moriba homework (PROMISED — do before the call):** TED talk, ASTRIAGraph, Wayfinder, his articles → checklist in [[Guide - Moriba Jah Call]]

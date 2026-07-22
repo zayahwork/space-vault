@@ -8,10 +8,10 @@
 
 | | Thing | State | Where |
 |---|---|---|---|
-| 🛰️ | **Maneuver-vs-stale detector** | **Working.** 541 candidates from 10,780 Starlink; 85% of the naive list was just old data | [[RESULTS - Maneuver vs Stale]] |
+| 🛰️ | **Maneuver-vs-stale detector** | **Working.** 524 maneuver candidates from 10,780 Starlink (17 impossible >500 km jumps gated out as data-quality flags); 85% of the naive list was just old data | [[RESULTS - Maneuver vs Stale]] |
 | 📡 | SupGP + public-catalog archive | Running every 6h, now with retry + health log + GP capture | `06 Code/supgp_archive.py --health` |
 | 📈 | First maneuver charts | 3/3 ISS maneuvers, Starlink deorbit caught | [[RESULTS - First Charts]] |
-| 📬 | Outreach machine | 40 targets loaded, **0 sent** | [[Guide - Daily Outreach]] |
+| 📬 | Outreach machine | 52 targets loaded (40 + batch 2's 12), batch 2 **drafted, not sent** | [[Guide - Daily Outreach]] · [[Outreach Emails - Batch 2]] |
 | 🏛️ | SBIR / SAM.gov | **Parked.** Weekly watcher armed — it un-parks itself | [[Guide - SBIR Steps]] |
 | 🏢 | **The office** — the room, the team, their brains, the money | 7 people · 14 lessons banked · $1,276 of $127,500 charged | **[[00 THE OFFICE]]** |
 | 🖥️ | **The war room** — see them at the table and talk to them | Working. `cd "C:\Space\06 Code"` then type `jarvis` | [[The Room]] |

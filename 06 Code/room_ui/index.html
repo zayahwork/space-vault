@@ -29,7 +29,88 @@
 <main>
   <section class="stage" aria-label="The meeting room">
     <svg id="room" viewBox="0 28 900 508" role="img" aria-labelledby="room-title">
-      <title id="room-title">Six teammates at a table, with a screen at the far end</title>
+      <title id="room-title">Seven teammates at a table, with a screen at the far
+        end and a window onto orbit</title>
+
+      <defs>
+        <!-- The only light in the room, pooled where the table is. -->
+        <radialGradient id="pool" cx="50%" cy="50%">
+          <stop offset="0%" stop-color="#1d2f29" stop-opacity="0.55"></stop>
+          <stop offset="100%" stop-color="#1d2f29" stop-opacity="0"></stop>
+        </radialGradient>
+        <linearGradient id="glassfade" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0a1a24"></stop>
+          <stop offset="100%" stop-color="#070d11"></stop>
+        </linearGradient>
+        <clipPath id="windowclip">
+          <rect x="34" y="86" width="196" height="150" rx="2"></rect>
+        </clipPath>
+      </defs>
+
+      <!-- Ceiling, with the strip lights that are actually lighting this room. -->
+      <rect id="ceiling" x="0" y="28" width="900" height="34"></rect>
+      <line id="ceiling-edge" x1="0" y1="62" x2="900" y2="62"></line>
+      <rect class="striplight" x="258" y="40" width="176" height="6" rx="3"></rect>
+      <rect class="striplight" x="466" y="40" width="176" height="6" rx="3"></rect>
+
+      <!-- The back wall, and the line where it meets the floor. -->
+      <rect id="backwall" x="0" y="62" width="900" height="228"></rect>
+      <line id="baseboard" x1="0" y1="290" x2="900" y2="290"></line>
+      <line id="baseboard2" x1="0" y1="295" x2="900" y2="295"></line>
+
+      <!-- A door, because rooms have them and you can tell a room from a set by
+           whether anyone could leave it. -->
+      <g id="door">
+        <rect x="726" y="118" width="86" height="172" rx="1"></rect>
+        <rect class="door-glass" x="740" y="132" width="58" height="66" rx="1"></rect>
+        <circle class="door-knob" cx="800" cy="216" r="2.6"></circle>
+      </g>
+
+      <!-- A whiteboard nobody has wiped. -->
+      <g id="whiteboard">
+        <rect x="628" y="124" width="82" height="62" rx="1"></rect>
+        <path class="scrawl" d="M638,142 h30 M638,152 h48 M638,162 h22 M676,162 h18" />
+        <path class="scrawl-arc" d="M642,176 q20,-8 40,0" />
+      </g>
+
+      <!-- A plant in the corner. Every office has one and nobody waters it. -->
+      <g id="plant">
+        <path class="pot" d="M842,268 L878,268 L873,292 L847,292 z"></path>
+        <path class="frond" d="M860,268 q-16,-20 -22,-36 M860,268 q2,-24 -4,-40
+                               M860,268 q14,-18 24,-32 M860,268 q10,-26 6,-40"></path>
+      </g>
+
+      <!-- The floor. Perspective lines converging on the back wall - the thing
+           that makes this read as a room you are standing in. -->
+      <g id="floor">
+        <path d="M-140,536 L346,290" /><path d="M96,536 L406,290" />
+        <path d="M332,536 L462,290" /><path d="M568,536 L518,290" />
+        <path d="M804,536 L578,290" /><path d="M1040,536 L638,290" />
+        <path d="M-40,536 L940,536" /><path d="M104,420 L796,420" />
+        <path d="M198,352 L702,352" />
+      </g>
+
+      <!-- A rug, so the table isn't standing on bare geometry. -->
+      <ellipse id="rug" cx="450" cy="424" rx="372" ry="126"></ellipse>
+
+      <!-- A window onto orbit. It is a satellite company; the view is the point.
+           Static: these are stars, and stars do not twinkle on a console. -->
+      <g id="window" clip-path="url(#windowclip)">
+        <rect x="34" y="86" width="196" height="150" fill="url(#glassfade)"></rect>
+        <circle class="star" cx="72" cy="112" r="0.9"></circle>
+        <circle class="star" cx="118" cy="98" r="0.6"></circle>
+        <circle class="star" cx="164" cy="126" r="1"></circle>
+        <circle class="star" cx="203" cy="104" r="0.7"></circle>
+        <circle class="star" cx="88" cy="150" r="0.7"></circle>
+        <circle class="star" cx="142" cy="166" r="0.5"></circle>
+        <circle class="star" cx="196" cy="152" r="0.8"></circle>
+        <circle class="star" cx="56" cy="188" r="0.6"></circle>
+        <!-- the limb of something large, low in the frame -->
+        <circle id="limb" cx="132" cy="330" r="126"></circle>
+        <path id="limb-glow" d="M6,232 A126,126 0 0 1 258,232"></path>
+      </g>
+      <rect id="window-frame" x="34" y="86" width="196" height="150" rx="2"></rect>
+      <line id="window-mullion" x1="132" y1="86" x2="132" y2="236"></line>
 
       <!-- the screen at the head of the table -->
       <g id="tv">
@@ -41,25 +122,44 @@
       <line id="tv-stand" x1="450" y1="224" x2="450" y2="238"></line>
 
       <!-- the table, seen from your chair -->
+      <ellipse id="tablepool" cx="450" cy="410" rx="330" ry="150"
+               fill="url(#pool)"></ellipse>
       <path id="table" d="M330,302 L570,302 L752,508 L148,508 Z"></path>
+      <line id="table-spine" x1="450" y1="308" x2="450" y2="502"></line>
       <path id="table-edge" d="M148,508 L752,508"></path>
 
       <g id="chairs"></g>
+      <g id="desks"></g>
       <g id="people"></g>
       <g id="plates"></g>
     </svg>
     <p class="partial" id="partial"></p>
   </section>
 
-  <section class="log" aria-label="What was said">
-    <div class="log-head">
-      <span>TRANSCRIPT</span>
-      <span id="count">0 lines</span>
-    </div>
-    <div class="log-body" id="log">
-      <p class="empty">Nothing said yet. Talk, or type below.</p>
-    </div>
-  </section>
+  <div class="side">
+    <section class="log" aria-label="What was said">
+      <div class="log-head">
+        <span>TRANSCRIPT</span>
+        <span id="count">0 lines</span>
+      </div>
+      <div class="log-body" id="log">
+        <p class="empty">Nothing said yet. Talk, or type below.</p>
+      </div>
+    </section>
+
+    <!-- What the team is actually doing, not just saying. Nothing runs until
+         you press Do it - these edit real files in the vault. -->
+    <section class="work" id="work" aria-label="What the team is working on">
+      <div class="log-head">
+        <span>ON THE BENCH</span>
+        <span id="work-count">nothing running</span>
+      </div>
+      <div class="work-body" id="work-body">
+        <p class="empty" id="work-empty">Nobody's running anything. When one of
+          them claims a job it appears here.</p>
+      </div>
+    </section>
+  </div>
 </main>
 
 <footer class="deck">
@@ -67,8 +167,11 @@
     <input id="input" type="text" placeholder="Type instead of talking" aria-label="Say something to the room">
     <button type="submit">Send</button>
   </form>
+  <button id="mic" type="button" class="mic" aria-pressed="false">
+    <span class="mic-dot"></span><span id="mic-label">Mute</span>
+  </button>
   <button id="end" type="button" class="end">End call</button>
-  <p class="note">Talk any time — they stop mid-word. Nothing on screen moves without real audio.</p>
+  <p class="note">Say anything and they stop dead. Mute (M) shuts your mic for real.</p>
 </footer>
 
 <script src="/app.js"></script>

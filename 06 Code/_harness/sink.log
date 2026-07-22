@@ -1,0 +1,4 @@
+sink listening on 127.0.0.1:8031, expecting 2
+sink received 1
+sink received 2
+SINK_TOTAL=2

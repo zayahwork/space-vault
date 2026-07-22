@@ -50,9 +50,24 @@ TASKS_FILE = Path(r"C:\Space\01 TASKS.md")
 
 # Kokoro ships no Irish and no Australian voice. Rook and Fitz get the closest
 # British ones here; --tts edge gets their real accents back at ~0.5s a line.
+#
+# Cast so that no two people who argue with each other sound alike - Sable and
+# Vega are the pair most often disagreeing, so they get the two least similar
+# female voices, and Fitz's is deliberately lighter than Rook's because half of
+# Fitz's job is winding Rook up and you have to hear which one is which.
+#
+# Tim had NO entry here at all. He was hired after this table was written, so
+# every line he has ever spoken came out of the af_heart fallback - a female
+# voice, for someone team.json casts with a male one. That's what a silent
+# `.get(name, default)` buys you.
 KOKORO_VOICE = {
-    "Vega": "af_nova", "Rook": "bm_lewis", "Sable": "af_kore",
-    "Fitz": "bm_george", "Nova": "bf_emma", "CTO": "am_michael",
+    "Vega":  "af_bella",     # bright, fast, sells things
+    "Sable": "af_kore",      # cool and precise, nothing like Vega
+    "Rook":  "bm_lewis",     # deep, flat, unimpressed
+    "Fitz":  "bm_fable",     # lighter and quicker - the wind-up merchant
+    "Nova":  "bf_emma",      # warm British, the one who explains
+    "Tim":   "am_adam",      # measured, unhurried, reads the primary source
+    "CTO":   "am_onyx",      # the one who lands the decision
 }
 
 LINE = re.compile(r"^\s*\*{0,2}(\w+)\*{0,2}\s*:\s*(.+)$")

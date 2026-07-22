@@ -13,6 +13,11 @@ const LEFT = { far: [330, 302], near: [148, 508] };
 const RIGHT = { far: [570, 302], near: [752, 508] };
 const ALONG = [0.10, 0.46, 0.82];        // far end of the table first
 
+// The head of the table, facing you down its length. Whoever chairs the meeting
+// sits here - smaller than the far side seats because they are further away
+// still, and behind the table's far edge rather than beside it.
+const HEAD = { x: 450, y: 282, scale: 0.68 };
+
 // Identity, not decoration: one muted hue each, so the eye learns the seat.
 // Brightness carries state; hue only carries who.
 const HUE = {
@@ -22,6 +27,7 @@ const HUE = {
 
 const el = (id) => document.getElementById(id);
 const chairsG = el("chairs"), peopleG = el("people"), platesG = el("plates");
+const desksG = el("desks");
 const logEl = el("log");
 const seats = new Map();
 let lineCount = 0;
@@ -40,22 +46,78 @@ function seatAt(side, t) {
            ex: x, ey: y, scale, out };
 }
 
+/* An open laptop and, for some of them, a mug. Six identical place settings
+   would read as a diagram; a table people actually work at is uneven. */
+function deskFor(pos, i) {
+  const s = pos.scale;
+  const g = NS("g");
+  const x = pos.ex - pos.out * 64 * s;
+  g.setAttribute("transform",
+    "translate(" + x + " " + (pos.ey + 10 * s) + ") scale(" + s.toFixed(3) + ")");
+
+  const screen = NS("path");
+  screen.setAttribute("class", "lid");
+  screen.setAttribute("d", "M-9,-8 L9,-8 L11,0 L-11,0 z");
+
+  const base = NS("path");
+  base.setAttribute("class", "deck-base");
+  base.setAttribute("d", "M-11,0 L11,0 L13,4 L-13,4 z");
+
+  g.append(screen, base);
+
+  if (i % 3 === 0) {
+    const mug = NS("circle");
+    mug.setAttribute("class", "mug");
+    mug.setAttribute("cx", pos.out >= 0 ? 22 : -22);
+    mug.setAttribute("cy", 2);
+    mug.setAttribute("r", 3.4);
+    g.appendChild(mug);
+  }
+
+  // What's actually open on the screen right now - a ticket's status word, lit
+  // on the laptop lid itself. Empty text takes no space, so a desk with nothing
+  // claimed looks exactly like it did before this existed.
+  const status = NS("text");
+  status.setAttribute("class", "desk-status");
+  status.setAttribute("text-anchor", "middle");
+  status.setAttribute("y", -11);
+  g.appendChild(status);
+
+  return { g, status };
+}
+
 function buildRoom(people) {
-  [chairsG, peopleG, platesG].forEach((g) => { g.textContent = ""; });
+  [chairsG, peopleG, platesG, desksG].forEach((g) => { g.textContent = ""; });
   seats.clear();
 
-  people.forEach((p, i) => {
-    const side = i % 2 === 0 ? LEFT : RIGHT;
-    const pos = seatAt(side, ALONG[Math.floor(i / 2)]);
+  // The head seat is taken out of the side-by-side count, so six people still
+  // sit three-and-three however many chair the meeting.
+  let sideIndex = 0;
+
+  people.forEach((p) => {
+    let pos;
+    if (p.head) {
+      pos = { x: HEAD.x, y: HEAD.y, ex: HEAD.x, ey: 302, scale: HEAD.scale, out: 0 };
+    } else {
+      const side = sideIndex % 2 === 0 ? LEFT : RIGHT;
+      pos = seatAt(side, ALONG[Math.floor(sideIndex / 2)]);
+      sideIndex += 1;
+    }
     const s = pos.scale;
     const hue = HUE[p.name] || "#d6e3dd";
 
     const chair = NS("path");
     chair.setAttribute("class", "chair");
     chair.setAttribute("d", "M-21,20 q0,-36 21,-36 q21,0 21,36 z");
-    chair.setAttribute("transform",
-      "translate(" + pos.x + " " + (pos.y + 22 * s) + ") scale(" + s.toFixed(3) + ")");
+    // Seen from across the table, the chair back rises BEHIND the person, so
+    // the head seat's chair is flipped rather than drawn in front of them.
+    chair.setAttribute("transform", p.head
+      ? "translate(" + pos.x + " " + (pos.y - 10 * s) + ") scale(" +
+        s.toFixed(3) + " " + (-s).toFixed(3) + ")"
+      : "translate(" + pos.x + " " + (pos.y + 22 * s) + ") scale(" + s.toFixed(3) + ")");
     chairsG.appendChild(chair);
+    const desk = deskFor(pos, sideIndex);
+    desksG.appendChild(desk.g);
 
     // Head and shoulders, deliberately plain. A drawn face would be a cartoon,
     // and this is a console.
@@ -110,7 +172,7 @@ function buildRoom(people) {
     plate.append(nm, rl);
     platesG.appendChild(plate);
 
-    seats.set(p.name, { g, level, plate });
+    seats.set(p.name, { g, level, plate, desk: desk.status });
   });
 }
 
@@ -120,8 +182,10 @@ function paintBoard(board) {
   const body = el("tv-body");
   body.textContent = "";
   el("tv-eyebrow").textContent = board.title || "ON THE BOARD";
+  // Six rows at 22px is what fits inside the glass (y 52-220). Any looser and
+  // the sixth row prints below the screen it is supposed to be on.
   (board.rows || []).forEach((row, i) => {
-    const y = 106 + i * 26;
+    const y = 104 + i * 22;
 
     const k = NS("text");
     k.setAttribute("class", "tv-key");
@@ -138,6 +202,96 @@ function paintBoard(board) {
 
     body.append(k, v);
   });
+}
+
+/* ---------------------------------------------------------------- work */
+
+/* A ticket is a teammate's promise made concrete: they said they'd do a thing,
+   and this is that thing being handed to Claude Code with tools. Nothing runs
+   until you press Do it, because the vault has no git history to undo a bad
+   edit. There is no progress bar here on purpose - we do not know how far along
+   a job is, and drawing a bar that pretends to would be inventing a number. */
+
+const STATUS_WORD = {
+  waiting: "needs you", queued: "queued", running: "working",
+  done: "done", failed: "failed", skipped: "skipped",
+};
+
+/* The sidebar card is the record; this is the glance. A person's own desk shows
+   only what THEY are doing right now, so it clears the moment the ticket lands -
+   done or failed both belong to the card, not to a screen that's supposed to
+   read as "in progress". */
+function paintDeskStatus(t) {
+  const seat = seats.get(t.who);
+  if (!seat || !seat.desk) return;
+  const active = t.status === "waiting" || t.status === "queued" || t.status === "running";
+  seat.desk.dataset.status = t.status;
+  seat.desk.textContent = active ? (STATUS_WORD[t.status] || t.status) : "";
+}
+
+function paintTicket(t) {
+  const empty = el("work-empty");
+  if (empty) empty.remove();
+  let card = document.getElementById("tk" + t.id);
+  if (!card) {
+    card = document.createElement("div");
+    card.id = "tk" + t.id;
+    card.className = "tk";
+    el("work-body").appendChild(card);
+  }
+  card.dataset.status = t.status;
+  card.style.color = HUE[t.who] || "#d6e3dd";
+  card.textContent = "";
+
+  const head = document.createElement("div");
+  head.className = "tk-head";
+  head.innerHTML = "<span class='tk-id'>#" + t.id + "</span> <b>" + t.who + "</b>";
+
+  const state = document.createElement("span");
+  state.className = "tk-state";
+  state.textContent = STATUS_WORD[t.status] || t.status;
+  head.appendChild(state);
+
+  const task = document.createElement("div");
+  task.className = "tk-task";
+  task.textContent = t.task;
+  card.append(head, task);
+
+  if (t.status === "waiting") {
+    const row = document.createElement("div");
+    row.className = "tk-row";
+    row.append(tkButton("Do it", "/approve", t.id, "go"),
+               tkButton("Skip", "/skip", t.id, ""));
+    card.appendChild(row);
+  }
+
+  if (t.result) {
+    const res = document.createElement("div");
+    res.className = "tk-result";
+    res.textContent = t.result;
+    card.appendChild(res);
+  }
+
+  if (t.duration_s) {
+    const foot = document.createElement("div");
+    foot.className = "tk-foot";
+    foot.textContent = t.duration_s + "s"
+      + (t.cost_usd ? "  ·  $" + t.cost_usd.toFixed(3) + " if this were the API" : "");
+    card.appendChild(foot);
+  }
+  el("work-body").scrollTop = el("work-body").scrollHeight;
+}
+
+function tkButton(label, url, id, cls) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "tk-btn " + cls;
+  b.textContent = label;
+  b.addEventListener("click", () => {
+    b.parentElement.querySelectorAll("button").forEach((x) => { x.disabled = true; });
+    fetch(url, { method: "POST", body: JSON.stringify({ id }) });
+  });
+  return b;
 }
 
 /* --------------------------------------------------------------- levels */
@@ -197,6 +351,8 @@ function snapshot() {
   fetch("/history").then((r) => r.json()).then((d) => {
     handle(d.roster);
     if (d.board) handle(d.board);
+    (d.tickets || []).forEach(handle);
+    if (d.work) handle(d.work);
     d.events.forEach(handle);
     setState("listening");
   });
@@ -240,7 +396,7 @@ function handle(ev) {
       break;
 
     case "said":
-      turn(ev.who, ev.role, ev.text);
+      turn(ev.who, ev.role, ev.text, ev.cut ? "cut" : "");
       break;
 
     case "speak_start": {
@@ -272,6 +428,27 @@ function handle(ev) {
       });
       break;
 
+    case "ticket":
+      paintTicket(ev);
+      paintDeskStatus(ev);
+      break;
+
+    case "mic_state":
+      paintMic(ev);
+      break;
+
+    case "work_summary": {
+      // The header answers "is anyone doing anything right now" first, because
+      // that is the question the panel exists to answer.
+      const bits = [];
+      bits.push(ev.running ? "running #" + ev.running : "nothing running");
+      if (ev.open) bits.push(ev.open + " waiting");
+      if (ev.done) bits.push(ev.done + " done");
+      if (ev.failed) bits.push(ev.failed + " failed");
+      el("work-count").textContent = bits.join(" · ");
+      break;
+    }
+
     case "error":
       turn("Room", "", ev.text, "sys");
       break;
@@ -288,6 +465,28 @@ el("composer").addEventListener("submit", (e) => {
   fetch("/say", { method: "POST", body: JSON.stringify({ text }) });
 });
 
+/* The mic has two independent reasons to be shut and the button must say which,
+   because "why can't they hear me" has two different answers and only one of
+   them is something you did. */
+let micByUser = false;
+
+function paintMic(ev) {
+  micByUser = ev.by_user;
+  const b = el("mic");
+  b.dataset.state = ev.by_user ? "user" : ev.by_room ? "room" : "open";
+  b.setAttribute("aria-pressed", String(ev.by_user));
+  // Honest about the difference: yours is a real shut mic, theirs is the room
+  // holding the floor while still listening for you to take it back.
+  el("mic-label").textContent = ev.by_user ? "Unmute"
+    : ev.by_room ? "Speak to cut in" : "Mute";
+}
+
+function toggleMic() {
+  fetch("/mic", { method: "POST", body: JSON.stringify({ muted: !micByUser }) });
+}
+
+el("mic").addEventListener("click", toggleMic);
+
 el("end").addEventListener("click", () => {
   if (!confirm("End the call? This shuts the meeting down completely.")) return;
   fetch("/end", { method: "POST" });
@@ -295,8 +494,16 @@ el("end").addEventListener("click", () => {
 });
 
 // Escape still cuts them off mid-sentence. Ending the call is deliberate.
+// M toggles the mic, but not while you're typing an M into the composer.
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") fetch("/cut", { method: "POST" });
+  if ((e.key === "m" || e.key === "M") && e.target !== el("input")) toggleMic();
+  // N is the reset. Escape stops the sentence; N stops everyone, throws away
+  // whatever was queued behind it, and hands the floor back clean.
+  if ((e.key === "n" || e.key === "N") && e.target !== el("input")) {
+    fetch("/hush", { method: "POST" });
+    setState("listening");
+  }
 });
 
 setInterval(() => {

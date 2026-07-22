@@ -113,11 +113,82 @@ main {
   opacity: 0.2;
 }
 
+/* The room itself. Everything here is furniture: dark, low contrast, and never
+   competing with the seven people or the numbers on the board. */
+#ceiling { fill: #080c0b; }
+#ceiling-edge { stroke: var(--rule); stroke-width: 1; }
+.striplight { fill: #24413a; opacity: 0.85; }
+
+#backwall { fill: #0b100f; }
+#baseboard { stroke: var(--rule-lit); stroke-width: 1; }
+#baseboard2 { stroke: var(--rule); stroke-width: 1; opacity: 0.6; }
+
+#door rect { fill: #0a0f0e; stroke: var(--rule-lit); stroke-width: 1; }
+.door-glass { fill: #0c1512 !important; stroke: var(--rule) !important; }
+.door-knob { fill: var(--faint); }
+
+#whiteboard rect { fill: #101614; stroke: var(--rule-lit); stroke-width: 1; }
+.scrawl { stroke: var(--faint); stroke-width: 1.4; fill: none; }
+.scrawl-arc { stroke: #3f5a50; stroke-width: 1.4; fill: none; }
+
+.pot { fill: #131a17; stroke: var(--rule-lit); stroke-width: 1; }
+.frond { stroke: #2f6b52; stroke-width: 1.6; fill: none; opacity: 0.75; }
+
+#rug {
+  fill: none;
+  stroke: var(--rule);
+  stroke-width: 1;
+  opacity: 0.5;
+}
+
+/* The floor. Barely there on purpose - it should give the room depth without
+   ever being something you look at. */
+#floor path {
+  fill: none;
+  stroke: #131c19;
+  stroke-width: 1;
+}
+
+/* A window onto orbit, because that is what this company is for. Nothing in
+   here moves: these are stars on a console, not a screensaver. */
+#window-frame {
+  fill: none;
+  stroke: var(--rule-lit);
+  stroke-width: 1.5;
+}
+#window-mullion { stroke: var(--rule-lit); stroke-width: 1; }
+.star { fill: #cfe6dd; opacity: 0.55; }
+#limb { fill: #0d1a20; stroke: #1d3a44; stroke-width: 1; }
+#limb-glow { fill: none; stroke: #2f6b7a; stroke-width: 2; opacity: 0.5; }
+
+/* The seam down the middle of the table, and the light pooled over it. */
+#table-spine { stroke: var(--rule); stroke-width: 1; opacity: 0.5; }
+
 .chair {
   fill: #0c100f;
   stroke: var(--rule);
   stroke-width: 1;
 }
+
+/* Open laptops and the odd mug. The room is worked at, not posed in. */
+.lid { fill: #0d1614; stroke: var(--rule-lit); stroke-width: 0.9; }
+.deck-base { fill: #101a17; stroke: var(--rule); stroke-width: 0.9; }
+.mug { fill: #101a17; stroke: var(--faint); stroke-width: 0.9; }
+
+/* The status word lit on a person's own laptop lid - what they're doing right
+   now, not what they said. Empty when nobody's claimed anything for them. */
+.desk-status {
+  font-family: var(--mono);
+  font-size: 4.6px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  fill: var(--dim);
+}
+.desk-status[data-status="running"] {
+  fill: var(--amber);
+  animation: pulse 0.9s ease-in-out infinite;
+}
+.desk-status[data-status="failed"] { fill: #ff8a7a; }
 
 .body {
   fill: #121a18;
@@ -199,6 +270,10 @@ main {
 
 /* ---------------------------------------------------------------- log */
 
+/* Talk on top, work underneath. The work panel takes only the room it needs,
+   and takes none at all until somebody claims a job. */
+.side { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-height: 0; }
+
 .log { display: grid; grid-template-rows: 34px 1fr; min-height: 0; }
 
 .log-head {
@@ -254,6 +329,108 @@ main {
 
 .turn.sys .turn-text { color: var(--amber); font-family: var(--mono); font-size: 12px; }
 
+/* Somebody cut in while you were still talking. Marked, because "who said that
+   and when" matters more than usual when it overlapped you. */
+.turn.cut .turn-text {
+  border-left: 1px solid currentColor;
+  padding-left: 12px;
+}
+.turn.cut .turn-who::after {
+  content: " · CUT IN";
+  color: var(--amber);
+  letter-spacing: 0.2em;
+}
+
+/* ---------------------------------------------------------------- work */
+
+.work {
+  display: grid;
+  grid-template-rows: 34px auto;
+  border-top: 1px solid var(--rule);
+  min-height: 0;
+}
+.work[hidden] { display: none; }
+
+.work-body {
+  overflow-y: auto;
+  max-height: 38vh;
+  padding: 12px 20px 16px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule) transparent;
+}
+
+.tk {
+  border: 1px solid var(--rule);
+  border-left: 2px solid currentColor;
+  border-radius: 2px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  background: var(--panel);
+}
+/* A job nobody has approved is the only thing here asking you for something. */
+.tk[data-status="waiting"] { border-color: var(--rule-lit); background: #141c1a; }
+/* The one they are working on RIGHT NOW is the point of this panel. */
+.tk[data-status="running"] {
+  border-color: var(--amber);
+  background: #171a13;
+  box-shadow: inset 2px 0 0 var(--amber);
+}
+.tk[data-status="running"] .tk-task { color: #f2e2c4; }
+.tk[data-status="failed"]  { border-color: #4a2f2c; }
+.tk[data-status="skipped"] { opacity: 0.45; }
+
+.tk-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+.tk-head b { color: currentColor; font-weight: 600; }
+.tk-id { color: var(--faint); }
+.tk-state { margin-left: auto; letter-spacing: 0.16em; }
+.tk[data-status="running"] .tk-state { color: var(--amber); }
+.tk[data-status="done"]    .tk-state { color: var(--phosphor); }
+.tk[data-status="failed"]  .tk-state { color: #ff8a7a; }
+
+.tk-task {
+  font-family: var(--sans);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink);
+  margin-top: 5px;
+}
+
+/* Whatever Claude Code actually reported, unedited. */
+.tk-result {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--dim);
+  border-left: 1px solid var(--rule-lit);
+  padding-left: 10px;
+  margin-top: 8px;
+  white-space: pre-wrap;
+}
+
+.tk-foot {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--faint);
+  margin-top: 8px;
+  text-transform: uppercase;
+}
+
+.tk-row { display: flex; gap: 8px; margin-top: 10px; }
+.tk-btn { padding: 6px 14px; font-size: 9px; }
+.tk-btn.go { color: var(--phosphor); border-color: var(--rule-lit); }
+.tk-btn.go:hover { border-color: var(--phosphor); }
+.tk-btn:disabled { opacity: 0.35; cursor: default; }
+
 /* ---------------------------------------------------------------- deck */
 
 .deck { border-top: 1px solid var(--rule); gap: 14px; }
@@ -292,6 +469,22 @@ button {
   transition: color 140ms, border-color 140ms;
 }
 button:hover { color: var(--ink); border-color: var(--phosphor); }
+/* The mic button says WHY it's shut, not just that it is - you muted it, or
+   they're talking. Those have different answers to "why can't they hear me". */
+.mic { display: flex; align-items: center; gap: 9px; white-space: nowrap; }
+.mic-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--phosphor);
+  flex: none;
+}
+.mic[data-state="open"] { color: var(--ink); border-color: var(--rule-lit); }
+.mic[data-state="room"] { color: var(--dim); border-color: var(--rule); }
+.mic[data-state="room"] .mic-dot { background: var(--faint); }
+.mic[data-state="user"] { color: #ff8a7a; border-color: #4a2f2c; }
+.mic[data-state="user"] .mic-dot { background: #ff8a7a; }
+.mic[data-state="user"]:hover { border-color: #ff8a7a; }
+
 /* Ending the call kills the process and releases the mic. It should look
    like the one button here with consequences. */
 .end { color: #b4736b; border-color: #4a2f2c; }

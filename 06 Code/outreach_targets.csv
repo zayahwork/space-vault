@@ -1,41 +1,53 @@
 id,segment,company,why_them,contact_route,email,status,sent_on,notes
-1,operator,Planet Labs,"Largest smallsat fleet in LEO; conjunction load is a daily operational cost",https://www.planet.com/contact/,,todo,,
+1,operator,Planet Labs,Largest smallsat fleet in LEO; conjunction load is a daily operational cost,https://www.planet.com/contact/,,todo,,
 2,operator,Spire Global,"~100 LEO satellites; sells data, so they think about catalog quality",https://spire.com/contact/,,todo,,
 3,operator,ICEYE,"SAR constellation, growing fast, Finnish - EU ops teams answer email",https://www.iceye.com/contact,,todo,,
 4,operator,Capella Space,"SAR smallsat operator, small ops team = pain is felt personally",https://www.capellaspace.com/contact,,todo,,
-5,operator,BlackSky,"Real-time imaging constellation with a live tasking loop",https://www.blacksky.com/contact/,,todo,,
-6,operator,HawkEye 360,"RF-geolocation clusters; formation flying makes neighbours matter",https://www.he360.com/contact/,,todo,,
+5,operator,BlackSky,Real-time imaging constellation with a live tasking loop,https://www.blacksky.com/contact/,,todo,,
+6,operator,HawkEye 360,RF-geolocation clusters; formation flying makes neighbours matter,https://www.he360.com/contact/,,todo,,
 7,operator,Kepler Communications,"Data-relay constellation, mid-size ops team",https://kepler.space/contact/,,todo,,
-8,operator,Loft Orbital,"Flies other people's payloads - they eat other operators' risk",https://www.loftorbital.com/contact,,todo,,
+8,operator,Loft Orbital,Flies other people's payloads - they eat other operators' risk,https://www.loftorbital.com/contact,,todo,,
 9,operator,Muon Space,"Newer constellation builder-operator, engineers are reachable",https://www.muonspace.com/contact,,todo,,
 10,operator,Pixxel,"Hyperspectral smallsats, India-based, small ops team",https://www.pixxel.space/contact,,todo,,
-11,operator,Satellogic,"Large-ish EO fleet on a thin ops budget - our exact buyer profile",https://satellogic.com/contact/,,todo,,
+11,operator,Satellogic,Large-ish EO fleet on a thin ops budget - our exact buyer profile,https://satellogic.com/contact/,,todo,,
 12,operator,Umbra,"SAR, deliberately lean ops - lean is the whole thesis",https://umbra.space/contact/,,todo,,
 13,operator,Orbital Sidekick,"Small hyperspectral fleet, tiny team",https://www.orbitalsidekick.com/contact,,todo,,
-14,operator,Sidus Space,"Very small operator - the customer nobody else bothers to serve",https://sidusspace.com/contact/,,todo,,
-15,operator,Open Cosmos,"Turnkey missions for third parties; they carry ops burden for others",https://www.open-cosmos.com/contact,,todo,,
+14,operator,Sidus Space,Very small operator - the customer nobody else bothers to serve,https://sidusspace.com/contact/,,todo,,
+15,operator,Open Cosmos,Turnkey missions for third parties; they carry ops burden for others,https://www.open-cosmos.com/contact,,todo,,
 16,operator,AAC Clyde Space,"End-to-end small missions, European, responsive",https://www.aac-clyde.space/contact,,todo,,
 17,operator,GomSpace,"Cubesat platform + missions, Danish",https://gomspace.com/contact.aspx,,todo,,
 18,operator,NanoAvionics,"Buses and missions for many small operators - a channel, not just a customer",https://nanoavionics.com/contact/,,todo,,
-19,operator,D-Orbit,"Orbital transfer vehicles - maneuvering IS their product",https://www.dorbit.space/contact,,todo,,
-20,operator,Turion Space,"Inspection and RPO startup - pattern-of-life is their core question",https://turionspace.com/contact,,todo,,
-21,insurer,AXA XL,"Space insurance practice - prices missions in crowded orbits",https://axaxl.com/insurance/products/space,,todo,,See Guide - Insurer Probe
-22,insurer,Marsh (Space Projects),"Broker with a named space projects team",https://www.marsh.com/en/industries/aviation-aerospace.html,,todo,,See Guide - Insurer Probe
+19,operator,D-Orbit,Orbital transfer vehicles - maneuvering IS their product,https://www.dorbit.space/contact,,todo,,
+20,operator,Turion Space,Inspection and RPO startup - pattern-of-life is their core question,https://turionspace.com/contact,,todo,,
+21,insurer,AXA XL,Space insurance practice - prices missions in crowded orbits,https://axaxl.com/insurance/products/space,,todo,,See Guide - Insurer Probe
+22,insurer,Marsh (Space Projects),Broker with a named space projects team,https://www.marsh.com/en/industries/aviation-aerospace.html,,todo,,See Guide - Insurer Probe
 23,insurer,Gallagher (Aerospace),"Aerospace practice, brokers talk more freely than underwriters",https://www.ajg.com/industries/aviation-aerospace/,,todo,,
 24,insurer,Lockton (Space),"Independent broker, space practice",https://global.lockton.com/us/en/industries/aviation-aerospace,,todo,,
-25,insurer,Global Aerospace,"Pure aerospace underwriter",https://www.global-aero.com/contact/,,todo,,
+25,insurer,Global Aerospace,Pure aerospace underwriter,https://www.global-aero.com/contact/,,todo,,
 26,insurer,Munich Re (Space),"Reinsurer - thinks in aggregate orbital risk, which is exactly our data",https://www.munichre.com/en/solutions/for-industry-clients/space.html,,todo,,
-27,insurer,Allianz Commercial,"Space practice inside a large specialty insurer",https://commercial.allianz.com/,,todo,,
-28,insurer,Beazley,"Specialty lines incl. space",https://www.beazley.com/en-US/contact-us/,,todo,,
+27,insurer,Allianz Commercial,Space practice inside a large specialty insurer,https://commercial.allianz.com/,,todo,,
+28,insurer,Beazley,Specialty lines incl. space,https://www.beazley.com/en-US/contact-us/,,todo,,
 29,partner,LeoLabs,"Commercial radar network - could be a data partner, not just a rival",https://leolabs.space/contact/,,todo,,Partner angle only - do not pitch as competitor
-30,partner,COMSPOC,"Astrodynamics software house; sells to operators we want",https://comspoc.com/contact/,,todo,,Partner angle only
+30,partner,COMSPOC,Astrodynamics software house; sells to operators we want,https://comspoc.com/contact/,,todo,,Partner angle only
 31,partner,ExoAnalytic Solutions,"Optical telescope network, GEO-heavy - complementary to our LEO data",https://exoanalytic.com/contact,,todo,,Partner angle only
 32,partner,Vyoma,"European SSA startup - peer, good for honest pain conversations",https://vyoma.space/contact/,,todo,,Peer - learn, do not sell
-33,partner,Neuraspace,"European collision-avoidance SaaS - peer with real operator customers",https://www.neuraspace.com/contact,,todo,,Peer - learn, do not sell
+33,partner,Neuraspace,European collision-avoidance SaaS - peer with real operator customers,https://www.neuraspace.com/contact,,todo,,Peer - learn, do not sell
 34,partner,Digantara,"India-based SSA startup, similar stage",https://www.digantara.co.in/contact,,todo,,Peer - learn, do not sell
-35,partner,Scout Space,"In-space sensing startup",https://www.scout.space/contact,,todo,,Peer - learn, do not sell
-36,academic,ASTRIAGraph / UT Austin,"Moriba Jah's group - already a warm thread",https://sites.utexas.edu/moriba/,,todo,,Already in Guide - Moriba Jah Call
-37,academic,MIT ARCLab,"Authors of SPLID - the answer-key dataset we validate against",https://arclab.mit.edu/,,todo,,Ask about SPLID's simulated portion
-38,academic,CelesTrak (T.S. Kelso),"Already replied with a full roadmap - keep this thread warm",https://celestrak.org/webmaster.php,,todo,,ACTIVE THREAD - see Guide - Kelso Goldmine
-39,gov,Space-Track / 18 SDS,"Data provider; understanding their roadmap protects our supply",https://www.space-track.org/,,todo,,
-40,gov,Office of Space Commerce (TraCSS),"Civil SSA program - already emailed once",https://www.space.commerce.gov/contact/,,todo,,Follow up only - already contacted
+35,partner,Scout Space,In-space sensing startup,https://www.scout.space/contact,,todo,,Peer - learn, do not sell
+36,academic,ASTRIAGraph / UT Austin,Moriba Jah's group - already a warm thread,https://sites.utexas.edu/moriba/,,todo,,Already in Guide - Moriba Jah Call
+37,academic,MIT ARCLab,Authors of SPLID - the answer-key dataset we validate against,https://arclab.mit.edu/,,todo,,Ask about SPLID's simulated portion
+38,academic,CelesTrak (T.S. Kelso),Already replied with a full roadmap - keep this thread warm,https://celestrak.org/webmaster.php,,todo,,ACTIVE THREAD - see Guide - Kelso Goldmine
+39,gov,Space-Track / 18 SDS,Data provider; understanding their roadmap protects our supply,https://www.space-track.org/,,todo,,
+40,gov,Office of Space Commerce (TraCSS),Civil SSA program - already emailed once,https://www.space.commerce.gov/contact/,,todo,,Follow up only - already contacted
+41,fallback,Advanced Space (Patrick Miga),AMOS 2025 paper on low-latency maneuver detection - confirmed fallback contact,patrick.miga@advancedspace.com,patrick.miga@advancedspace.com,drafted,,See Outreach Emails - Batch 2 #1
+42,academic,MIT ARCLab (Dr. Richard Linares),"Runs SPLID, our validation dataset - direct stake in our finding","linaresr@mit.edu (verified: MIT AeroAstro directory, 617-258-6738)",linaresr@mit.edu,drafted,,VERIFIED 2026-07-21 - MIT directory + MX live. Batch 2 #2
+43,competitor,Digantara,AMOS paper authors on pattern-of-life violations - direct topical overlap,info@digantara.co.in,info@digantara.co.in,drafted,,"/contact 404 - use info@ (site-published, MX live). Batch 2 #3"
+44,competitor,Kratos,"AMOS paper on passive-RF pattern-of-life - different sensor, same idea",https://www.kratosdefense.com/contact,,drafted,,form live 200. Batch 2 #4
+45,partner,LeoLabs,"Commercial radar network - free-data pre-filter angle, not rival",sales@leolabs.space,sales@leolabs.space,drafted,,"no /contact page; sales@ published on homepage, MX live. Partner angle. Batch 2 #5"
+46,partner,COMSPOC,Astrodynamics software house selling to our target operators,https://comspoc.com/contact-us,info@comspoc.com,drafted,,form live + info@/pressinquiry@ published. Batch 2 #6
+47,partner,Vyoma,"European SSA startup, peer stage - honest pain conversation",https://www.vyoma.space/,contact@vyoma.space,drafted,,"/contact 404; contact@ on homepage, MX live. Batch 2 #7", do not sell
+48,partner,Neuraspace,"European collision-avoidance SaaS, peer with real operator customers",https://www.neuraspace.com/contact,info@neuraspace.com,drafted,,form live + info@ published. Batch 2 #8, do not sell
+49,partner,Scout Space,In-space sensing startup - free-data companion angle,https://www.scout.space/contact,,drafted,,"form live, no public email. Batch 2 #9", do not sell
+50,partner,Aerospace Corporation,"Seattle-area presence, bench name from research doc",https://aerospace.org/contact-us,,drafted,,"403 to script (WAF) - browser-only, open by hand. Batch 2 #10"
+51,partner,RBC Signals,"Seattle ground-station data company, bench name",https://rbcsignals.com/contact/,,drafted,,403 to script (WAF) - browser-only. Phone 425-201-5629. Batch 2 #11
+52,partner,Stoke Space,"Kent WA launch provider - referral angle, not a direct buyer",https://www.stokespace.com/contact/,info@stokespace.com,drafted,,form live + info@/media@ published. Referral ask. Batch 2 #12, not a sale

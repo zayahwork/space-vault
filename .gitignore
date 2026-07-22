@@ -1,6 +1,8 @@
 # Credentials. Never, under any circumstance.
 06 Code/spacetrack_auth.json
 **/spacetrack_auth.json
+06 Code/gmail_auth.json
+**/gmail_auth.json
 *.env
 .env
 
@@ -23,3 +25,7 @@
 .obsidian/workspace*.json
 .obsidian/cache
 .trash/
+
+# Room/crew runtime state - regenerated every session
+06\ Code/.brain_cwd/
+06\ Code/sink_out/

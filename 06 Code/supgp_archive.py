@@ -63,7 +63,8 @@ GROUPS = [
 
 POLITE_DELAY_SEC = 2.0
 RETRIES = 3
-RETRY_BACKOFF_SEC = 8.0
+RETRY_BACKOFF_SEC = 8.0     # first backoff; doubles each attempt (8, 16, 32...)
+RETRY_BACKOFF_CAP_SEC = 120.0
 
 # The public 18 SDS catalog for the same objects. We archive it beside SupGP because
 # the maneuver-vs-stale question needs BOTH element sets captured at the same instant,
@@ -76,6 +77,32 @@ HEALTH_LOG = ARCHIVE / "health.jsonl"
 UNCHANGED = "<unchanged>"   # sentinel: CelesTrak says we already have this data
 
 
+class Refused(Exception):
+    """CelesTrak answered and told us no. Not retryable inside this run.
+
+    A 403 here is a decision by the server, not a glitch: we are blocked, or asking
+    for something we may not have. Retrying it is both useless and rude - the only
+    correct move is to record it and let the next scheduled cycle try again.
+    """
+
+    def __init__(self, status, detail):
+        super().__init__(f"HTTP {status}: {detail}")
+        self.status = status
+        self.detail = detail
+
+
+def _retry_after_sec(resp):
+    """CelesTrak's own rate-limit signal, if it sent one. Header wins over guesswork."""
+    raw = resp.headers.get("Retry-After", "").strip()
+    if not raw:
+        return None
+    try:
+        wait = float(raw)                       # the delta-seconds form
+    except ValueError:
+        return None                             # HTTP-date form - fall back to backoff
+    return max(0.0, min(wait, RETRY_BACKOFF_CAP_SEC))
+
+
 def fetch(group, session, timeout=120, base=BASE, param="FILE"):
     """Return CSV text for one constellation group, or None if it has no data.
 
@@ -84,12 +111,23 @@ def fetch(group, session, timeout=120, base=BASE, param="FILE"):
     once every 2 hours). That is politeness enforcement, not an error - treat it as
     UNCHANGED, or we'd retry three times against a server deliberately saying stop.
     The SupGP endpoint does not do this; back-to-back fetches both return 200.
+
+    Any OTHER 403 is a refusal (Refused) and is never retried. A 429 or 5xx is the
+    server asking for time, so it raises normally and the caller backs off.
     """
     resp = session.get(
         base, params={param: group, "FORMAT": "csv"}, headers=HEADERS, timeout=timeout
     )
-    if resp.status_code == 403 and "has not updated" in resp.text.lower():
-        return UNCHANGED
+    if resp.status_code == 403:
+        if "has not updated" in resp.text.lower():
+            return UNCHANGED
+        raise Refused(403, " ".join(resp.text.split())[:200] or "no body")
+    if resp.status_code == 429:
+        # Explicit rate limit. Attach the server's own wait so we honour it exactly
+        # instead of doubling blindly past it.
+        exc = requests.HTTPError(f"429 rate limited for {group}", response=resp)
+        exc.retry_after = _retry_after_sec(resp)
+        raise exc
     resp.raise_for_status()
     text = resp.text
     if not text.strip() or text.lower().startswith(("no supgp data", "no gp data")):
@@ -103,17 +141,28 @@ def fetch_with_retry(group, session, base=BASE, param="FILE"):
     Telesat vanished from the 14:00Z snapshot on 2026-07-21: one failed request, no
     retry, and the manifest simply had no telesat key at all. The run did exit
     non-zero - nobody was watching. So: retry, then record the hole explicitly.
+
+    Backoff doubles (8s, 16s, 32s...) rather than sitting flat, and a Retry-After
+    header overrides it. A Refused (403) breaks out immediately - retrying a server
+    that has said no is how a polite client becomes a banned one.
     """
     last = None
+    wait = RETRY_BACKOFF_SEC
     for attempt in range(1, RETRIES + 1):
         try:
             return fetch(group, session, base=base, param=param), None
+        except Refused as exc:
+            print(f"  {group:<12} REFUSED ({exc}) - not retrying, next cycle will")
+            return None, exc
         except requests.RequestException as exc:
             last = exc
             if attempt < RETRIES:
+                pause = getattr(exc, "retry_after", None)
+                pause = wait if pause is None else pause
                 print(f"  {group:<12} attempt {attempt} failed "
-                      f"({exc.__class__.__name__}) - retrying in {RETRY_BACKOFF_SEC:.0f}s")
-                time.sleep(RETRY_BACKOFF_SEC)
+                      f"({exc.__class__.__name__}) - retrying in {pause:.0f}s")
+                time.sleep(pause)
+                wait = min(wait * 2, RETRY_BACKOFF_CAP_SEC)
     return None, last
 
 
@@ -144,6 +193,7 @@ def snapshot(groups, dry_run=False, with_gp=True):
         "groups": {},
         "gp_active": None,
         "missing": [],
+        "refused": [],     # server said no on purpose - distinct from a broken request
         "suspect": [],
         "total_rows": 0,
     }
@@ -154,10 +204,20 @@ def snapshot(groups, dry_run=False, with_gp=True):
     for i, group in enumerate(groups):
         text, err = fetch_with_retry(group, session)
         if err is not None:
-            print(f"  {group:<12} FAILED after {RETRIES} attempts: {err}")
+            if isinstance(err, Refused):
+                manifest["refused"].append({"group": group, "detail": str(err)})
+            else:
+                print(f"  {group:<12} FAILED after {RETRIES} attempts: {err}")
             manifest["groups"][group] = None      # an explicit hole, not a silence
             manifest["missing"].append(group)
             failures.append(group)
+            continue
+
+        if text is UNCHANGED:
+            # SupGP has not historically done this, but if it starts, the last
+            # snapshot's copy is still the current data - not a hole.
+            print(f"  {group:<12} unchanged since last pull")
+            manifest["groups"][group] = "unchanged"
             continue
 
         if text is None:
@@ -205,6 +265,8 @@ def snapshot(groups, dry_run=False, with_gp=True):
             manifest["gp_active"] = None
             manifest["missing"].append("gp_active")
             failures.append("gp_active")
+            if isinstance(gp_err, Refused):
+                manifest["refused"].append({"group": "gp_active", "detail": str(gp_err)})
             print(f"  {'gp active':<12} FAILED - no public catalog for this snapshot")
         else:
             gp_rows = row_count(gp_text)
@@ -216,9 +278,12 @@ def snapshot(groups, dry_run=False, with_gp=True):
                     fh.write(gp_text)
             print(f"  {'gp active':<12} {gp_rows:>6} objects  (public catalog)")
 
-    if not dry_run and manifest["total_rows"]:
-        out_dir.mkdir(parents=True, exist_ok=True)
-        (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
+    if not dry_run:
+        if manifest["total_rows"]:
+            out_dir.mkdir(parents=True, exist_ok=True)
+            (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
+        # Log even a zero-row run. A cycle where CelesTrak refused everything is the
+        # single most important line in this file, and the old guard threw it away.
         _log_health(manifest, out_dir)
 
     return manifest, failures, out_dir
@@ -231,6 +296,7 @@ def _log_health(manifest, out_dir):
         "snapshot": out_dir.name,
         "total_rows": manifest["total_rows"],
         "missing": manifest["missing"],
+        "refused": [r["group"] for r in manifest.get("refused", [])],
         "suspect": [s["group"] for s in manifest["suspect"]],
         "ok": not manifest["missing"] and not manifest["suspect"],
     }
@@ -258,6 +324,8 @@ def main():
             note = ""
             if e["missing"]:
                 note += f"  missing={','.join(e['missing'])}"
+            if e.get("refused"):
+                note += f"  refused={','.join(e['refused'])}"
             if e["suspect"]:
                 note += f"  suspect={','.join(e['suspect'])}"
             print(f"  {flag} {e['captured_utc'][:16]}  {e['total_rows']:>6} rows{note}")
@@ -270,6 +338,8 @@ def main():
     print(f"\n  total: {manifest['total_rows']} objects")
     if manifest["missing"]:
         print(f"  ⚠ MISSING (recorded as holes): {', '.join(manifest['missing'])}")
+    for r in manifest["refused"]:
+        print(f"  ⚠ REFUSED {r['group']}: {r['detail']} - retry is next cycle, not now")
     for s in manifest["suspect"]:
         print(f"  ⚠ SUSPECT {s['group']}: {s['was']} -> {s['now']} objects")
     if args.dry_run:

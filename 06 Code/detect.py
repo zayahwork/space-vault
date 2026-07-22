@@ -73,6 +73,14 @@ STEP_MINUTES = 1
 AGE_BINS = [0, 3, 6, 12, 24, 48, 96, 1e9]      # hours
 MIN_PER_BIN = 25          # below this a percentile is noise, so we widen instead
 
+# A hard physical sanity gate, applied BEFORE the age-aware statistics.
+# No station-keeping burn - and no plausible orbit-raising a public catalog would
+# lag on - moves an object hundreds of km RMS over a 6h span. A gap this size means
+# the two element sets describe wholly different orbits: a decaying/reentering object
+# or a bad TLE, not a maneuver. These get bucketed as data-quality flags, never as
+# detections, so a nonsense 5,337 km "maneuver" can't reach a customer dashboard.
+MAX_PLAUSIBLE_KM = 500.0
+
 
 # ------------------------------------------------------------------ loading
 
@@ -148,10 +156,23 @@ def capture_jd(snap_dir):
 
 # ------------------------------------------------------------------ the call
 
-def classify(rows, pct, min_km):
-    """Attach a verdict to every row, using its own age bin as the yardstick."""
-    ages = np.array([r["gp_age_h"] for r in rows])
-    gaps = np.array([r["gap_km"] for r in rows])
+def classify(rows, pct, min_km, max_km=MAX_PLAUSIBLE_KM):
+    """Attach a verdict to every row, using its own age bin as the yardstick.
+
+    A hard plausibility gate runs first: any gap >= max_km is physically impossible
+    for a real maneuver and is flagged as a data-quality issue, then excluded from
+    the age-baseline statistics so a handful of nonsense orbits can't distort the
+    per-band thresholds the honest candidates are judged against.
+    """
+    for r in rows:
+        if r["gap_km"] >= max_km:
+            r["verdict"] = "DATA QUALITY FLAG (likely decay or bad TLE, not a maneuver)"
+
+    graded = [r for r in rows if not r["verdict"].startswith("DATA QUALITY")]
+    if not graded:
+        return []
+    ages = np.array([r["gp_age_h"] for r in graded])
+    gaps = np.array([r["gap_km"] for r in graded])
 
     bands = []
     for lo, hi in zip(AGE_BINS, AGE_BINS[1:]):
@@ -166,7 +187,7 @@ def classify(rows, pct, min_km):
             cut, basis, n = float(np.percentile(gaps[sel], pct)), "bin", int(sel.sum())
         bands.append({"lo": lo, "hi": hi, "n": n, "cut_km": cut, "basis": basis,
                       "median_km": float(np.median(gaps[sel]))})
-        for r, is_in in zip(rows, sel):
+        for r, is_in in zip(graded, sel):
             if not is_in:
                 continue
             r["band_cut_km"] = cut
@@ -187,6 +208,9 @@ def main():
                     help="a gap above this percentile FOR ITS AGE BIN is a suspect")
     ap.add_argument("--min-km", type=float, default=5.0,
                     help="never flag anything below this, however unusual for its bin")
+    ap.add_argument("--max-km", type=float, default=MAX_PLAUSIBLE_KM,
+                    help="gaps at/above this are physically impossible for a maneuver; "
+                         "bucketed as data-quality flags, never as detections")
     ap.add_argument("--top", type=int, default=15)
     ap.add_argument("--chart", action="store_true")
     ap.add_argument("--csv", action="store_true", help="write the full table")
@@ -223,7 +247,7 @@ def main():
             "verdict": "agrees",
         })
 
-    bands = classify(rows, args.pct, args.min_km)
+    bands = classify(rows, args.pct, args.min_km, args.max_km)
 
     print("  what a NORMAL gap looks like, by how old the catalog entry is:")
     print(f"  {'age (h)':>12}  {'objects':>8}  {'median km':>10}  {'flag above':>11}")
@@ -237,6 +261,8 @@ def main():
                       key=lambda r: r["gap_km"] / max(r["band_cut_km"], 1e-9),
                       reverse=True)
     stale = [r for r in rows if r["verdict"].startswith("stale")]
+    flagged = sorted([r for r in rows if r["verdict"].startswith("DATA QUALITY")],
+                     key=lambda r: r["gap_km"], reverse=True)
 
     print(f"\n  {'NORAD':>7}  {'gap km':>9}  {'gp age h':>9}  {'normal for age':>14}  ratio")
     for r in suspects[: args.top]:
@@ -247,7 +273,12 @@ def main():
           f"({100*len(suspects)/len(rows):.1f}%)")
     print(f"  big gap but stale  {len(stale):>5}  "
           f"- would have been false positives on gap alone")
-    print(f"  agrees             {len(rows)-len(suspects)-len(stale):>5}")
+    print(f"  agrees             {len(rows)-len(suspects)-len(stale)-len(flagged):>5}")
+    print(f"  DATA QUALITY FLAG  {len(flagged):>5}  "
+          f"- gap >= {args.max_km:g} km, physically impossible; likely decay or bad TLE")
+    if flagged:
+        worst = ", ".join(f"{r['norad']} ({r['gap_km']:.0f} km)" for r in flagged[:3])
+        print(f"                           excluded from candidates, e.g. {worst}")
     if failed:
         print(f"  propagation failed {failed:>5}  (usually reentering)")
 
