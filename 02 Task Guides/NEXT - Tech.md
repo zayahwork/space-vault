@@ -4,6 +4,12 @@ owner: DETECTOR window (tech — heavy lifting)
 status: assigned
 ---
 
+> [!todo] ⚡ CTO update ~04:30 — the second catalog snapshot is BANKED (`0750Z`)
+> Persistence can run **right now**: `python detect.py --group starlink`. Do it first — it's
+> one command, it splits the candidates into *persisted* vs *one-off*, and it's the second
+> number for the Kelso conversation. Update [[RESULTS - Maneuver vs Stale]] with the split,
+> then carry on with the quiet detector below.
+
 # 🔧 NEXT — tech
 
 > [!success] What you just did matters
