@@ -7,6 +7,17 @@ snapshot: 2026-07-22 0200Z
 
 # 🔬 RESULTS — checked against the catalog's own history
 
+> [!note] Window change 2026-07-22 (issue 018) — **the Starlink headline did not move, and here is the proof**
+> `verify.py` no longer hardcodes a ±3-day step window; it now takes a regime-aware,
+> one-sided window (see [[RESULTS - Beyond Starlink]] for why). **LEO deliberately stays at
+> ±3 days**, because the measured Starlink catalog update interval is a **median of 0.27
+> days** (95th 0.98 d, n=2,701 intervals) — the LEO catalog is not late, so widening the
+> window there would only feed the control bar more noise for no gain.
+>
+> So every number on this page is unchanged, by construction rather than by hope. Checked
+> anyway: recomputing all 80 cached objects under the old ±3d and the new window gives
+> **identical steps on 80 of 80**. Nothing on this page was re-baselined quietly.
+
 > [!success] The headline (hardened 2026-07-22, two snapshots)
 > **~two-thirds of the top suspects** clear a movement bar that only **~10% of ordinary
 > satellites** clear — replicated on two independent snapshots (72% vs 11% at 0200Z,

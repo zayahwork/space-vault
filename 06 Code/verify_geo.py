@@ -79,8 +79,13 @@ CACHE = Path(__file__).resolve().parent / "verify_geo_cache"
 # residual from that number.
 GEO_SYNC_REV_DAY = 86400.0 / 86164.0905
 
-WINDOW_DAYS = 3.0     # how close to the snapshot a step has to be to count
+WINDOW_DAYS = 3.0     # legacy symmetric default; the run uses window_for_regime() below
 MIN_POINTS = 5        # below this an object has no history worth stepping through
+
+# One window table, owned by verify.py, used by both verifiers. Keeping a private copy
+# here is how the two drifted apart in the first place: verify.py was scored against
+# documented events and this file was not, and both silently said "3.0".
+window_for_regime = verify.window_for_regime
 
 
 def drift_deg_per_day(mean_motion_rev_day):
@@ -142,7 +147,7 @@ def get_geo_history(session, norads, days):
 
 # ------------------------------------------------------------------ the measures
 
-def biggest_step(points, centre, component, window_days=WINDOW_DAYS):
+def biggest_step(points, centre, component, before_days=WINDOW_DAYS, after_days=None):
     """Largest change in one component between consecutive records near `centre`.
 
     component: 1 = inclination (deg), 2 = longitude drift rate (deg/day).
@@ -150,8 +155,15 @@ def biggest_step(points, centre, component, window_days=WINDOW_DAYS):
     A burn shows in the catalog as a step - the orbit was one thing, then another.
     Restricted to a window around the snapshot so we measure what the detector was
     reacting to rather than something that happened last month.
+
+    Asymmetric by default at GEO, for the same reason as verify.biggest_step_km: the
+    catalog is late, never early. Measured on documented events, a symmetric +/-14d
+    window credits the MEV-2 and Intelsat 1002 dockings with inclination steps that
+    landed 12.3 days BEFORE the docking.
     """
-    lo, hi = centre - timedelta(days=window_days), centre + timedelta(days=window_days)
+    if after_days is None:
+        after_days = before_days
+    lo, hi = centre - timedelta(days=before_days), centre + timedelta(days=after_days)
     best = 0.0
     for a, b in zip(points, points[1:]):
         if lo <= b[0] <= hi:
@@ -263,6 +275,7 @@ def main():
     print(f"\n  {len(suspects)} suspects vs {len(controls)} matched controls")
     print(f"  controls: detect.py said ordinary, catalog age {lo:.1f}-{hi:.1f}h")
 
+    before, after, basis = window_for_regime(run["regime"])
     centre = datetime.fromisoformat(
         json.loads((snap / "manifest.json").read_text(encoding="utf-8"))["captured_utc"])
     if centre.tzinfo is None:
@@ -278,8 +291,8 @@ def main():
             if len(pts) < MIN_POINTS:
                 skipped += 1
                 continue
-            inc.append(biggest_step(pts, centre, 1))
-            drift.append(biggest_step(pts, centre, 2))
+            inc.append(biggest_step(pts, centre, 1, before, after))
+            drift.append(biggest_step(pts, centre, 2, before, after))
         return inc, drift, skipped
 
     s_inc, s_drift, s_skip = measure(suspects)
@@ -287,8 +300,21 @@ def main():
     if s_skip or c_skip:
         print(f"  (skipped for thin history: {s_skip} suspects, {c_skip} controls)")
 
-    print(f"\n  biggest step within +/-{WINDOW_DAYS:g} days of the snapshot, "
-          f"over {args.days} days of history")
+    # Same discipline as verify.py: print the window, its basis, and how much of its
+    # forward reach has actually been published yet.
+    lag = verify.lag_profile({n: [(t, i) for t, i, _ in pts]
+                              for n, pts in hist.items()})
+    obs = verify.observable_window(centre, after)
+    print(f"\n  catalog update interval on this fleet: "
+          + (f"median {lag['median_days']:.2f} d, 95th {lag['p95_days']:.2f} d "
+             f"(n={lag['n']})" if lag["n"] else "not measurable"))
+    print(f"  window: -{before:g} / +{after:g} days   [{run['regime']}]")
+    print(f"    basis: {basis}")
+    if obs["provisional"]:
+        print(f"    ** PROVISIONAL: only {obs['observable_after_days']:.2f} d of the "
+              f"+{after:g} d forward reach has been\n       published yet. Re-run in "
+              f"{obs['settles_in_days']:.1f} d to settle it. **")
+    print(f"\n  biggest step in that window, over {args.days} days of history")
     inc_v = compare("INCLINATION - the north-south burn (~95% of GEO station-keeping)",
                     "deg", s_inc, c_inc)
     dr_v = compare("LONGITUDE DRIFT RATE - the east-west burn  [WEAKER EVIDENCE: derived "
