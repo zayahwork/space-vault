@@ -4,17 +4,18 @@
 > Open **[[01 TASKS]]** → work the bullets top to bottom → each bullet links to a guide with
 > *everything* (steps, addresses, drafts) → tick the box → tell Claude when a chunk is done.
 
-## 📊 The board — what actually exists right now (updated 2026-07-21)
+## 📊 The board — what actually exists right now (updated 2026-07-22)
 
 | | Thing | State | Where |
 |---|---|---|---|
-| 🛰️ | **Maneuver-vs-stale detector** | **Working.** 524 maneuver candidates from 10,780 Starlink (17 impossible >500 km jumps gated out as data-quality flags); 85% of the naive list was just old data | [[RESULTS - Maneuver vs Stale]] |
+| 🛰️ | **Maneuver-vs-stale detector** | **Working, smarter.** Deorbiting hardware (was 79% of the list!) now judged separately; persistence check built (needs 2+ archived catalogs to run); known issue: the 29 ">500 km" discards look like new sats orbit-raising, not bad data | [[RESULTS - Maneuver vs Stale]] |
 | 📡 | SupGP + public-catalog archive | Running every 6h, now with retry + health log + GP capture | `06 Code/supgp_archive.py --health` |
 | 📈 | First maneuver charts | 3/3 ISS maneuvers, Starlink deorbit caught | [[RESULTS - First Charts]] |
-| 📬 | Outreach machine | 52 targets loaded (40 + batch 2's 12), batch 2 **drafted, not sent** | [[Guide - Daily Outreach]] · [[Outreach Emails - Batch 2]] |
+| 📬 | Outreach machine | 52 targets loaded (40 + batch 2's 12), batch 2 **drafted, not sent**. ⚠️ Day-1's 10 sends were by hand and never logged — CSV still says `todo` for all 40 | [[Guide - Daily Outreach]] · [[Outreach Emails - Batch 2]] |
 | 🏛️ | SBIR / SAM.gov | **Parked.** Weekly watcher armed — it un-parks itself | [[Guide - SBIR Steps]] |
 | 🏢 | **The office** — the room, the team, their brains, the money | 7 people · 14 lessons banked · $1,276 of $127,500 charged | **[[00 THE OFFICE]]** |
 | 🖥️ | **The war room** — see them at the table and talk to them | Working. `cd "C:\Space\06 Code"` then type `jarvis` | [[The Room]] |
+| 💰 | **Pricing decision** | **Sequence B locked (2026-07-22):** operators = validation (cheap/free, they label our candidates), insurers = revenue ($150K+, only after the false-positive number exists) | [[Pricing - What to Charge and Who]] |
 | 🗣️ | **Scoreboard** | **1 / 5** pain descriptions · **0 / 1** "can I try it?" | bottom of [[01 TASKS]] |
 
 ## Where everything lives

@@ -116,3 +116,12 @@
 > [!note] Scoreboard (the only one that matters)
 > 🗣️ People describing their pain unprompted: **1 / 5** (Kelso — USSF tracking weaknesses, unsolved launch-ID, in writing, unprompted) · 💰 "Can I try it?" asks: **0 / 1**
 > Emails out: **10 / 10** ✅ · Replies: **2 — Moriba (call door open) + Kelso (full roadmap, same night)**
+>
+> ⚠️ **Reconciled against the machine records 2026-07-22 — they disagree.** The 10 Day-1 sends
+> were by hand and were never logged: `outreach_log.jsonl` doesn't exist, and all 40 batch-1
+> rows in `outreach_targets.csv` still say `todo`. Two consequences until fixed:
+> (1) the dedupe guard is blind — `outreach.py` would happily re-draft the 10 people we already
+> mailed; (2) "10/10 ✅" is remembered, not recorded.
+> **Fix (5 min):** open [[Outreach Emails]], match the 10 recipients to their CSV ids, then
+> `python outreach.py --sent <ids> --note "day-1 manual send"`. Don't guess the ids — check
+> the sent folder in Gmail against the list.
