@@ -8,12 +8,34 @@ supersedes: the GEO hypothesis in [[RESULTS - Beyond Starlink]]
 
 # 🎯 RESULTS — the detector vs. 24 documented maneuvers
 
-> [!success] The one-line version
-> Against **14 scoreable GEO maneuvers with public documentation, the method catches 10
-> (71%)** — and the four it drops are not random. **Two are catalog *lateness*, not
-> blindness** (the signal is real, it just arrives 5–10 days after the event). **Two are
-> servicer dockings, where the target satellite doesn't move at all.** Widen one timing
-> window and 71% becomes 86%.
+> [!quote] The honest summary — read this before any other number on this page
+> We assembled 24 documented events and then stress-tested every row, demanding a **second
+> source independent of the first**. Only **7 of 24 survived**; the other 17 are marked
+> *assumed*. Of the 15 scoreable maneuvers we catch 11 — but that 73% is flattered by its
+> evidence. **On the 6 events with two independent sources, we catch 2 — 33%.** The gap is a
+> selection effect, and it is the most important thing on this page: the events that earn two
+> independent sources are *anomalies* — breakups, failures, servicer dockings — which is
+> precisely the class our altitude-step method handles worst; the events we catch reliably are
+> graveyard disposals and routine station-keeping, which no operator ever announces, so they
+> can only ever be self-sourced. **We are best at what nobody documents and worst at what
+> everybody documents.** And on false positives this set says almost nothing: it contains one
+> true negative, our two live undocumented flags are unresolvable in principle, and the 205
+> Starlink objects flagged on 2026-07-22 have no public documentation of any kind. The ~1%
+> false-alarm rate implied by our bar is a **calibration artifact** — we set the bar at the
+> 99th percentile of a null distribution — **not a measurement**. Ground truth tells you about
+> events that happened; measuring a false-positive rate needs documented *non*-events, which
+> essentially do not exist in public sources. **So: a real but modest detection result on hard
+> cases, a strong one on easy cases, and no measured false-positive rate at all.**
+
+> [!success] The one-line version — true, but read the summary above first
+> Against **14 scoreable GEO maneuvers, the method catches 10 (71%)** — and the four it drops
+> are not random. **Two are catalog *lateness*, not blindness** (the signal is real, it just
+> arrives 5–10 days after the event). **Two are servicer dockings, where the target satellite
+> doesn't move at all.** Widen one timing window and 71% becomes 86%.
+>
+> ⚠️ **Caveat that outranks this box:** most of those 10 catches are events we dated from the
+> catalog ourselves. Restricted to double-sourced events, the rate is **2 of 6**. Use 71% for
+> engineering decisions about where to spend effort; **never use it with a buyer.**
 
 > [!danger] The one-line version we'd rather not write
 > **Our detector can currently be scored on 12 hours of data, not two days.** The public
@@ -31,12 +53,45 @@ curated by an astronomer who has been doing it since 1985.
 
 ## What "ground truth" means here, and what it cost
 
-24 events in `06 Code/ground_truth.csv`. **Every row is marked `verified` or `assumed`:**
+24 events in `06 Code/ground_truth.csv`. **Every row is marked `verified` or `assumed`,
+after a stress test on 2026-07-22 that demanded a second independent source per row:**
 
 | mark | meaning | count |
 |---|---|---|
-| **verified** | a named public source states the event *and* its date | **15** |
-| **assumed** | the event class is inferred from catalog behaviour; no independent document names it | **9** |
+| **verified** | **two mutually independent sources** attest the event and its date | **7** |
+| **assumed** | one source, or a source that derives from the data we measure | **17** |
+
+**What "independent" means here:** neither source derives from the other. Trade coverage
+restating a press release is *not* a second source. A company announcement plus a government
+tracking record *is*. This rule cost us 8 rows that were marked verified on the first pass.
+
+**The 8 downgrades, and why** — each one is a small lesson:
+
+| row | why it fell |
+|---|---|
+| Intelsat 901 graveyard raise | Northrop's release is the only document; every trade story derives from it, **and we supplied the date ourselves** |
+| AMC 18 (null object) | McDowell's classification derives from the same public catalog we measure — not independent of us |
+| 5 × Starlink reentries | Space-Track is authoritative but alone: **McDowell's `rcat.tsv` was last updated 2026-07-17 20:11 UTC, before all five decays** |
+| STARLINK-37977 orbit-raise | SpaceX's FCC filings describe orbit-raising generically, never per-satellite. The classification is our inference |
+
+> [!note] A downgrade is not a doubt
+> The five Starlink reentries are almost certainly real — Space-Track's decay record is the
+> authoritative US government source. They fell to *assumed* on a **procedural** rule, not
+> because anyone disputes them. **Re-check `rcat.tsv` in a week and they should promote.**
+> That's the difference between "we don't believe it" and "we can't yet corroborate it."
+
+**Two things the stress test actually corrected:**
+- **Intelsat 29e's date moved from 2019-04-09 to 2019-04-07** — Intelsat's own release puts
+  the propellant leak "late on April 7". Verdict unchanged (still caught, now with a +2 day
+  lag instead of 0).
+- **I had misread McDowell's catalog.** Its rows are *phases*, not objects — `DDate` is the
+  end of a phase and `Status` is the event that ended it. My first pass read first-phase rows
+  and would have reported Galaxy 15 as "decayed 2006" (it was *renamed* in 2006). Corrected
+  before it reached the CSV. This is also how S33153 resolved: launched as **Protostar 1**,
+  renamed October 2009, now Intelsat 25.
+- **Two dockings gained hour-level corroboration:** GCAT independently records MEV-1 docking
+  at *2020 Feb 25 07:15* and MEV-2 at *2021 Apr 12 17:34* — the latter matching Northrop's
+  "1:34 pm EDT" exactly.
 
 *Jargon: "the catalog" = the public US government orbit list (GP). "GP_HISTORY" = the same
 list, but every past version, going back years. "SupGP" = the operator's own published
@@ -45,9 +100,10 @@ orbit for its own satellite — better, but only for satellites the operator sti
 **An honest note on circularity.** For some events I could only get the *date* by reading
 it out of the catalog's own history. That is the same data our verifier uses, so those rows
 cannot independently validate the verifier — they can only test whether it agrees with
-itself. Rows where the date came from a press release or a Space Force statement
-(IS-901, IS-33e, IS-29e, AMC-9, the MEV dockings, Galaxy 15, every Starlink decay) are the
-genuinely independent ones. **13 of the 15 verified rows are dated by an outside source.**
+itself. **All 7 surviving verified rows are dated by an outside source** — a press release, a Space
+Force statement, a NASA debris bulletin, a USGS space-weather study, or McDowell's phase
+catalog. Every row whose date we had to read out of the catalog is now marked *assumed*,
+which is exactly where the circularity risk lives.
 
 ---
 
@@ -62,6 +118,22 @@ genuinely independent ones. **13 of the 15 verified rows are dated by an outside
 | ❌ **missed outright** | 2 | MEV-2 docking, Intelsat 1002 being docked |
 | — excluded | 1 | MEV-1's own orbit-raising contaminated the window; not a fair test |
 | — true negative | 1 | AMC 18, abandoned: 1,604 orbit updates, no burns, correctly silent |
+
+### The same scoreboard, split by how well-evidenced each event is
+
+This is the split that matters, and it is not flattering:
+
+| evidence tier | events | caught | rate |
+|---|---|---|---|
+| **two independent sources** | 6 | **2** | **33%** |
+| single-source / self-dated | 9 | 9 | 100% |
+| **all scoreable** | 15 | 11 | 73% |
+
+The 100% row should make you suspicious, not pleased — those are the events we dated from the
+catalog ourselves, so a catalog-based detector agreeing with them is close to tautological.
+**The 33% is the number to quote to anyone who matters.** The four verified misses are two
+servicer dockings (target doesn't move), one breakup and one command-loss (both real signals,
+both arriving late).
 
 **The bar this is scored against is measured, not chosen.** I took four satellites McDowell
 classifies as abandoned — they drift, they never fire an engine — and measured how much the
@@ -197,7 +269,8 @@ consistency check that we're not wildly over-flagging — **not** proof we catch
 
 | claim | before today | after ground truth |
 |---|---|---|
-| "we detect GEO maneuvers" | ❌ unproven | ✅ **10 of 14 documented events, worst case 2× the measured noise floor** |
+| "we detect GEO maneuvers" | ❌ unproven | ⚠️ **11 of 15 documented events — but only 2 of 6 that carry two independent sources. Quote 33%, not 73%** |
+| "we have a known false-positive rate" | implied | ❌ **never measured. The ~1% is how we set the bar, not a result** |
 | "we detect them same-day" | implied | ❌ **no — the catalog itself is up to 10 days late** |
 | "we detect 'went quiet'" | implied by the pitch | ⚠️ **not with the step verifier. Galaxy 15 proves it. Needs `quiet.py`** |
 | "the GEO gap is an altitude-vs-longitude problem" | stated in [[RESULTS - Beyond Starlink]] | ❌ **retracted — drift and altitude are the same number** |
