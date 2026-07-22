@@ -581,8 +581,12 @@ def apply_bounces(rows, sends, msgids):
 
 
 def check_bounces(rows, args):
-    """Read the inbox for delivery failures and retire the dead addresses."""
-    auth = load_auth()
+    """Read every account's inbox for delivery failures and retire dead addresses.
+
+    A bounce for mail sent from account B arrives in account B's inbox, not the
+    primary's, so with several sending accounts each one has to be checked.
+    """
+    accounts = load_auth()
     sends = {e["message_id"]: e for e in read_log()
              if e.get("ok") and e.get("message_id")}
     if not sends:
@@ -591,34 +595,38 @@ def check_bounces(rows, args):
 
     since = (datetime.date.today()
              - datetime.timedelta(days=args.since_days)).strftime("%d-%b-%Y")
-    box = imaplib.IMAP4_SSL(args.imap_host, 993,
-                            ssl_context=ssl.create_default_context())
     hits = 0
-    try:
-        box.login(auth["address"], auth["app_password"])
-        box.select("INBOX", readonly=True)
-        ok, data = box.search(None, f'(SINCE {since})', '(OR OR FROM '
-                              '"mailer-daemon" FROM "postmaster" '
-                              'SUBJECT "Undeliverable")')
-        if ok != "OK":
-            print(f"\n  IMAP search failed: {ok}\n")
-            return 1
-        nums = data[0].split()
-        print(f"\n  {len(nums)} bounce-shaped messages since {since}.")
-        for num in nums:
-            ok, payload = box.fetch(num, "(RFC822)")
-            if ok != "OK" or not payload or not isinstance(payload[0], tuple):
-                continue
-            for row in apply_bounces(rows, sends,
-                                     bounce_report_ids(payload[0][1])):
-                hits += 1
-                print(f"  bounced #{row['id']:<3} {row['company']:<28} "
-                      f"{row['email']}")
-    finally:
+    for acct in accounts:
+        box = imaplib.IMAP4_SSL(args.imap_host, 993,
+                                ssl_context=ssl.create_default_context())
         try:
-            box.logout()
-        except Exception:
-            pass
+            box.login(acct["address"], acct["app_password"])
+            box.select("INBOX", readonly=True)
+            ok, data = box.search(None, f'(SINCE {since})', '(OR OR FROM '
+                                  '"mailer-daemon" FROM "postmaster" '
+                                  'SUBJECT "Undeliverable")')
+            if ok != "OK":
+                print(f"  {acct['address']}: IMAP search failed: {ok}")
+                continue
+            nums = data[0].split()
+            print(f"\n  {acct['address']}: {len(nums)} bounce-shaped messages since {since}.")
+            for num in nums:
+                ok, payload = box.fetch(num, "(RFC822)")
+                if ok != "OK" or not payload or not isinstance(payload[0], tuple):
+                    continue
+                for row in apply_bounces(rows, sends,
+                                         bounce_report_ids(payload[0][1])):
+                    hits += 1
+                    print(f"  bounced #{row['id']:<3} {row['company']:<28} "
+                          f"{row['email']}")
+        except Exception as e:
+            # One account's IMAP being unreachable must not blind the others.
+            print(f"  {acct['address']}: bounce check skipped ({e})")
+        finally:
+            try:
+                box.logout()
+            except Exception:
+                pass
 
     if hits:
         save(rows)
