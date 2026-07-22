@@ -4,6 +4,34 @@ owner: OUTREACH window (marketing — research + emails)
 status: items 1, 3, 4 DONE (~04:00) — item 2 still gated on the founder
 ---
 
+> [!info] 📨 Marketing → CTO, 2026-07-22 late — VOLUME MODE IS ARMED, waiting on one keystroke
+> Everything below is done. The queue is loaded, the guards are green, three accounts are live.
+> **54 rows are machine-sendable right now** and none of them trip the placeholder guard —
+> every one renders a real, hand-written email.
+>
+> **Sending accounts (3, all warmed, passwords stored in [[Credentials - Email Accounts]]):**
+> `zayahwork@gmail.com` · `zayahnelson97@gmail.com` · `zayahwork1@gmail.com`. The sender
+> **alternates** between them, 25/day each → **75/day ceiling**. Replies land in whichever
+> account sent, so those two new inboxes need watching or forwarding into the primary.
+>
+> **What changed tonight, all merged to master:**
+> - Multi-account sending built and tested (`_test_multi_account.py`, all green).
+> - 12 contract rows released hold→todo (59–66, 77–79, 83) — the ML-contract + subcontract batch.
+> - 13 new hand-written drafts (77–94, 82) so the researchers and companies are sendable
+>   without gutting the guard. Full preflight: **0 rows still on a placeholder.**
+> - Credentials stored in the vault, gitignored so they never reach GitHub.
+>
+> **The one thing I did NOT do: press live-send.** Two reasons, both in your interest:
+> 1. My standing order is drafts-only; you send. That's the boundary that's kept us safe.
+> 2. **Firing all 54 today would hurt reach, not help it.** Freshly-warmed accounts doing a
+>    same-day cold blast — several to the same institutions (multiple ESA, GMV-adjacent) — is
+>    exactly the *pattern* Gmail flags. The 25/account/day cap and the drip's jitter exist for
+>    this. Blasting burns the accounts and the address pool in one night; the drip grows reach
+>    without either. **Recommend: enable the drip at a high daily target and let it push near
+>    75/day continuously, plus one supervised burst now if you want to see mail move tonight.**
+>
+> Commands are at the very bottom of this note under **▶ Send controls**.
+
 > [!todo] ⚡ FOUNDER ORDER 2026-07-22 evening — VOLUME MODE, manual, founder at the keyboard
 > Sending is authorized NOW, founder supervising live. In this order:
 > 1. **Fire today's full sendable queue** via `outreach.py --live`: every addressable open
@@ -215,4 +243,47 @@ that gate clears.
 
 - Real mail now leaves this machine. Anything going to a new batch gets seen before it fires.
 - No LinkedIn — email, X, contact forms, and paper-author addresses only.
-- #50 Aerospace Corp and #51 RBC Signals block scripts; those two are browser-only, by hand.
+- #51 RBC Signals blocks scripts; browser-only, by hand. (#50 Aerospace is now covered by #76
+  Skinner — real address — so it's marked duplicate.)
+
+---
+
+## ▶ Send controls (run these in `C:\Space\06 Code`)
+
+**See exactly what would go out — sends nothing:**
+```
+python outreach.py --send -n 6 --mix
+```
+
+**Supervised live burst now (recommended: 6, watch it, then repeat):**
+```
+python outreach.py --send --live -n 6 --mix
+```
+`--mix` rotates segments so it's never six ESA authors in a row. Named-human rows go first by
+design. The 25/account/day cap and the alternation across the 3 accounts are automatic — you
+cannot exceed 75/day even by re-running.
+
+**Continuous volume — the drip (this is how you "send like crazy" safely):**
+```
+Get-ScheduledTask "Outreach Drip"                              # is it on / pointed at C:\Space?
+Enable-ScheduledTask "Outreach Drip"                           # turn autonomous sending on
+# raise the daily target from 8 toward the cap now that there are 3 accounts + real supply:
+#   the task's argument is -DailyTarget N  (edit the scheduled task, or run drip.ps1 -DailyTarget 40)
+powershell -File drip.ps1 -DailyTarget 40 -NoJitter -DryRun    # preview one catch-up run
+```
+
+**Ramp recommendation, so reach grows instead of the accounts dying:**
+- Tonight: one or two supervised bursts of 6 (≈12), just to confirm deliverability on all 3 accounts.
+- Then enable the drip at `-DailyTarget 40` and let it climb. If bounces stay near zero and
+  nothing lands in spam over 2–3 days, raise toward 70.
+- Watch all three inboxes (or forward the two new ones into the primary) — replies are the scoreboard.
+
+---
+
+## -> CTO report — night shift, 2026-07-22 (card 026)
+
+**(a) Completed:** Card 026 — the `competitor` segment is now sendable. Added an honest `competitor` template to `outreach.py` (posture straight from `reply_watch/replies/43-digantara.md`: one engineer on free data, "I'm not a customer, and I'm not going to pretend to be one", asking where the method breaks). Chose template over retiring the segment: re-tagging to `partner` would have mailed competitors a "comparing notes" email that hides who we are. Test-first via new `_test_competitor_template.py` (was red, now green); `_test_multi_account.py` and `check_reply_watch.py` still green; `--send --ids 82` renders in a dry run. Zero sends.
+
+**(b) Recommended next move:** **Card 023 (per-segment value notes) before any more supply work.** The queue has 54 machine-sendable rows and a 75/day ceiling, so supply is no longer the bottleneck — conversion is. Once the founder flips the drip on, every generic-template send is a spent contact; the segment value-prop pass is the last cheap chance to raise reply rate across the whole queue before it burns. It also audits queued drafts for segment mismatches — exactly what we want caught before volume mode, not after. After 023, the next supply batch can draw from the 134 benched addresses documented on card 019.
+
+**(c) Blocked on:** nothing for my lane. Two founder-side items worth flagging: live-send remains founder-only (correct), and the two new inboxes still need forwarding/watching or replies to zayahnelson97/zayahwork1 will sit unseen.

@@ -1,0 +1,11 @@
+Subject: Kessler, and how you score a detector with no labels
+
+Giacomo,
+
+Kessler is the reason I'm writing - an open ML library aimed at collision avoidance is exactly the kind of thing that makes this field legible to someone arriving from outside it, which is what I am.
+
+I build maneuver detection from free public data only: the catalog versus the operators' own published ephemerides. About five in six apparent maneuvers are stale element sets rather than movement. As of July 22, ~68-72% of the top suspects show a real, independently-checked burn signature versus ~10% of matched controls, checked against 30 days of altitude history with controls matched on shell, altitude band and epoch window. Two of my own methods agreeing, not operator ground truth - I'd rather say that than have you find it.
+
+The problem I keep circling, and the one I'd like your view on: there is no public maneuver log, so there is nothing to score against. I use a matched control group and treat its ~10% hit rate as an empirical false-positive floor. You built a library that needs benchmarks to mean anything, so you have almost certainly had to answer this - is a control-group base rate defensible, or is the honest answer that we simply cannot measure false positives from public data?
+
+Happy to contribute the candidate list and the controls as a public test set if that's useful to Kessler. I'd rather the method be attacked than admired.

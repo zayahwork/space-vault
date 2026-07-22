@@ -1,0 +1,11 @@
+Subject: your all-vs-all screening paper - would a "which objects actually moved" prior help?
+
+Prof. Urrutxua,
+
+Your SDC8 paper with Stevenson, Rodriguez-Fernandez, Morand and Camacho on AI for all-vs-all conjunction screening addresses the scaling problem from the inside. I've been coming at the same wall from outside, with no sensors and no compute budget worth mentioning.
+
+I rank LEO objects by how far the public catalog disagrees with the operators' own published ephemerides. About 4,900 Starlink objects look like they moved; five in six of those are stale catalog entries rather than movement, leaving roughly 490 real candidates. As of July 22, ~68-72% of the top suspects show a real, independently-checked burn signature versus ~10% of matched controls, checked against 30 days of altitude history with controls matched on shell, altitude band and epoch window. Two of my own methods agreeing, not operator ground truth - I'd rather say that than have you find it.
+
+The question: in an all-vs-all screening pipeline, would a free daily list of which catalogued objects most likely maneuvered recently be a useful prior - a set of correlations to distrust tonight - or does the screening geometry make it irrelevant? I can imagine it being either, and you'd know in a sentence.
+
+I'm an ML engineer working independently in the US. If the honest answer is that this isn't a real bottleneck, that saves me months and I'll say thank you and stop.
