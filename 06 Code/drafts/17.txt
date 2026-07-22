@@ -2,7 +2,7 @@ Subject: built a maneuver detector on free data — two questions for GomSpace
 
 Hi,
 
-I built a detector that flags satellites breaking their own routine, using only free public tracking data, and checked it against 30 days of altitude history with a matched control group. Flagged objects move 11.3× more than ordinary ones; 72% show a real burn signature versus 11% of controls. Honest framing: two of my own methods agreeing, not operator ground truth.
+I built a detector that flags satellites breaking their own routine, using only free public tracking data, and checked it against 30 days of altitude history with a matched control group. As of July 22, ~68–72% of the top suspects show a real, independently-checked burn signature versus ~10% of matched controls. Honest framing: two of my own methods agreeing, not operator ground truth.
 
 GomSpace sees this from two directions — what your platform customers ask for, and what your own mission operations deal with. That's why I'm writing.
 

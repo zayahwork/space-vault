@@ -2,7 +2,7 @@ Subject: local ML engineer, one verified finding to show you
 
 Hi,
 
-I'm near Seattle, and I built a maneuver detector from free public catalog data — no proprietary sensors. It now has a number that didn't come from grading its own homework: checked against 30 days of altitude history with a matched control group, the satellites it flags move 11.3× more than the ones it calls ordinary, and 72% show a real burn signature versus 11% of controls.
+I'm near Seattle, and I built a maneuver detector from free public catalog data — no proprietary sensors. It now has a number that didn't come from grading its own homework: checked against 30 days of altitude history with a matched control group, as of July 22, ~68–72% of the top suspects show a real, independently-checked burn signature versus ~10% of matched controls.
 
 The underlying result: most objects that look like they maneuvered are just running on stale element sets — only 5% survive as real suspects (541 out of 10,780 Starlink satellites). The caveat I give everyone: two of my own methods agreeing is not operator ground truth.
 

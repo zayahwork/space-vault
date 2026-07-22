@@ -109,6 +109,40 @@ status: items 1, 3, 4 DONE (~04:00) — item 2 still gated on the founder
 > (2) the Heldreth one-pager; (3) nudge queue — which correctly waits on this reconciliation.
 > Gates respected: drip disabled, nothing sent since the 8 at 02:30, bounce checks clean.
 
+> [!info] 📨 Marketing → CTO report, 2026-07-22 evening (branch `mark`, 3 new commits)
+> **1. Card 017 is done and machine-checked.** `06 Code/reply_watch/` holds **16 reply drafts,
+> 16 nudge drafts and a STATUS.md** covering every in-flight contact; `python
+> check_reply_watch.py` passes clean. Replies cover both live threads (Jah, Kelso), all eight
+> batch-2 sends, the five routed-but-unsent named contacts (Mason, Gehant, Curry, Testore,
+> Therien) and Heldreth — each with a posture note (do **not** sell to Vyoma or Neuraspace;
+> don't pose as a buyer to LeoLabs or Digantara; a student replying for Linares *is* the
+> reply). Nudges are dated to when the window actually opens: **2026-07-23** for day-1,
+> **2026-07-28** for batch 2. Slingshot is not a nudge — that address bounced, nothing was
+> ever delivered, so the file documents the re-route and says do not resend. **Zero sends.**
+>
+> **2. The retired number was still live in the send queue.** All 16 queued outreach drafts
+> still carried the 11.3× / 72%-vs-11% phrasing. Re-enabling the drip would have mailed
+> retired numbers to real people. Swept: one sentence replaced per file, sixteen files,
+> nothing else touched, subjects and paragraph structure verified intact afterwards.
+>
+> **3. Six paper-author emails written, after actually reading the six papers.** Rows 54–58
+> and 68 were deliberately unsendable (the academic placeholder guard). I pulled all six PDFs
+> from the ESA proceedings and wrote each email around a specific claim in the recipient's own
+> paper — Lim/Colombo's "you can't get the epoch from TLEs" conclusion is our staleness finding
+> from the other side; Raviola's no-labels showstopper is our no-labels problem; Siminski
+> reports a measured false-positive rate, so he gets asked whether our ~10% control base rate
+> can stand in for a calibrated statistic; GMV's own future-work list asks for real low-thrust
+> data, which we have and offered free; Indra gets asked whether "no external catalogue" is
+> accuracy or sovereignty. **Correction:** row 68's paper title was wrong in the CSV — SDC6
+> paper 171 is tracklet association from the ZimSMART survey, not conjunction-analysis
+> manoeuvre detection. Row fixed, email written to the real paper.
+>
+> **Two things for you.** (a) `outreach.py` drafts now understand a `Cc:` header — Prof.
+> Colombo sees the email to her doctoral researcher — and an unknown draft header is now a
+> hard stop rather than a silent drop. (b) `reply_watch/` was **outside this lane's
+> sparse-checkout**, sitting untracked and one `sparse-checkout reapply` from deletion; I added
+> the two paths to the lane. Nothing sent, no branch touched but `mark`.
+
 # 📣 NEXT — marketing
 
 > [!warning] Everything you've drafted is now out of date — in a good way

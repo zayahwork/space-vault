@@ -197,21 +197,26 @@ def read_draft(row):
     drafts/<id>.txt, headers then a blank line then the body:
 
         Subject: your low-latency maneuver paper - something I stumbled into
+        Cc: camilla.colombo@polimi.it
         Attach: output/starlink_deorbit_detected.png
 
         Patrick,
         ...
 
-    Attach is optional and repeatable; paths are relative to 06 Code. The
-    signature is appended by compose(), same as the templates, so drafts must
-    not repeat it.
+    Attach is optional and repeatable; paths are relative to 06 Code. Cc is
+    optional and repeatable too - it exists for papers with a supervisor who
+    should see the email but isn't the person being asked. The signature is
+    appended by compose(), same as the templates, so drafts must not repeat it.
+
+    An unrecognised header is a hard stop, not a shrug: a 'Cc:' line that gets
+    silently dropped means a professor never sees an email we believed they got.
     """
     path = DRAFTS_DIR / f"{str(row['id']).strip()}.txt"
     if not path.exists():
         return None
     text = path.read_text(encoding="utf-8")
     head, _, body = text.partition("\n\n")
-    subject, attachments = None, []
+    subject, cc, attachments = None, [], []
     for line in head.splitlines():
         key, sep, val = line.partition(":")
         if not sep:
@@ -219,21 +224,32 @@ def read_draft(row):
         key, val = key.strip().lower(), val.strip()
         if key == "subject":
             subject = val
+        elif key == "cc" and val:
+            cc.extend(a.strip() for a in val.split(",") if a.strip())
         elif key == "attach" and val:
             attachments.append(val)
+        elif key not in ("subject", "cc", "attach"):
+            raise SystemExit(f"\n  {path.name} has an unknown header {key!r}. "
+                             f"Only Subject, Cc and Attach are understood.\n")
     if not subject:
         raise SystemExit(f"\n  {path.name} has no 'Subject:' header line.\n")
-    return subject, body.strip("\n"), attachments
+    return subject, body.strip("\n"), attachments, cc
 
 
 def compose(row):
     """The actual email, as it would land: (subject, body)."""
     hand = read_draft(row)
     if hand is not None:
-        subject, body, _ = hand
+        subject, body = hand[0], hand[1]
         return subject, f"{body}\n\n{SIGN}\n"
     subject, body = TEMPLATES.get(row["segment"], TEMPLATES["operator"])
     return subject, f"{body}\n{SIGN}\n"
+
+
+def cc_for(row):
+    """Addresses this row's hand-written draft asks to be copied in."""
+    hand = read_draft(row)
+    return list(hand[3]) if hand is not None else []
 
 
 def attachments_for(row):
@@ -354,6 +370,9 @@ def build_message(row, from_addr):
     msg = EmailMessage()
     msg["From"] = f"{FROM_NAME} <{from_addr}>"
     msg["To"] = row["email"].strip()
+    cc = cc_for(row)
+    if cc:
+        msg["Cc"] = ", ".join(cc)
     msg["Subject"] = subject
     msg["Date"] = formatdate(localtime=True)
     msg["Message-ID"] = make_msgid(domain=from_addr.split("@")[-1])
@@ -606,6 +625,8 @@ def send_batch(rows, args):
     for r in batch:
         msg = build_message(r, from_addr)
         print(f"{'-' * 74}\n  #{r['id']}  {r['company']}  ->  {msg['To']}")
+        if msg["Cc"]:
+            print(f"  cc: {msg['Cc']}")
         print(f"  subject: {msg['Subject']}")
     print("-" * 74)
 
