@@ -68,6 +68,35 @@ A fixed 1–2 per run either misses the target or overshoots, because runs get s
 sendable pool moves under us. Chasing the number means the day lands near 12 while still
 looking nothing like a scheduler — bursty early, quiet mid-afternoon, a straggler at five.
 
+### What runs without anyone touching it
+
+| Every run | What it does |
+|---|---|
+| **Preflight** | Refuses to run at all if `gmail_auth.json` is missing from the tree it's in, and says so in the log — silent credential failure used to look identical to a quiet day |
+| **Low-queue alarm** | Logs `LOW QUEUE` when fewer than 5 rows are sendable. An empty queue is the failure nobody notices: the drip keeps running and mails nobody |
+| **Pacing** | Reads the audit log (`--count-today`), compares to where it should be for the hour, sends the difference |
+| **Jitter / skip / weekend / after-hours** | As above |
+| **Segment rotation** | `--mix` |
+| **Bounce sweep** | `--check-bounces` after every run; dead addresses are parked, never retried |
+| **Ledger** | Status, date and Message-ID written per send, after each one, so a crash can't lose the record |
+
+**Target is 8/day**, not 12 — that's what the queue can feed
+([[Volume Pass - What the Drip Can Actually Reach]]). Raise `-DailyTarget` when inventory does.
+
+> [!warning] The one thing that is NOT automatic
+> The **"Outreach Drip" scheduled task still points at a different worktree**, so none of the
+> above is live until it points at the merged tree. After merging to `C:\Space`:
+>
+> ```
+> $t = Get-ScheduledTask "Outreach Drip"
+> $t.Actions[0].Arguments = '-NonInteractive -ExecutionPolicy Bypass -File "C:\Space\06 Code\drip.ps1"'
+> $t.Actions[0].WorkingDirectory = "C:\Space\06 Code"
+> Set-ScheduledTask $t
+> ```
+>
+> And `gmail_auth.json` must exist in `C:\Space\06 Code` — it's gitignored, so it does not
+> travel with the merge. The preflight check will tell you loudly if it's missing.
+
 ### It rotates segments (`--mix`)
 
 The CSV is grouped by segment because that's how it was written, so a plain walk sends nine
