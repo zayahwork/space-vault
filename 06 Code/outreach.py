@@ -152,6 +152,21 @@ I'm working on maneuver detection and pattern-of-life using only free public orb
 I'd rather ask than assume. Thanks for any steer.
 
 Thanks,"""),
+    # Competitors get the straightest email of all. The posture is the one
+    # reply_watch/replies/43-digantara.md documents: not a customer, not a
+    # threat, say what we are. Pretending to be a buyer to a company that sells
+    # what we build is the one move that can never be walked back.
+    "competitor": (
+        "maneuver detection from free public data - where does it break?",
+        """Hi,
+
+To be straight about who I am before anything else: one ML engineer, working on maneuver detection and pattern-of-life from free public orbit data. No sensors, no funding, and you are much further down this road than I am - so I'm not a customer, and I'm not going to pretend to be one.
+
+I'm writing because you've published in exactly this area, and the most useful thing anyone could tell me is the failure mode: where does public-catalog-only detection break in ways someone with real sensors can see and I can't?
+
+If the honest answer is that you solved this years ago, that's useful to me too and I won't take more of your time.
+
+Thanks,"""),
     "gov": (
         "question about public orbit data availability",
         """Hi,
