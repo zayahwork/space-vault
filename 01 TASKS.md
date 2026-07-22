@@ -90,6 +90,14 @@
       541 candidates and no way to check them is not a detector, it's a ranked guess. Start with the
       top ones: 5,337 km and 8,412 km RMS are physically implausible for a burn and are probably
       decaying objects or bad elements → [[RESULTS - Maneuver vs Stale]]
+- [ ] 🔇 **Teach it to say "nothing happened" — and to spot a satellite going quiet.** Every
+      threshold we have is a percentile, so the tool always returns the top 5% and can never
+      report a quiet day. Worse, it can't see an **absence**: a satellite that *stops*
+      station-keeping drops off the list instead of onto it — and that's the health signal the
+      insurer pitch is built on ([[Pricing - What to Charge and Who]], $150K–400K/yr). Two
+      parts: absolute thresholds learned from the archive (so zero is possible), and per-object
+      cadence (so "this one stopped" is visible). Part 2 needs weeks of archive — build it now,
+      it unblocks itself → [[Plan - The Quiet Detector]]
 - [ ] 📐 **Sable: the structure question.** Before more detector work — what shape does the data have to
       be in for a claim to be possible at all? Age bins are non-monotonic at 24–48h vs 48–96h (618 vs 45
       objects). Do we need per-constellation baselines, per-altitude, or longer history first?
