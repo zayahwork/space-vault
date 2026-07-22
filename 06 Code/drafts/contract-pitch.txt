@@ -1,0 +1,13 @@
+Subject: contract ML help - [COMPANY], not an application
+
+[NAME],
+
+You've got [an ML/algorithms role open / a lot of tracking data and a small team] - so this is the offer that usually gets skipped: I'm not applying, I'm offering to take work by the hour while the hire happens or doesn't.
+
+The specific overlap: I build ML on orbital data. Most recently a maneuver detector from free public tracking data - it ranks objects that broke their own routine, and I checked it against the catalog's own history with a matched control group rather than grading it myself. About two-thirds of the top candidates show independent movement against a ~10% control base rate. The code has tests, and when the archive is too short to answer honestly the tool refuses to answer instead of guessing.
+
+[ONE line naming what THEY do and where I'd plausibly be useful - data quality, detection, pipeline, or a second opinion on a model. If I can't write this line specifically, they're the wrong target and this email shouldn't go.]
+
+How I usually work: a scoped one-week piece first, paid, so you find out what I'm like before committing to anything. After that either hourly or a fixed-scope month, whichever you prefer.
+
+Worth 15 minutes? Happy to walk through the detector live - it's public data, so there's nothing I have to be cagey about.
