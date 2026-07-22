@@ -40,6 +40,23 @@ Scheduled task **"Outreach Drip"** runs `06 Code/drip.ps1` every hour from 8am t
 Each run sends **at most 2**, then checks for bounces. Nothing runs overnight on purpose:
 mail that arrives at 3am is buried under the 9am pile, and nobody is awake to notice a misfire.
 
+**It doesn't actually send on the hour** (since 2026-07-22). The scheduler can only fire on an
+exact interval, and mail leaving at 08:00:04, 09:00:04, 10:00:04 — two at a time, twenty seconds
+apart, every day — reads as a machine to anyone who looks at the headers, and Gmail looks. So
+each run rolls dice before it does anything:
+
+| dice | effect |
+|---|---|
+| wait `0–25 min` | the send lands somewhere inside the hour, not at the top of it |
+| `20%` skip | one run in five sends nothing, so there are natural quiet gaps |
+| `1 or 2` emails | not always the same number |
+| `35–95s` between sends | not a metronome |
+
+Averages a bit over one an hour across eleven hours — well under the cap, and shaped like
+someone working a list between other things. Weekends are skipped (`-Weekends` overrides), and
+a jitter roll that would land after 7pm is dropped rather than sent late. `-NoJitter` fires
+immediately, for when you're running it by hand.
+
 **The schedule is a suggestion; the cap is the law.** `outreach.py` counts today's sends from
 its own audit log and refuses to exceed `DAILY_CAP` (25), so a scheduler misfire cannot become
 a blast. `MAX_PER_RUN` is 5, well under the cap, which is what forces the send to spread out.
@@ -51,6 +68,7 @@ limiter and slow enough that a bad batch gets caught before it repeats.
 
 ```
 powershell -File drip.ps1 -DryRun      # what would go out, sends nothing
+powershell -File drip.ps1 -NoJitter    # send now, skip the dice (manual run)
 powershell -File drip.ps1 -N 1         # one at a time
 Get-ScheduledTask "Outreach Drip"      # is it on?
 Disable-ScheduledTask "Outreach Drip"  # stop everything, now
