@@ -22,7 +22,7 @@ Thumbnail carries the day number: **Day 1 → Day 3 → Day 6 → Day 9 → …*
 
 | | |
 |---|---|
-| Length | **9–12 min** — matches all three reference channels ([[Reference - Style Teardown]]) |
+| Length | **8–10 min** (locked by founder 2026-07-22) — Erik's 76k video is 8:43, the shortest of the three references ([[Reference - Style Teardown]]) |
 | Spine | **You, talking POV** (iPhone, day-in-the-life). Screen capture is B-roll *under* your voice, never the main event |
 | Shorts | 2–3 cut out of each long-form, not shot separately |
 | Structure | Open on a **goal**, spend the episode on the real attempt, close on the verdict + the next goal |
@@ -60,8 +60,14 @@ any one of them on screen for a single frame is a doxx:
 **Hard rule: nothing gets marked ready-to-publish until I've done an OPSEC pass and
 listed every timestamp needing a blur or a cut.** No exceptions, no "it's only a second."
 
-Blur is fine for a name in passing. **Cut** for anything with an @ in it, and for the
-auth file always.
+> [!danger] Locked by founder 2026-07-22: **NO NAMED PEOPLE. EVER.**
+> No third party's name appears on screen *or is spoken on the audio track*. Not
+> researchers, not brokers, not insurers, not people who replied to you. They're "a broker
+> in Seattle", "the guy who wrote the paper". This is stricter than blurring and it's
+> simpler to enforce: if a name is in the frame or in the mouth, it's cut.
+
+Blur is fine for a UI element in passing. **Cut** for anything with an @ in it, any real
+person's name, and the auth file always.
 
 ## Footage inventory (as of 2026-07-22)
 
