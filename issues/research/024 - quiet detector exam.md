@@ -43,3 +43,21 @@ already abandoned when the archive began never spikes, never reaches 3, and repo
 `no rhythm yet` forever. `WENT QUIET` is reachable only by a satellite that stops *during*
 our window. **A catch rate of nothing on Jul 29 is the expected result, not a failure** — and
 must be reported as "not measurable", never as 0%. Follow-up filed as **issue 025**.
+
+
+**Re-done properly 2026-07-22 (night, CTO directive).** The first pass built a GEO-belt
+status table that intersected the actual spike-history population at ZERO objects. Corrected:
+- Ran `quiet.py` against the live archive and enumerated the gradeable population from its own
+  code path: **55 objects with >=3 spikes (49 Starlink, 6 OneWeb), zero Intelsat/SES** — GEO
+  refreshes too slowly to accumulate 3 looks in 5 snapshots.
+- All 55 are documented Active in McDowell's `currentcat`, so all 55 are pre-registered
+  `on rhythm`. `quiet_exam.csv` rebuilt (812 rows, 55 in exam set); note rewritten.
+- **OneWeb gap closed** — `currentcat`'s Active flag covers all regimes (654 in-orbit, 652
+  active), where `geotab` was GEO-only.
+- **`06 Code/quiet_exam_score.py`** added: grades a Jul 29 run in one command. Feedback loop
+  demonstrated on synthetic runs (fault-injected false alarm caught; clean run 0/55).
+
+The structural finding stands and is now proven against the real population: the exam measures
+a **false-alarm rate on 55 documented non-events** and **cannot measure a catch rate** (no
+known-dead object has spikes; MIN_SPIKES=3 guarantees it). Report catch rate as not-measurable
+on Jul 29, never 0%.
