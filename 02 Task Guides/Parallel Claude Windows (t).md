@@ -4,16 +4,25 @@ Set up 2026-07-22, copied from [[03 Reference/Video Digest - Agentic Engineer Wo
 
 ## The one thing to remember
 
-Open Command Prompt (or PowerShell), type **`t`**, press Enter. Four Claude Code windows — plain Command Prompt windows — appear in a 2×2 grid:
+Open Command Prompt (or PowerShell), type **`t`**, press Enter. Four Claude Code windows — plain Command Prompt windows — appear in a 2×2 grid, **one per work stream, each on its own branch in its own worktree**, so they can never step on each other:
 
 | | Left | Right |
 |---|---|---|
-| **Top** | HIGH effort | HIGH effort |
-| **Bottom** | MEDIUM effort | LOW effort |
+| **Top** | **PLAN** · high effort · `master` | **DETECTOR** · high effort · `detector` |
+| **Bottom** | **OUTREACH** · medium effort · `outreach` | **ROOM** · low effort · `room` |
 
-- **Top row (HIGH):** big stuff — planning, features, anything that needs real thinking.
-- **Bottom-left (MEDIUM):** normal everyday tasks.
-- **Bottom-right (LOW):** quick questions ("what does this file do?"). Answers fast, costs little.
+- **PLAN (top-left):** the boss window. Vault notes, task list, planning — and it's the only one on `master`, which is what Obsidian shows.
+- **DETECTOR (top-right):** maneuver detection, SupGP, SPLID. The hard technical work.
+- **OUTREACH (bottom-left):** email drafting, contact checking.
+- **ROOM (bottom-right):** crew tooling and quick questions.
+
+The three branch windows live in copies under `~\.claude\worktrees\` — the launcher creates
+them automatically, copies the Space-Track/Gmail auth files in, and links the SupGP archive
+(so all streams read the same one real archive).
+
+**Getting work back onto master:** a branch's changes don't show in Obsidian until merged.
+When a stream finishes something, go to the PLAN window and say: *"merge the detector branch
+into master"* (commit in the stream window first).
 
 `t C:\SomeOtherFolder` opens the grid in a different repo. Script lives at [t.ps1](../06 Code/t.ps1).
 
@@ -28,10 +37,9 @@ each of the 4 windows picks up its own conversation right where it left off.
 
 ## Branches (set up 2026-07-22)
 
-The repo has a branch per work stream: **`detector`** (maneuver detection), **`outreach`**
-(emails + contact checking), **`room`** (the crew tooling). Vault notes stay on `master`.
-Careful: all 4 windows share one checkout — `git switch` in one window switches ALL of them.
-When one window needs its own stream, give it a worktree: `/wt detector`.
+One branch per work stream: **`detector`**, **`outreach`**, **`room`** — and `t` wires each
+to its own window automatically (see the grid above). Vault notes stay on `master`.
+Need an extra stream beyond the standard four? `/wt some-name` in any window makes one.
 
 ## Status line
 

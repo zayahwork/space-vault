@@ -26,7 +26,8 @@
       "Write(.claude/agents/)",
       "Edit(.claude/agents/)",
       "Read(.claude/agents/)",
-      "Bash(PYTHONIOENCODING=utf-8 python -c ' *)"
+      "Bash(PYTHONIOENCODING=utf-8 python -c ' *)",
+      "PowerShell($p = Get-Process -Id $PID; $p.Name; $p.MainWindowTitle; $c = Get-CimInstance Win32_Process -Filter \"ProcessId=$PID\"; while \\($c.ParentProcessId\\) { $c = Get-CimInstance Win32_Process -Filter \"ProcessId=$\\($c.ParentProcessId\\)\" -ErrorAction SilentlyContinue; if \\(-not $c\\) { break }; \"$\\($c.ProcessId\\) $\\($c.Name\\) :: $\\($c.CommandLine\\)\" })"
     ]
   }
 }
