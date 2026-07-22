@@ -156,6 +156,57 @@ def test_leo_is_not_provisional_for_the_usual_reason():
     check("LEO settles in 3 days", obs["provisional"], False)
 
 
+# ------------------------------------------------- suspect/control selection (issue 003)
+#
+# The larger-n sweep has to pick its two groups EXACTLY the way verify.py picks them, or
+# the hardened rate is not the same measurement at a bigger n - it is a different
+# measurement. So both call one function, and these tests pin its behaviour.
+
+def row(norad, gap, cut, age, flagged, verdict="agrees", falling=False):
+    return {"norad": norad, "gap_km": gap, "band_cut_km": cut, "gp_age_h": age,
+            "flagged": flagged, "verdict": verdict, "falling": falling}
+
+
+def test_suspects_ranked_by_gap_over_its_own_bar():
+    rows = [row(1, 10.0, 10.0, 5, True), row(2, 30.0, 10.0, 5, True),
+            row(3, 20.0, 10.0, 5, True)]
+    s, _ = verify.select_groups(rows, 2)
+    check("ranked by gap/cut, not raw gap", [r["norad"] for r in s], [2, 3])
+
+
+def test_falling_objects_are_never_suspects():
+    rows = [row(1, 99.0, 1.0, 5, True, falling=True), row(2, 10.0, 1.0, 5, True)]
+    s, _ = verify.select_groups(rows, 5)
+    check("decaying object excluded from suspects", [r["norad"] for r in s], [2])
+
+
+def test_controls_share_the_suspects_age_range():
+    rows = [row(1, 10.0, 1.0, 20, True),
+            row(2, 1.0, 1.0, 20, False),      # in range, agrees -> eligible
+            row(3, 1.0, 1.0, 99, False),      # out of age range -> not eligible
+            row(4, 1.0, 1.0, 20, False, verdict="DATA QUALITY")]  # not 'agrees'
+    _, c = verify.select_groups(rows, 5)
+    check("controls matched on catalog age and verdict",
+          [r["norad"] for r in c], [2])
+
+
+def test_controls_are_capped_at_n():
+    rows = [row(1, 10.0, 1.0, 20, True)]
+    rows += [row(100 + i, 1.0, 1.0, 20, False) for i in range(50)]
+    _, c = verify.select_groups(rows, 5)
+    check("never more controls than suspects asked for", len(c) <= 5, True)
+
+
+def test_selection_matches_what_verify_run_top_would_do():
+    """Pins the spread rule: controls are sampled ACROSS the pool, not the first n of it,
+    so they are not all the youngest entries in the age band."""
+    rows = [row(1, 10.0, 1.0, 20, True)]
+    rows += [row(100 + i, 1.0, 1.0, 20, False) for i in range(10)]
+    _, c = verify.select_groups(rows, 2)
+    check("controls sampled across the pool with a stride",
+          [r["norad"] for r in c], [100, 105])
+
+
 # ---------------------------------------------------------------- both verifiers agree
 
 def test_verify_geo_uses_the_same_window_table():

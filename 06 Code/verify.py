@@ -316,20 +316,39 @@ def run_flags(session, rows, centre, days):
     return {"decaying": decaying, "flat": flat, "nodata": nodata}
 
 
-def run_top(session, rows, centre, days, top, regime="LEO"):
-    """2b - suspects vs a matched control group of objects we called ordinary."""
-    before, after, basis = window_for_regime(regime)
+def select_groups(rows, top):
+    """The two groups every verify run compares: top suspects, and matched controls.
+
+    Factored out so the larger-n hardening sweep (issue 003) picks its groups with THIS
+    code rather than a copy of it. A hardened rate measured on a differently-chosen
+    control set is not the same number at a bigger n, it is a different number - and two
+    copies of a selection rule drifting apart is exactly the bug that let verify.py and
+    verify_geo.py ship different windows while both said "3.0".
+
+    Controls are objects detect.py called ORDINARY, drawn across the same catalog-age
+    range as the suspects, so the two groups differ in what detect.py SAID about them,
+    not in what they are. Sampled with a stride across the pool rather than taking the
+    first n, so they are not all from one end of the age band.
+    """
     suspects = sorted([r for r in rows if not r["falling"] and r.get("flagged")],
                       key=lambda r: r["gap_km"] / max(r["band_cut_km"], 1e-9),
                       reverse=True)[:top]
-    # Controls: same regime, called ordinary, drawn across the same catalog-age range
-    # so the two groups differ in what detect.py SAID, not in what they are.
+    if not suspects:
+        return [], []
     ages = [r["gp_age_h"] for r in suspects]
     lo, hi = min(ages), max(ages)
     pool = [r for r in rows if not r["falling"] and not r.get("flagged")
             and r["verdict"] == "agrees" and lo <= r["gp_age_h"] <= hi]
     step = max(1, len(pool) // top)
-    controls = pool[::step][:top]
+    return suspects, pool[::step][:top]
+
+
+def run_top(session, rows, centre, days, top, regime="LEO"):
+    """2b - suspects vs a matched control group of objects we called ordinary."""
+    before, after, basis = window_for_regime(regime)
+    suspects, controls = select_groups(rows, top)
+    ages = [r["gp_age_h"] for r in suspects]
+    lo, hi = min(ages), max(ages)
 
     print(f"\n  {len(suspects)} top suspects vs {len(controls)} matched controls")
     print(f"  controls: same regime, catalog age {lo:.1f}-{hi:.1f}h, detect.py said "

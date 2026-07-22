@@ -12,13 +12,19 @@ status: assigned
 # 🔧 NEXT — tech (Tim)
 
 > [!success] Where we stand after last night
-> The number that goes in front of people is now: **~68–72% of top suspects clear a bar only
-> ~10% of matched controls clear** (replicated on two snapshots). The old **11.3× multiple is
-> RETIRED** — it swung to 23.8× between runs. If you see 11.3× in any note, fix it and say so.
-> OneWeb verified the method isn't a Starlink fluke. GEO is our named blind spot: SES shows
-> no signal because the verifier watches altitude and GEO burns barely change altitude.
-> `quiet.py` is built and correctly refusing until ~Jul 29. The 6-hourly Maneuver Alert task
-> is running itself.
+> The number that goes in front of people is now **96% of top-75 suspects clear a bar only
+> ~11% of matched controls clear** (both snapshots, issue 003). ⬆️ **This replaces 68–72%**,
+> which was measured minutes after the snapshot when the forward half of the window held no
+> data yet; re-scored aged, the same suspects give 96% and controls stay at 11%. Practical
+> rule: a same-day LEO verify under-reports — re-run ~12h later before quoting. The old
+> **11.3× multiple stays RETIRED** (rates, not multiples). Separation sags with n as a ranked
+> list should: 96% at 75, 52–63% at 300, control rate 10% throughout.
+>
+> GEO is no longer the "altitude-blind" story — the referee (015) refuted that; the fix was
+> the timing window and it now ships (018, −3/+14d at GEO). SES's live miss is formally
+> **unexplained**, back on the open list (card 025). OneWeb verified the method isn't a
+> Starlink fluke. `quiet.py` is built and correctly refusing until ~Jul 29. The 6-hourly
+> Maneuver Alert task is running itself.
 
 ## Standing order: never idle
 

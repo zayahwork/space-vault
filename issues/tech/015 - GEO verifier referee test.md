@@ -18,7 +18,12 @@ closed-by: tim
 
 ## ✅ Closed 2026-07-22 — Randy's timing explanation won; my altitude-blindness mechanism is refuted. Table live in `RESULTS - Beyond Starlink.md`
 
-**Scoreboard** (each event judged against its own era- and cadence-matched null bar from abandoned GEO/ID drifters):
+> **Re-scored 2026-07-22 by issue 026** — ground truth grew to 17 scoreable rows; the
+> all-scoreable column below moved (altitude −3/+14d 13/14 → **16/17**) but the
+> **double-sourced 5/6 did not**. Numbers as-run at 15 rows are kept here as the closing
+> record; the live scoreboard is in `RESULTS - Beyond Starlink.md`.
+
+**Scoreboard at close (14 scoreable rows)** — each event judged against its own era- and cadence-matched null bar from abandoned GEO/ID drifters:
 
 | measurement | all 14 | double-sourced 6 |
 |---|---|---|
