@@ -1,7 +1,7 @@
 ---
 date: 2026-07-22
 type: research
-status: TARGET LIST ONLY — do not email anyone on this page yet
+status: ADDRESSES FOUND 2026-07-22 — parked on `hold`, nothing sends automatically
 parent: "[[Guide - Insurer Probe]]"
 ---
 
@@ -59,13 +59,46 @@ a shrinking desk; deprioritize.
   the Starlink shell where our 11.3× result lives.
 - AXA XL already paid for this category once (SpaceAble). Precedent, not speculation.
 
-## How this updates the CSV (rows 21–28)
+## Addresses — found 2026-07-22
 
-- Rows exist for AXA XL, Marsh, Gallagher, Lockton, Global Aerospace, Munich Re, Allianz,
-  Beazley — routes mostly dead or generic (contact_check: AXA XL, Marsh, Lockton, Munich Re
-  unreachable).
-- **When the insurer probe opens**: lead with Heldreth (local, new-in-role, broker view),
-  then Kunstadter (public evangelist for exactly our data category), then Wade/ASIC
-  (technical desk). Named humans, individually written — never the template.
+Every one of these came from a document the company itself published. None came from a
+scraper site (ZoomInfo/RocketReach mask the address and charge for the rest anyway). All
+domains have live MX.
+
+| Who | Address | How we know |
+|---|---|---|
+| **Chris Kunstadter** — Global Head of Space, AXA XL | `chris.kunstadter@axaxl.com` | ✅ **Verified** — printed in his own slide decks, twice: the NASA SCAF space-insurance update and the ESA/indico version |
+| **David Wade** — Space Underwriter, Atrium/ASIC | `David.wade@atrium-uw.com` | ✅ **Verified** — published on Atrium's own space page, with +44 207 050 3000 |
+| **Lee Davis** — Deputy Space Underwriter, ASIC | `Lee.davis@atrium-uw.com` | ✅ **Verified** — same page. The backup if Wade goes quiet |
+| **Denis Bensoussan** — Head of Space, Beazley | `denis.bensoussan@beazley.com` | ✅ **Verified** — Beazley's own people page, with +44 20 7674 7844 |
+| **Melissa Heldreth** — Director US Space Practice, Gallagher | `Melissa_Heldreth@ajg.com` | ⚠️ **Inferred** — Gallagher's own *Plane Talking* PDF prints five US staff as `First_Last@ajg.com` (Adam_Sullivan, Steve_Lloyd, Grant_S_Robinson…), and the same names appear on the current team page. Her address is not published anywhere; the pattern is |
+
+**Still no address, and why:**
+
+- **Marsh** — found the human: **Patton Kline**, US Aviation & Space Practice Leader, New York.
+  Marsh publishes no addresses at all; convention unconfirmed. Old CSV route was a 404, fixed.
+- **Munich Re** — page 403s a script and names nobody. Still one of the few big reinsurers in
+  space. This one is a phone call, not an email.
+- **Global Aerospace** — only `beaproducer@`, which is broker recruitment, i.e. the wrong door.
+  Underwriting line: +1 888-228-0001.
+- **WTW / Lockton** — nothing published; both sit behind Gallagher and Marsh in priority anyway.
+- **Allianz** — marked **dead** in the CSV. They've pulled back from direct space underwriting;
+  a shrinking desk isn't worth an email.
+- **Llift Space** (the 18-syndicate NewSpace consortium) — humans identified, **Gary Brice**
+  (Brit, Head of Marine & Space) and **Pascal Lecointe** (Hiscox, Space Line Underwriter). No
+  addresses yet. Worth another pass: 18 syndicates through one conversation, aimed at exactly
+  our size of customer.
+
+## How this updates the CSV (rows 21–28, 53)
+
+- Rows 21 (AXA XL), 23 (Gallagher), 28 (Beazley) and new row 53 (Atrium/ASIC) now carry a real
+  address and are set to **`hold`** — *not* `todo`.
+- **`hold` is deliberate.** The drip only picks up `todo`/`drafted`, so parking them means the
+  automatic sender cannot reach them. Four named humans in a market of a few dozen decision
+  makers is exactly the list you do not want a segment template landing on. They get written by
+  hand, one at a time, or not at all.
+- **Order when the probe opens**: Heldreth (local, new in role, broker view of everything) →
+  Kunstadter (already paid for this data category once) → Wade/ASIC (technical desk, 8
+  syndicates) → Bensoussan (built a satellite book from nothing, will have opinions).
 
 Sources: [Lloyd's — Space](https://www.lloyds.com/about-lloyds/our-market/what-we-insure/space) · [New Space Economy — orbital insurance market](https://newspaceeconomy.ca/2026/03/29/the-orbital-insurance-market-how-underwriters-are-pricing-constellation-scale-risk/) · [Atrium ASIC](https://www.atrium-uw.com/specialisms/space/asic/) · [AXA XL × SpaceAble](https://www.insurancejournal.com/news/international/2021/04/22/610964.htm) · [Kunstadter — Office of Space Commerce ACES](https://space.commerce.gov/advisory-committee-on-excellence-in-space-aces/aces-membership/christopher-kunstadter/) · [The Insurer — Heldreth appointment](https://www.theinsurer.com/ti/news/gallagher-names-baldwins-heldreth-director-of-us-space-practice-2025-12-11/) · [Gallagher aerospace](https://www.ajg.com/gallagher-specialty/industries/aerospace-aviation/) · [Marsh — Space](https://www.marsh.com/en/industries/aviation-space/expertise/space.html) · [Munich Re — space solutions](https://www.munichre.com/en/solutions/for-industry-clients/space-and-satellite-insurance-solutions.html) · [ts2 — satellite insurance boom](https://ts2.tech/en/space-at-stake-the-boom-in-satellite-insurance-risk-management-2025-2032/) · [Insurance Business — $6bn market stress test](https://www.insurancebusinessmag.com/us/news/breaking-news/the-6-billion-space-insurance-market-faces-its-biggest-stress-test-yet-578992.aspx)

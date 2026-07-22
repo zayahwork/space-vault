@@ -1,0 +1,11 @@
+Subject: WebPlan and scheduling - a question, and an offer of contract hands
+
+Agnieszka,
+
+Your WebPlan paper on web-based sensor scheduling was useful to me for an unexpected reason: I've been working the other end of the same problem - deciding which objects are worth looking at in the first place.
+
+Mine is built only from free public tracking data. Rank Starlink by how far the catalog disagrees with the operators' published orbits and about 4,900 objects look like they manoeuvred; 89% of that is a stale catalog entry rather than movement. Filtering the deliberate deorbits leaves roughly 490 station-keepers that moved when they shouldn't have. Checked against the catalog's own altitude history with matched controls, about two-thirds of the top candidates verify against a ~10% base rate - two of my own methods agreeing, not operator ground truth.
+
+That list is essentially a scheduling prior: a ranked, free, daily answer to "which objects deserve a sensor tonight." I'd like to know whether that's useful to a scheduler, or whether it's an input you already have solved.
+
+And plainly: if Sybilla ever needs ML contract help, I'm available, and I'd rather start with a scoped paid week than a long sales conversation.

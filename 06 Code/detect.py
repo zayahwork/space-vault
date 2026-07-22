@@ -65,6 +65,7 @@ import gzip
 import io
 import json
 import sys
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -120,6 +121,92 @@ FALLING_KM_PER_DAY = -0.4
 # a measurement, two is a measurement that repeated.
 HISTORY_SNAPSHOTS = 4
 MIN_LOOKS = 2
+
+
+# ------------------------------------------------------------------ orbital regime
+#
+# Every constant above was calibrated on Starlink, at 475 km, in thick air. Point the
+# same code at a GEO bird 75x higher and it still runs, still prints a table, and still
+# sounds confident - while two of its three filters quietly do nothing at all. Measured
+# on 2026-07-22:
+#
+#                         median alt      km/day range        median gap    "falling"
+#   starlink (LEO)          475.2 km   -55.44 .. +24.18         9.68 km    1021 objects
+#   intelsat (GEO)       35,786.6 km    -0.077 .. +0.160        7.44 km       0 objects
+#   ses      (GEO)       35,786.0 km    -0.085 .. +0.192        0.97 km       0 objects
+#
+# The decay filter needs an object to lose 0.4 km/day. Nothing at GEO comes within a
+# factor of two of that, because there is no atmosphere up there to lose it to. The
+# filter is not broken, it is INAPPLICABLE - and a detector that reports "on the way
+# down: 0" as though it had looked and found none is lying by omission.
+#
+# So the regime is named out loud, and each profile says which filters can actually
+# fire. Naming it is the point: silence about an inert filter is how a LEO number ends
+# up quoted as a GEO result.
+LEO_CEILING_KM = 2000.0
+GEO_BAND_KM = (34000.0, 37000.0)      # 35,786 nominal, plus room for drift and graveyard
+
+# The floor below which nothing is flagged however unusual it looks for its age bin.
+# 5 km on Starlink is about half that population's median gap. The same 5 km at GEO is
+# five times SES's median - the same nominal number is ~10x more restrictive relative to
+# the population it is judging, and it silently excludes most of the constellation from
+# ever being flagged at all.
+#
+# GEO gets 1.0 km instead. Be clear about what that number is: it is a JUDGEMENT, not a
+# measurement. There is no drag up there so the catalog tracks a GEO bird far more
+# closely, and 1 km sits above the sub-km noise while leaving normal station-keeping
+# reachable. It has not been validated against a real GEO maneuver record, and until it
+# has, it is the least defensible constant in this file.
+REGIME_PROFILES = {
+    "LEO": {"min_km": 5.0, "decay_filter": True,
+            "note": "drag is real here; the decay split does work"},
+    "GEO": {"min_km": 1.0, "decay_filter": False,
+            "note": "no drag: the decay split cannot fire and is reported as inert"},
+    "MEO": {"min_km": 2.0, "decay_filter": False,
+            "note": "little drag; decay split treated as inert pending evidence"},
+}
+
+
+def orbital_regime(altitudes):
+    """Name the regime a constellation lives in, or 'mixed' if it does not live in one.
+
+    Judged on the median so a couple of graveyard or transfer orbits cannot rename the
+    whole constellation, and refuses to answer when the population genuinely straddles
+    regimes - a single profile would be wrong for most of it.
+    """
+    alts = [a for a in altitudes if a == a]          # drop NaN (no mean motion on file)
+    if not alts:
+        return "unknown"
+    med = float(np.median(alts))
+    if med <= LEO_CEILING_KM:
+        regime = "LEO"
+    elif GEO_BAND_KM[0] <= med <= GEO_BAND_KM[1]:
+        regime = "GEO"
+    elif med < GEO_BAND_KM[0]:
+        regime = "MEO"
+    else:
+        return "unknown"
+    # A constellation spread across regimes gets no profile at all. Better to say so
+    # than to judge half a population by the other half's physics.
+    share = sum(1 for a in alts if _regime_of_one(a) == regime) / len(alts)
+    return regime if share >= 0.8 else "mixed"
+
+
+def _regime_of_one(alt):
+    if alt <= LEO_CEILING_KM:
+        return "LEO"
+    if GEO_BAND_KM[0] <= alt <= GEO_BAND_KM[1]:
+        return "GEO"
+    if alt < GEO_BAND_KM[0]:
+        return "MEO"
+    return "unknown"
+
+
+def regime_profile(regime):
+    """Constants appropriate to a regime. Unknown regimes fall back to LEO, loudly."""
+    return REGIME_PROFILES.get(regime, dict(REGIME_PROFILES["LEO"],
+                                            note="UNRECOGNISED REGIME - using LEO "
+                                                 "constants, which are probably wrong"))
 
 
 # ------------------------------------------------------------------ loading
@@ -323,10 +410,13 @@ def classify(rows, pct, min_km, max_km=MAX_PLAUSIBLE_KM, flag=SUSPECT,
                 continue
             r["band_cut_km"] = cut
             r["band_median_km"] = float(np.median(gaps[sel]))
-            if r["gap_km"] >= cut and r["gap_km"] >= min_km:
+            # The floor is the object's own where analyze stamped one (regimes differ
+            # inside a single operator's fleet); the scalar is the fallback.
+            floor = r.get("min_km", min_km)
+            if r["gap_km"] >= cut and r["gap_km"] >= floor:
                 r["verdict"] = flag
                 r["flagged"] = True
-            elif r["gap_km"] >= min_km:
+            elif r["gap_km"] >= floor:
                 r["verdict"] = "stale (big gap, but normal for its age)"
             else:
                 r["verdict"] = "agrees"
@@ -357,12 +447,18 @@ def learn_baselines(group, pct, min_km, max_km):
     because a threshold nobody can audit is a tuned number wearing a lab coat.
     """
     pools = {"station": {}, "falling": {}}     # (lo,hi) -> [gaps]
-    used = []
+    used, floors, regimes_seen = [], set(), set()
     for snap in snapshot_dirs():
         run = analyze(snap, group, pct, min_km, max_km, allow_live=False)
         if not run or run.get("skipped") or not run["rows"]:
             continue
         used.append(str(snap.relative_to(ARCHIVE)).replace("\\", "/"))
+        # Record the floors actually applied, not the None that asked for a regime
+        # default. A baseline stamped "min_km: null" is provenance nobody can audit -
+        # and for a straddling fleet like SES a single scalar would be a lie, since its
+        # GEO half was judged at 1 km and its MEO half at 2 km.
+        floors.update(r["min_km"] for r in run["rows"])
+        regimes_seen.add(run["regime"])
         for r in run["rows"]:
             if r["gap_km"] >= max_km:
                 continue                        # data-quality rows poison baselines
@@ -374,8 +470,13 @@ def learn_baselines(group, pct, min_km, max_km):
     if not used:
         sys.exit("no scoreable snapshots to learn from")
 
+    applied = sorted(floors)
     out = {"group": group, "learned_utc": datetime.now(timezone.utc).isoformat(),
-           "pct": pct, "min_km": min_km, "snapshots": used, "regimes": {}}
+           "pct": pct,
+           "min_km": applied[0] if len(applied) == 1 else applied,
+           "orbital_regime": sorted(regimes_seen)[0] if len(regimes_seen) == 1
+                             else sorted(regimes_seen),
+           "snapshots": used, "regimes": {}}
     for regime, bands in pools.items():
         every = [g for v in bands.values() for g in v]
         entries = []
@@ -402,6 +503,13 @@ def load_baselines(group):
         return None
     raw["cuts"] = {reg: {(b["lo"], b["hi"]): b["cut_km"] for b in bands}
                    for reg, bands in raw["regimes"].items()}
+    # Guarantee a key per regime, so a baseline file that is missing one entirely
+    # cannot hand analyze() a None. None means "rank mode" to classify(), so a
+    # truncated or hand-edited file would silently rank that whole regime while the
+    # run still called itself alert mode - the one failure here that leaves no trace
+    # in the output. An empty dict refuses loudly instead, which is the house rule.
+    for regime in ("station", "falling"):
+        raw["cuts"].setdefault(regime, {})
     return raw
 
 
@@ -460,6 +568,34 @@ def analyze(snap_dir, group, pct, min_km, max_km, allow_live=True, stored=None):
             "flagged": False,
         })
 
+    # Where does this constellation actually live? The floor below which nothing is
+    # flagged has to come from the regime, not from Starlink. Passing min_km=None means
+    # "use the regime's own"; an explicit --min-km still wins.
+    #
+    # The floor is stamped PER OBJECT, not per constellation, because operators do not
+    # respect the boundary: SES flies 38 birds at GEO and 30 more at 8,066 km (O3b), and
+    # measured on 2026-07-22 no single floor is right for both halves. A constellation
+    # -wide number would judge one half by the other half's physics.
+    regime = orbital_regime([r["altitude_km"] for r in rows])
+    prof = regime_profile(regime)
+    for r in rows:
+        if min_km is not None:
+            r["min_km"] = min_km                     # an explicit --min-km wins outright
+        elif r["altitude_km"] == r["altitude_km"]:   # not NaN
+            r["min_km"] = regime_profile(_regime_of_one(r["altitude_km"]))["min_km"]
+        else:
+            r["min_km"] = prof["min_km"]             # no mean motion on file - fall back
+    if min_km is None:
+        min_km = prof["min_km"]
+
+    # Can the decay split fire for ANY object here? Asked of the objects themselves
+    # rather than the constellation label, because "mixed" falls back to LEO constants
+    # and would otherwise claim a working decay filter for a GEO+MEO fleet that has no
+    # atmosphere to decay into.
+    decay_applies = any(
+        regime_profile(_regime_of_one(r["altitude_km"]))["decay_filter"]
+        for r in rows if r["altitude_km"] == r["altitude_km"])
+
     # Each regime gets its own baseline. A deorbiting satellite is only interesting
     # if it is extreme among OTHER deorbiting satellites.
     on_station = [r for r in rows if not r["falling"]]
@@ -472,7 +608,9 @@ def analyze(snap_dir, group, pct, min_km, max_km, allow_live=True, stored=None):
 
     return {"dir": snap_dir, "rows": rows, "bands": bands, "failed": failed,
             "gp_src": gp_src, "n_sup": len(sup), "n_gp": len(gp), "skipped": None,
-            "n_falling": len(falling), "n_station": len(on_station)}
+            "n_falling": len(falling), "n_station": len(on_station),
+            "regime": regime, "profile": prof, "min_km": min_km,
+            "decay_applies": decay_applies}
 
 
 # --------------------------------------------------------- temporal persistence
@@ -535,8 +673,11 @@ def main():
     ap.add_argument("--group", default="starlink")
     ap.add_argument("--pct", type=float, default=95.0,
                     help="a gap above this percentile FOR ITS AGE BIN is a suspect")
-    ap.add_argument("--min-km", type=float, default=5.0,
-                    help="never flag anything below this, however unusual for its bin")
+    ap.add_argument("--min-km", type=float, default=None,
+                    help="never flag anything below this, however unusual for its bin. "
+                         "Default: the orbital regime's own floor (LEO 5.0, MEO 2.0, "
+                         "GEO 1.0) - 5 km is half Starlink's median gap but five times "
+                         "SES's, so one number cannot serve both")
     ap.add_argument("--max-km", type=float, default=MAX_PLAUSIBLE_KM,
                     help="gaps at/above this are physically impossible for a maneuver; "
                          "bucketed as data-quality flags, never as detections")
@@ -611,10 +752,39 @@ def main():
     rows, bands = latest["rows"], latest["bands"]
     print(f"  supgp      {latest['n_sup']} objects")
     print(f"  gp         {latest['n_gp']} objects ({latest['gp_src']})")
-    print(f"  comparable {len(rows) + latest['failed']} objects\n")
+    print(f"  comparable {len(rows) + latest['failed']} objects")
     if not rows:
         sys.exit("no overlap - nothing to compare")
     failed = latest["failed"]
+
+    # ---- which physics are we actually in? -----------------------------------
+    # Say it out loud. The same code, the same table and the same confident tone
+    # come out whether or not half the filters below can fire at all.
+    med_alt = float(np.nanmedian([r["altitude_km"] for r in rows]))
+    prof = latest["profile"]
+    floors = sorted({r["min_km"] for r in rows})
+    shown = (f"floor {floors[0]:g} km" if len(floors) == 1
+             else "floor " + "/".join(f"{f:g}" for f in floors) + " km, per object")
+    print(f"  regime     {latest['regime']} - median altitude {med_alt:,.0f} km, "
+          f"{shown}"
+          f"{' (--min-km given)' if args.min_km is not None else ' (regime default)'}")
+    if latest["regime"] == "mixed":
+        mix = Counter(_regime_of_one(r["altitude_km"]) for r in rows
+                      if r["altitude_km"] == r["altitude_km"])
+        parts = ", ".join(f"{n} {k}" for k, n in sorted(mix.items(), key=lambda kv: -kv[1]))
+        print(f"             This operator straddles regimes ({parts}). No single floor "
+              f"fits, so each\n             object is judged against its own; the "
+              f"constellation-wide number would have\n             put one half under "
+              f"the other half's physics.")
+    if not latest["decay_applies"]:
+        drops = [r["km_per_day"] for r in rows]
+        print(f"             DECAY SPLIT INERT here: no drag at this altitude, so the "
+              f"split cannot fire.")
+        print(f"             Nothing can reach {FALLING_KM_PER_DAY} km/day - this "
+              f"population spans {min(drops):+.3f} to {max(drops):+.3f}.")
+        print(f"             'on the way down: 0' below means NOT APPLICABLE, "
+              f"not 'looked and found none'.")
+    print()
 
     # ---- second filter: did the same objects look wrong last time too? --------
     looks, runs, unusable = {}, [latest], []

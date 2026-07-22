@@ -1,0 +1,16 @@
+Subject: your constellation collision-avoidance paper - and a stale-catalog number you may want
+
+Jonas,
+
+Your SDC8 paper with Ayala Fernandez and Stoll on the impact of collision-avoidance manoeuvres on large constellations is why I'm writing - the manoeuvre load you model is exactly what my own work keeps colliding with, from the data-quality side.
+
+What I measured, from free public data only: rank Starlink by how far the public catalog disagrees with the operators' own published orbits and about 4,900 objects look like they moved. 89% of them didn't - the catalog entry was simply stale. Most of the survivors were deliberate deorbits. About 490 are satellites that were supposed to be holding station and moved anyway. I then checked that list against the catalog's own altitude history with a matched control group: roughly two-thirds of the top candidates show independent movement, against a ~10% control base rate. Two of my own methods agreeing, not operator ground truth - I'd rather say that up front.
+
+Why it's your problem too: if a screening pipeline treats catalog disagreement as movement, some fraction of what it reacts to is data age rather than spacecraft.
+
+Two things, either or neither:
+
+1. I'd genuinely like your read on whether that matches what OKAPI sees in production.
+2. If work like that is queued behind a hire, I contract - an ML engineer who has been living in orbital data for months. I usually start with a scoped, paid week so you can find out what I'm like before committing to anything.
+
+Happy to walk through the detector live. It's all public data, so there's nothing I have to be cagey about.
