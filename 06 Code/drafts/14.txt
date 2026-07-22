@@ -1,0 +1,11 @@
+Subject: a question small operators rarely get asked — with a number attached
+
+Hi — written for John Curry or the mission operations team; thanks to whoever passes it along.
+
+I built a maneuver detector that runs entirely on free public tracking data, and checked it with a second method: 30 days of altitude history against a matched control group. The flagged objects move 11.3× more than the ordinary ones; 72% show a real burn signature versus 11% of controls. Caveat up front — two of my own methods agreeing, not operator ground truth.
+
+Most tooling in this field is priced for people flying hundreds of satellites. I'm interested in the other end, which is why I'm writing to Sidus rather than the obvious names: operators with a handful of birds get the same warnings without a team to absorb them. And per my measurements, about five in six of those apparent maneuvers are stale catalog data, not movement.
+
+When you get a warning, or something near one of your satellites behaves oddly — what actually happens? Who looks, and with what?
+
+Fifteen minutes would help me a lot, and I have nothing to sell.

@@ -1,0 +1,7 @@
+Subject: your low-latency maneuver paper — something I stumbled into
+
+Patrick,
+
+Your AMOS paper on low-latency detection pipelines has been open in a tab for a week. I'm working a nearby corner of it, but from free catalog data only — no sensor feed of my own. The thing that surprised me: rank Starlink by how far the catalog drifts from the operator's published orbit and you get thousands of "maneuvers," but 85% of them evaporate once you correct for how stale the entry is. Old data, not a burn.
+
+Ten minutes to poke holes in it? I've got a clean before/after picture of one Starlink actually deorbiting that I can send too. I'd rather be corrected than keep guessing solo.

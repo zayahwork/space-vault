@@ -28,14 +28,36 @@ at 2 km". A stale object with a huge gap looks perfectly normal next to other st
 objects, and is not flagged. The baseline is empirical - measured off the same
 population, same day - so no drag model, no physics assumption, nothing to tune.
 
+THE SECOND FILTER: TEMPORAL PERSISTENCE
+The age filter fixes "old data looks like movement". It does nothing about the other
+way to fool yourself: a single snapshot is a single measurement, and one measurement
+of 10,000 objects at the 95th percentile hands you ~540 "suspects" by construction.
+Some of those are one-off garbage - a bad element set, a fit that went wrong once.
+
+A real maneuver does not go away when you look again. The operator's orbit keeps
+disagreeing with that catalog entry, through refresh after refresh of the operator's
+own ephemeris, until the catalog finally catches up and the gap collapses. Noise does
+not do that. So we look at the same object across several snapshots and ask: is it
+still flagged?
+
+The trap here is fake corroboration. CelesTrak republishes SupGP every ~30 min, but the
+element sets only actually change a few times a day - two of our six snapshots are
+byte-identical to the one before them. "Flagged in 6 of 6 snapshots" would mean nothing
+if 4 of those looks were the same two element sets compared twice. So persistence is
+counted in INDEPENDENT LOOKS only: a look counts for an object only if at least one of
+its two element sets (operator or catalog) actually changed epoch since the last one
+counted. Everything below reports looks, not snapshots.
+
 WHAT THIS IS NOT
 This is not ground truth. It is a ranked list of candidates with a stated reason.
 Anything claimed publicly gets checked against an actual maneuver record first.
 
 Usage:
-  python detect.py                          # newest snapshot, starlink
+  python detect.py                          # newest snapshot + persistence
   python detect.py --group oneweb --chart
   python detect.py --pct 95 --min-km 5
+  python detect.py --history 1              # single snapshot, no persistence
+  python detect.py --snapshot 2026-07-21/2025Z
 """
 
 import argparse
@@ -81,19 +103,48 @@ MIN_PER_BIN = 25          # below this a percentile is noise, so we widen instea
 # detections, so a nonsense 5,337 km "maneuver" can't reach a customer dashboard.
 MAX_PLAUSIBLE_KM = 500.0
 
+# An object losing altitude faster than this is on its way down, not holding station.
+# The number is deorbit_check.py's, kept deliberately identical so the two tools cannot
+# drift into disagreeing about what "falling" means.
+#
+# This matters more than it sounds. Objects falling this fast are ~9.5% of the Starlink
+# population but were producing ~79% of the maneuver candidates - a median gap of 19.7 km
+# against 4.0 km for everything else. A satellite being deliberately deorbited fights the
+# catalog every single day; that is decay doing its job, not a maneuver worth anyone's
+# attention. Judged against the general population it looks extraordinary. Judged against
+# other deorbiting hardware it looks like exactly what it is.
+FALLING_KM_PER_DAY = -0.4
+
+# How many snapshots back to look, and how many INDEPENDENT looks must agree before a
+# candidate is called persistent. Two is the minimum that means anything: one look is
+# a measurement, two is a measurement that repeated.
+HISTORY_SNAPSHOTS = 4
+MIN_LOOKS = 2
+
 
 # ------------------------------------------------------------------ loading
 
-def newest_snapshot_dir():
+def snapshot_dirs():
+    """Every archived snapshot, oldest first."""
     hits = sorted(ARCHIVE.glob("*/*/manifest.json"))
     if not hits:
         sys.exit("no archived snapshots - run supgp_archive.py first")
-    return hits[-1].parent
+    return [h.parent for h in hits]
+
+
+def newest_snapshot_dir():
+    return snapshot_dirs()[-1]
 
 
 def load_omm(text):
-    """Parse OMM CSV into {norad: Satrec}. Later duplicates win."""
-    sats = {}
+    """Parse OMM CSV into {norad: Satrec}, plus the raw fields we reason about.
+
+    Returns (sats, meta) where meta[norad] = (mean_motion, mean_motion_dot). Those
+    two don't come back off a Satrec in a form that's pleasant to read, and both are
+    needed to tell a satellite holding station from one on its way down.
+    Later duplicates win.
+    """
+    sats, meta = {}, {}
     for fields in omm.parse_csv(io.StringIO(text)):
         sat = Satrec()
         try:
@@ -101,34 +152,87 @@ def load_omm(text):
         except (ValueError, KeyError):
             continue
         sats[sat.satnum] = sat
-    return sats
+        try:
+            meta[sat.satnum] = (float(fields["MEAN_MOTION"]),
+                                float(fields["MEAN_MOTION_DOT"]))
+        except (KeyError, TypeError, ValueError):
+            pass
+    return sats, meta
 
 
-def load_gp(snap_dir, group):
-    """Archived public catalog if this snapshot has one, else fetch it live.
+_GP_CACHE = {}
 
-    Archived is strongly preferred: it was captured at the same instant as the
-    SupGP file, so the comparison is of the same moment rather than of now-vs-then.
+
+def load_gp(snap_dir, group, now_jd, allow_live=True):
+    """Archived public catalog for this snapshot, or the nearest EARLIER one.
+
+    Archived-in-place is strongly preferred: it was captured at the same instant as
+    the SupGP file, so the comparison is of the same moment rather than of now-vs-then.
+
+    When a snapshot has no GP of its own we borrow one, but only ever from the past.
+    Borrowing forwards would be a time-travel bug that quietly poisons everything
+    downstream: a catalog entry issued AFTER the snapshot gets a negative age, lands
+    in the wrong age bin, and drags that bin's threshold with it. It also manufactures
+    fake persistence - every historical snapshot would be scored against one identical
+    future catalog, so "still flagged three looks running" would just mean "we compared
+    the same two files three times".
+
+    Returns (sats, label, gp_capture_jd) - or (None, reason, None) if nothing usable.
     """
     local = snap_dir / "gp_active.csv.gz"
     if local.exists():
-        return load_omm(gzip.open(local, "rt", encoding="utf-8").read()), "archived"
+        return _cached_gp(local), "archived here", capture_jd(snap_dir)
 
-    # Walk back - a snapshot marked "unchanged" points at an earlier identical pull.
-    for older in sorted(ARCHIVE.glob("*/*/gp_active.csv.gz"), reverse=True):
-        return load_omm(gzip.open(older, "rt", encoding="utf-8").read()), \
-            f"archived {older.parent.name}"
+    for cand in sorted(ARCHIVE.glob("*/*/gp_active.csv.gz"), reverse=True):
+        when = capture_jd(cand.parent)
+        if when > now_jd:
+            continue                      # from the future - not ours to use
+        label = f"borrowed {cand.parent.parent.name}/{cand.parent.name}"
+        lag_h = (now_jd - when) * 24.0
+        return _cached_gp(cand), f"{label}, {lag_h:.1f}h earlier", when
+
+    if not allow_live:
+        return None, "no archived catalog at or before this snapshot", None
 
     resp = requests.get(GP_URL, params={"GROUP": group, "FORMAT": "csv"},
                         headers=HEADERS, timeout=180)
     resp.raise_for_status()
-    return load_omm(resp.text), "live"
+    return load_omm(resp.text), "live", now_jd
+
+
+def _cached_gp(path):
+    """The same GP file gets borrowed by several snapshots - parse it once."""
+    key = str(path)
+    if key not in _GP_CACHE:
+        _GP_CACHE[key] = load_omm(gzip.open(path, "rt", encoding="utf-8").read())
+    return _GP_CACHE[key]
 
 
 # ------------------------------------------------------------------ measuring
 
 def epoch_jd(sat):
     return sat.jdsatepoch + sat.jdsatepochF
+
+
+MU_KM3_S2 = 398600.4418
+EARTH_RADIUS_KM = 6378.14
+
+
+def altitude_km(mean_motion_rev_day):
+    """Circular altitude implied by a mean motion, in km."""
+    period_s = 86400.0 / mean_motion_rev_day
+    semi_major = (MU_KM3_S2 * (period_s / (2 * np.pi)) ** 2) ** (1.0 / 3.0)
+    return semi_major - EARTH_RADIUS_KM
+
+
+def descent_km_per_day(mean_motion, mean_motion_dot):
+    """How fast this object is losing altitude, in km/day. Negative = falling.
+
+    MEAN_MOTION_DOT in an OMM is n-dot/2 in rev/day^2, so the mean motion changes by
+    twice it over a day. Convert both to altitudes and take the difference - no drag
+    model, just the element set's own statement about where it is going.
+    """
+    return altitude_km(mean_motion + 2.0 * mean_motion_dot) - altitude_km(mean_motion)
 
 
 def rms_difference(sat_a, sat_b):
@@ -156,8 +260,29 @@ def capture_jd(snap_dir):
 
 # ------------------------------------------------------------------ the call
 
-def classify(rows, pct, min_km, max_km=MAX_PLAUSIBLE_KM):
+# The two things a flagged object can be. Kept as constants because persistence
+# rewrites verdict strings and string-matching on them was already getting fragile.
+SUSPECT = "MANEUVER SUSPECT"
+FALLING_SUSPECT = "DESCENDING (extreme even for hardware on the way down)"
+
+
+def classify(rows, pct, min_km, max_km=MAX_PLAUSIBLE_KM, flag=SUSPECT,
+             stored_cuts=None):
     """Attach a verdict to every row, using its own age bin as the yardstick.
+
+    Call this once per orbital regime. Objects holding station and objects being
+    deorbited disagree with the catalog for completely different reasons and at
+    completely different scales, so mixing them means the deorbiting ones set a
+    threshold the station-keepers can never reach - and sail over it themselves.
+
+    Two ways to set the bar, and they answer different questions:
+      stored_cuts=None  - RANK: the bar is a percentile of today's population.
+                          Always returns ~(100-pct)% of objects. Can never say
+                          "nothing happened", because someone is always most unusual.
+      stored_cuts given - ALERT: the bar was learned from past snapshots and held
+                          fixed ({(lo,hi): cut_km} per age band). Today's population
+                          can all sit under it, so zero is a possible answer - which
+                          is the entire point.
 
     A hard plausibility gate runs first: any gap >= max_km is physically impossible
     for a real maneuver and is flagged as a data-quality issue, then excluded from
@@ -181,7 +306,13 @@ def classify(rows, pct, min_km, max_km=MAX_PLAUSIBLE_KM):
             continue
         # A percentile off 4 objects is not a baseline. Fall back to the whole
         # population rather than inventing a threshold from nothing.
-        if sel.sum() < MIN_PER_BIN:
+        if stored_cuts is not None and (lo, hi) in stored_cuts:
+            cut, basis, n = stored_cuts[(lo, hi)], "stored", int(sel.sum())
+        elif stored_cuts is not None:
+            # No stored bar for this band - refuse to invent one from today's crowd,
+            # that would silently turn alert mode back into rank mode for these rows.
+            cut, basis, n = float("inf"), "no stored baseline", int(sel.sum())
+        elif sel.sum() < MIN_PER_BIN:
             cut, basis, n = float(np.percentile(gaps, pct)), "population", int(sel.sum())
         else:
             cut, basis, n = float(np.percentile(gaps[sel], pct)), "bin", int(sel.sum())
@@ -193,12 +324,210 @@ def classify(rows, pct, min_km, max_km=MAX_PLAUSIBLE_KM):
             r["band_cut_km"] = cut
             r["band_median_km"] = float(np.median(gaps[sel]))
             if r["gap_km"] >= cut and r["gap_km"] >= min_km:
-                r["verdict"] = "MANEUVER SUSPECT"
+                r["verdict"] = flag
+                r["flagged"] = True
             elif r["gap_km"] >= min_km:
                 r["verdict"] = "stale (big gap, but normal for its age)"
             else:
                 r["verdict"] = "agrees"
     return bands
+
+
+# ------------------------------------------------------------------ baselines
+
+BASELINE_FILE = HERE / "baselines.json"     # legacy single-group file, read-only now
+
+
+def baseline_file(group):
+    """One baseline file per group. A stored bar is a per-constellation fact -
+    Starlink's normal band says nothing about a GEO bird's, and a single shared
+    file meant learning OneWeb silently destroyed the Starlink baseline."""
+    return HERE / f"baselines_{group}.json"
+
+
+def learn_baselines(group, pct, min_km, max_km):
+    """Learn each cohort's normal band from EVERY scoreable snapshot, and persist it.
+
+    This is what makes "nothing happened" a possible answer. A percentile of today's
+    population always hands back the top (100-pct)% - someone is always most unusual.
+    A bar learned from past days and held fixed can sit above the whole of a quiet
+    day, so alert mode can honestly return zero.
+
+    The file carries its own provenance - which snapshots, when, what percentile -
+    because a threshold nobody can audit is a tuned number wearing a lab coat.
+    """
+    pools = {"station": {}, "falling": {}}     # (lo,hi) -> [gaps]
+    used = []
+    for snap in snapshot_dirs():
+        run = analyze(snap, group, pct, min_km, max_km, allow_live=False)
+        if not run or run.get("skipped") or not run["rows"]:
+            continue
+        used.append(str(snap.relative_to(ARCHIVE)).replace("\\", "/"))
+        for r in run["rows"]:
+            if r["gap_km"] >= max_km:
+                continue                        # data-quality rows poison baselines
+            regime = "falling" if r["falling"] else "station"
+            for lo, hi in zip(AGE_BINS, AGE_BINS[1:]):
+                if lo <= r["gp_age_h"] < hi:
+                    pools[regime].setdefault((lo, hi), []).append(r["gap_km"])
+                    break
+    if not used:
+        sys.exit("no scoreable snapshots to learn from")
+
+    out = {"group": group, "learned_utc": datetime.now(timezone.utc).isoformat(),
+           "pct": pct, "min_km": min_km, "snapshots": used, "regimes": {}}
+    for regime, bands in pools.items():
+        every = [g for v in bands.values() for g in v]
+        entries = []
+        for (lo, hi), gaps in sorted(bands.items()):
+            # Same small-sample rule as ranking: a bar off 4 objects is not a bar.
+            src = gaps if len(gaps) >= MIN_PER_BIN else every
+            entries.append({"lo": lo, "hi": hi, "n": len(gaps),
+                            "cut_km": float(np.percentile(src, pct)),
+                            "basis": "bin" if len(gaps) >= MIN_PER_BIN else "regime"})
+        out["regimes"][regime] = entries
+    baseline_file(group).write_text(json.dumps(out, indent=2), encoding="utf-8")
+    return out
+
+
+def load_baselines(group):
+    """Stored cuts as {(lo,hi): cut_km} per regime, or None if never learned."""
+    path = baseline_file(group)
+    if not path.exists():
+        path = BASELINE_FILE                 # fall back to the legacy shared file
+    if not path.exists():
+        return None
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    if raw.get("group") != group:
+        return None
+    raw["cuts"] = {reg: {(b["lo"], b["hi"]): b["cut_km"] for b in bands}
+                   for reg, bands in raw["regimes"].items()}
+    return raw
+
+
+def pooled_comparison(rows, pct, min_km, max_km):
+    """What the list would look like if both regimes were ranked together.
+
+    This is the claim the regime split has to earn, so it gets measured rather than
+    asserted. Returns (pooled_total, how_many_were_falling, station_keepers_the
+    _pooled_ranking_never_showed).
+    """
+    copy = [dict(r, verdict="agrees", flagged=False) for r in rows]
+    classify(copy, pct, min_km, max_km)
+    pooled = {r["norad"] for r in copy if r["flagged"]}
+    falling_in_pooled = sum(1 for r in copy if r["flagged"] and r["falling"])
+    now = {r["norad"] for r in rows if not r["falling"] and r.get("flagged")}
+    return len(pooled), falling_in_pooled, len(now - pooled)
+
+
+def analyze(snap_dir, group, pct, min_km, max_km, allow_live=True, stored=None):
+    """One snapshot end to end: measure every object, judge it against its age bin.
+
+    Returns None if the snapshot can't be scored - no file for this group, or no
+    catalog captured at or before it (see load_gp on why we never borrow forwards).
+    """
+    sup_file = snap_dir / f"{group}.csv.gz"
+    if not sup_file.exists():
+        return None
+    now_jd = capture_jd(snap_dir)
+    gp_loaded, gp_src, _ = load_gp(snap_dir, group, now_jd, allow_live)
+    if gp_loaded is None:
+        return {"dir": snap_dir, "rows": [], "bands": [], "skipped": gp_src}
+    gp, gp_meta = gp_loaded
+
+    sup, _ = load_omm(gzip.open(sup_file, "rt", encoding="utf-8").read())
+    rows, failed = [], 0
+    for norad in sorted(set(sup) & set(gp)):
+        gap = rms_difference(sup[norad], gp[norad])
+        if gap is None:
+            failed += 1
+            continue
+        # Is it holding station, or on its way down? Straight off the catalog's own
+        # element set - the object tells us which population it belongs to.
+        mm = gp_meta.get(norad)
+        drop = descent_km_per_day(*mm) if mm else 0.0
+        rows.append({
+            "norad": norad,
+            "gap_km": gap,
+            "gp_age_h": (now_jd - epoch_jd(gp[norad])) * 24.0,
+            "sup_age_h": (now_jd - epoch_jd(sup[norad])) * 24.0,
+            "sup_epoch": epoch_jd(sup[norad]),
+            "gp_epoch": epoch_jd(gp[norad]),
+            "km_per_day": drop,
+            "altitude_km": altitude_km(mm[0]) if mm else float("nan"),
+            "falling": drop < FALLING_KM_PER_DAY,
+            "verdict": "agrees",
+            "flagged": False,
+        })
+
+    # Each regime gets its own baseline. A deorbiting satellite is only interesting
+    # if it is extreme among OTHER deorbiting satellites.
+    on_station = [r for r in rows if not r["falling"]]
+    falling = [r for r in rows if r["falling"]]
+    cuts = stored["cuts"] if stored else {}
+    bands = classify(on_station, pct, min_km, max_km, flag=SUSPECT,
+                     stored_cuts=cuts.get("station") if stored else None)
+    classify(falling, pct, min_km, max_km, flag=FALLING_SUSPECT,
+             stored_cuts=cuts.get("falling") if stored else None)
+
+    return {"dir": snap_dir, "rows": rows, "bands": bands, "failed": failed,
+            "gp_src": gp_src, "n_sup": len(sup), "n_gp": len(gp), "skipped": None,
+            "n_falling": len(falling), "n_station": len(on_station)}
+
+
+# --------------------------------------------------------- temporal persistence
+
+def independent_looks(runs):
+    """Per object, the history of looks that actually told us something new.
+
+    A look only counts if at least one of the two element sets changed epoch since
+    the last counted look. CelesTrak republishes on a fixed cadence whether or not
+    the underlying fit moved, so consecutive snapshots are often the identical pair
+    of element sets - comparing those twice is one measurement, not two.
+    """
+    history = {}
+    for run in runs:                                   # oldest first
+        for r in run["rows"]:
+            history.setdefault(r["norad"], []).append(r)
+
+    out = {}
+    for norad, seq in history.items():
+        kept = []
+        for r in seq:
+            fingerprint = (round(r["sup_epoch"], 9), round(r["gp_epoch"], 9))
+            if kept and fingerprint == kept[-1][0]:
+                continue                               # same two element sets again
+            kept.append((fingerprint, r))
+        looks = [r for _, r in kept]
+        out[norad] = {
+            "looks": len(looks),
+            "flags": sum(1 for r in looks if r.get("flagged")),
+            "gaps": [r["gap_km"] for r in looks],
+            "flagged_now": bool(looks[-1].get("flagged")),
+        }
+    return out
+
+
+def apply_persistence(rows, looks, min_looks=MIN_LOOKS):
+    """Split this snapshot's suspects by whether the evidence repeated.
+
+    Nothing is thrown away - a first-look suspect may well be a burn that just
+    happened. It is separated because it has not yet earned the same confidence.
+    """
+    for r in rows:
+        h = looks.get(r["norad"])
+        if not h:
+            continue
+        r["looks"] = h["looks"]
+        r["flagged_looks"] = h["flags"]
+        if not r.get("flagged"):
+            continue
+        if h["looks"] < 2:
+            r["verdict"] = "SUSPECT (single look - nothing to corroborate against)"
+        elif h["flags"] >= min_looks:
+            r["verdict"] = "PERSISTENT SUSPECT"
+        else:
+            r["verdict"] = "SUSPECT (new this look - unconfirmed)"
 
 
 def main():
@@ -212,68 +541,181 @@ def main():
                     help="gaps at/above this are physically impossible for a maneuver; "
                          "bucketed as data-quality flags, never as detections")
     ap.add_argument("--top", type=int, default=15)
+    ap.add_argument("--history", type=int, default=HISTORY_SNAPSHOTS,
+                    help="how many snapshots back to check for persistence; 1 disables")
+    ap.add_argument("--min-looks", type=int, default=MIN_LOOKS,
+                    help="independent looks that must agree before a candidate is "
+                         "called persistent")
+    ap.add_argument("--snapshot", default=None,
+                    help="score this snapshot instead of the newest, e.g. 2026-07-21/2025Z")
+    ap.add_argument("--mode", choices=["rank", "alert"], default="rank",
+                    help="rank: percentile of today's crowd, always returns ~5%%. "
+                         "alert: fixed bar learned from past snapshots - can return zero")
+    ap.add_argument("--learn-baseline", action="store_true",
+                    help="learn each cohort's normal band from every scoreable "
+                         "snapshot, write baselines.json, and exit")
     ap.add_argument("--chart", action="store_true")
     ap.add_argument("--csv", action="store_true", help="write the full table")
     args = ap.parse_args()
 
-    snap_dir = newest_snapshot_dir()
-    sup_file = snap_dir / f"{args.group}.csv.gz"
-    if not sup_file.exists():
+    if args.learn_baseline:
+        base = learn_baselines(args.group, args.pct, args.min_km, args.max_km)
+        print(f"  learned from {len(base['snapshots'])} snapshots: "
+              f"{', '.join(base['snapshots'])}")
+        for regime, bands in base["regimes"].items():
+            print(f"\n  {regime}:")
+            for b in bands:
+                hi = "inf" if b["hi"] > 1e8 else f"{b['hi']:g}"
+                note = "" if b["basis"] == "bin" else "  (thin bin - used whole regime)"
+                print(f"    age {b['lo']:>4g}-{hi:<6} n={b['n']:<6} "
+                      f"flag above {b['cut_km']:8.2f} km{note}")
+        print(f"\n  -> {baseline_file(args.group).name}  (provenance stamped inside)")
+        print(f"     WARNING: learned from {len(base['snapshots'])} snapshot(s). "
+              f"A bar learned from one\n     day only knows one day's weather. "
+              f"Re-learn as the archive grows.")
+        return 0
+
+    stored = None
+    if args.mode == "alert":
+        stored = load_baselines(args.group)
+        if stored is None:
+            sys.exit("alert mode needs a stored baseline - run "
+                     "'python detect.py --learn-baseline' first")
+
+    every = snapshot_dirs()
+    if args.snapshot:
+        wanted = [d for d in every if str(d.relative_to(ARCHIVE)).replace("\\", "/")
+                  == args.snapshot.replace("\\", "/")]
+        if not wanted:
+            sys.exit(f"no snapshot {args.snapshot} in {ARCHIVE}")
+        every = every[: every.index(wanted[0]) + 1]
+    snap_dir = every[-1]
+
+    # Fetching the catalog live is only honest for the newest snapshot. For any
+    # earlier one it would compare a past operator orbit against today's catalog -
+    # the same time-travel mistake load_gp exists to prevent.
+    replaying = snap_dir != snapshot_dirs()[-1]
+
+    print(f"  snapshot   {snap_dir.relative_to(ARCHIVE)}"
+          f"{'  (replay - live fetch disabled)' if replaying else ''}")
+    if stored:
+        print(f"  mode       ALERT - fixed bar learned from "
+              f"{len(stored['snapshots'])} snapshot(s), "
+              f"{stored['pct']:g}th pct, {stored['learned_utc'][:16]}Z")
+    latest = analyze(snap_dir, args.group, args.pct, args.min_km, args.max_km,
+                     allow_live=not replaying, stored=stored)
+    if latest is None:
         sys.exit(f"{args.group} not in {snap_dir.relative_to(ARCHIVE)}")
-
-    print(f"  snapshot   {snap_dir.relative_to(ARCHIVE)}")
-    sup = load_omm(gzip.open(sup_file, "rt", encoding="utf-8").read())
-    gp, gp_src = load_gp(snap_dir, args.group)
-    now_jd = capture_jd(snap_dir)
-    print(f"  supgp      {len(sup)} objects")
-    print(f"  gp         {len(gp)} objects ({gp_src})")
-
-    both = sorted(set(sup) & set(gp))
-    print(f"  comparable {len(both)} objects\n")
-    if not both:
+    if latest["skipped"]:
+        sys.exit(f"cannot score this snapshot: {latest['skipped']}")
+    rows, bands = latest["rows"], latest["bands"]
+    print(f"  supgp      {latest['n_sup']} objects")
+    print(f"  gp         {latest['n_gp']} objects ({latest['gp_src']})")
+    print(f"  comparable {len(rows) + latest['failed']} objects\n")
+    if not rows:
         sys.exit("no overlap - nothing to compare")
+    failed = latest["failed"]
 
-    rows, failed = [], 0
-    for norad in both:
-        gap = rms_difference(sup[norad], gp[norad])
-        if gap is None:
-            failed += 1
-            continue
-        rows.append({
-            "norad": norad,
-            "gap_km": gap,
-            "gp_age_h": (now_jd - epoch_jd(gp[norad])) * 24.0,
-            "sup_age_h": (now_jd - epoch_jd(sup[norad])) * 24.0,
-            "verdict": "agrees",
-        })
+    # ---- second filter: did the same objects look wrong last time too? --------
+    looks, runs, unusable = {}, [latest], []
+    if args.history > 1:
+        for older in every[-args.history:-1]:
+            run = analyze(older, args.group, args.pct, args.min_km, args.max_km,
+                          allow_live=False, stored=stored)
+            if run and not run["skipped"] and run["rows"]:
+                runs.insert(-1, run)
+            elif run and run["skipped"]:
+                unusable.append((older, run["skipped"]))
+        for older, why in unusable:
+            print(f"  unusable   {older.relative_to(ARCHIVE)} - {why}")
+        if len(runs) > 1:
+            looks = independent_looks(runs)
+            apply_persistence(rows, looks, args.min_looks)
+        else:
+            print("\n  !! NO PERSISTENCE CHECK - only one scoreable snapshot exists.\n"
+                  "     Every candidate below rests on a single measurement. A maneuver\n"
+                  "     repeats; a bad element set does not, and right now we cannot tell\n"
+                  "     them apart. Fix: archive gp_active.csv.gz alongside every SupGP\n"
+                  "     snapshot, then re-run - two scoreable snapshots is all it needs.")
 
-    bands = classify(rows, args.pct, args.min_km, args.max_km)
+    print(f"  splitting the population by what it is DOING:")
+    print(f"    holding station    {latest['n_station']:>6}"
+          f"   - judged against each other")
+    print(f"    on the way down    {latest['n_falling']:>6}"
+          f"   - losing > {abs(FALLING_KM_PER_DAY):g} km/day, judged separately\n")
 
-    print("  what a NORMAL gap looks like, by how old the catalog entry is:")
+    if stored:
+        print("  the STORED bar for a station-keeping object, by catalog age:")
+    else:
+        print("  what a NORMAL gap looks like for a STATION-KEEPING object, by catalog age:")
     print(f"  {'age (h)':>12}  {'objects':>8}  {'median km':>10}  {'flag above':>11}")
     for b in bands:
         hi = "inf" if b["hi"] > 1e8 else f"{b['hi']:g}"
-        star = "" if b["basis"] == "bin" else "  (too few - used whole population)"
+        star = "" if b["basis"] in ("bin", "stored")             else "  (too few - used whole population)"
         print(f"  {b['lo']:>5g}-{hi:<6}  {b['n']:>8}  {b['median_km']:>10.2f}"
               f"  {b['cut_km']:>11.2f}{star}")
 
-    suspects = sorted([r for r in rows if r["verdict"] == "MANEUVER SUSPECT"],
-                      key=lambda r: r["gap_km"] / max(r["band_cut_km"], 1e-9),
-                      reverse=True)
+    by_strength = lambda r: r["gap_km"] / max(r["band_cut_km"], 1e-9)
+    station = [r for r in rows if not r["falling"]]
+    persistent = sorted([r for r in station if r["verdict"] == "PERSISTENT SUSPECT"],
+                        key=by_strength, reverse=True)
+    unconfirmed = sorted([r for r in station if r["verdict"].startswith("SUSPECT (")],
+                         key=by_strength, reverse=True)
+    single = sorted([r for r in station if r["verdict"] == SUSPECT],
+                    key=by_strength, reverse=True)
+    descending = sorted([r for r in rows if r["falling"] and r.get("flagged")],
+                        key=by_strength, reverse=True)
+    suspects = persistent + unconfirmed + single
     stale = [r for r in rows if r["verdict"].startswith("stale")]
     flagged = sorted([r for r in rows if r["verdict"].startswith("DATA QUALITY")],
                      key=lambda r: r["gap_km"], reverse=True)
 
-    print(f"\n  {'NORAD':>7}  {'gap km':>9}  {'gp age h':>9}  {'normal for age':>14}  ratio")
-    for r in suspects[: args.top]:
-        print(f"  {r['norad']:>7}  {r['gap_km']:>9.1f}  {r['gp_age_h']:>9.1f}"
-              f"  {r['band_median_km']:>14.2f}  {r['gap_km']/max(r['band_median_km'],1e-9):>5.0f}x")
+    if runs and len(runs) > 1:
+        span_h = (capture_jd(runs[-1]["dir"]) - capture_jd(runs[0]["dir"])) * 24.0
+        counted = [looks[r["norad"]]["looks"] for r in rows if r["norad"] in looks]
+        print(f"\n  persistence over {len(runs)} snapshots ({span_h:.1f}h): "
+              f"{'/'.join(str(r['dir'].name) for r in runs)}")
+        print(f"  independent looks per object: median "
+              f"{int(np.median(counted)) if counted else 0} "
+              f"(a snapshot only counts if an element set actually changed)")
 
-    print(f"\n  MANEUVER SUSPECTS  {len(suspects):>5}  of {len(rows)} "
-          f"({100*len(suspects)/len(rows):.1f}%)")
+    head = "  {:>7}  {:>9}  {:>9}  {:>14}  {:>5}  {}".format(
+        "NORAD", "gap km", "gp age h", "normal for age", "ratio", "looks")
+    print(f"\n{head}")
+    for r in suspects[: args.top]:
+        mark = {"PERSISTENT SUSPECT": "persisted"}.get(
+            r["verdict"], "new" if "new this look" in r["verdict"] else "-")
+        seen = (f"{r['flagged_looks']}/{r['looks']} {mark}"
+                if "looks" in r else "not checked")
+        print(f"  {r['norad']:>7}  {r['gap_km']:>9.1f}  {r['gp_age_h']:>9.1f}"
+              f"  {r['band_median_km']:>14.2f}"
+              f"  {r['gap_km']/max(r['band_median_km'],1e-9):>4.0f}x  {seen}")
+
+    print()
+    if runs and len(runs) > 1:
+        print(f"  PERSISTENT SUSPECTS{len(persistent):>5}  of {len(rows)} "
+              f"({100*len(persistent)/len(rows):.1f}%) - flagged in >= {args.min_looks} "
+              f"independent looks")
+        new = [r for r in unconfirmed if "new this look" in r["verdict"]]
+        lone = [r for r in unconfirmed if "single look" in r["verdict"]]
+        print(f"  unconfirmed        {len(new):>5}  - flagged only in the newest look; "
+              f"a fresh burn or a one-off. The next snapshot decides.")
+        if lone:
+            print(f"  uncorroborated     {len(lone):>5}  - no earlier independent look "
+                  f"exists for these objects")
+        cleared = sum(1 for n, h in looks.items()
+                      if h["flags"] and not h["flagged_now"])
+        print(f"  cleared            {cleared:>5}  - flagged in an earlier look, normal "
+              f"now (catalog caught up, or it was noise)")
+    else:
+        print(f"  MANEUVER SUSPECTS  {len(single):>5}  of {len(station)} station-keepers"
+              f"  - UNCORROBORATED, one snapshot only")
+    print(f"  on the way down    {len(descending):>5}  - extreme among deorbiting "
+          f"hardware, but they are SUPPOSED to be moving")
     print(f"  big gap but stale  {len(stale):>5}  "
           f"- would have been false positives on gap alone")
-    print(f"  agrees             {len(rows)-len(suspects)-len(stale)-len(flagged):>5}")
+    print(f"  agrees             "
+          f"{len(rows)-len(suspects)-len(descending)-len(stale)-len(flagged):>5}")
     print(f"  DATA QUALITY FLAG  {len(flagged):>5}  "
           f"- gap >= {args.max_km:g} km, physically impossible; likely decay or bad TLE")
     if flagged:
@@ -282,19 +724,53 @@ def main():
     if failed:
         print(f"  propagation failed {failed:>5}  (usually reentering)")
 
-    caught = len(suspects) + len(stale)
-    if caught:
+    if stored:
+        if not suspects and not descending:
+            print(f"\n  ** NOTHING HAPPENED. **\n"
+                  f"     Every one of {len(rows)} objects sits inside the normal band "
+                  f"learned from\n     {len(stored['snapshots'])} earlier snapshot(s). "
+                  f"A percentile could never say this -\n     it would have handed back "
+                  f"the top {100-stored['pct']:g}% anyway. Zero is a real answer\n"
+                  f"     now, which is what makes a nonzero day mean something.")
+        else:
+            print(f"\n  {len(suspects)} object(s) over a bar that was set BEFORE today. "
+                  f"These are not\n  'today's most unusual' - they are outside what "
+                  f"{len(stored['snapshots'])} past snapshot(s)\n  called normal. "
+                  f"A quiet day would have returned zero.")
+
+    caught = len(suspects) + len(descending) + len(stale)
+    if not stored and caught:
+        n_pooled, n_falling, n_new = pooled_comparison(rows, args.pct, args.min_km,
+                                                       args.max_km)
         print(f"\n  Ranking on raw gap alone would have surfaced {caught} objects."
-              f"\n  Age-aware ranking cuts that to {len(suspects)} "
+              f"\n  Age-aware ranking cuts that to {n_pooled} "
               f"- {100*len(stale)/caught:.0f}% of the naive list was just old data.")
+        print(f"\n  Separating the regimes does NOT shorten the list. At the "
+              f"{args.pct:g}th percentile about\n  {100-args.pct:g}% of each cohort gets "
+              f"flagged whatever happens up there. What it changes\n  is WHO is on it:")
+        print(f"    {n_falling:>5}  of those {n_pooled} "
+              f"({100*n_falling/max(n_pooled,1):.0f}%) were hardware being deliberately "
+              f"deorbited.\n           They move every day, on purpose. Judged against "
+              f"their own kind,\n           only {len(descending)} are unusual.")
+        print(f"    {n_new:>5}  station-keepers are on the list that the pooled ranking "
+              f"never\n           showed at all - they were crowded out by falling hardware.")
+        if len(runs) > 1 and suspects:
+            print(f"    {len(persistent):>5}  of the {len(suspects)} survived a second "
+                  f"independent look.")
+        print(f"\n  A satellite holding station that moved when it shouldn't have is the "
+              f"only\n  part anyone would pay for. Everything else now has a name.")
 
     if args.csv or args.chart:
         OUT.mkdir(exist_ok=True)
     if args.csv:
         import csv as _csv
         path = OUT / f"detect_{args.group}_{snap_dir.parent.name}_{snap_dir.name}.csv"
+        # Not every row carries every key - only graded rows get band stats, and only
+        # objects present in an earlier snapshot get look counts. Take the union so a
+        # row with extra keys can't blow up the writer.
+        fields = list(dict.fromkeys(k for r in rows for k in r))
         with path.open("w", newline="", encoding="utf-8") as fh:
-            w = _csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
+            w = _csv.DictWriter(fh, fieldnames=fields, restval="")
             w.writeheader()
             w.writerows(sorted(rows, key=lambda r: -r["gap_km"]))
         print(f"\n  table -> {path}")
@@ -309,12 +785,26 @@ def chart(rows, bands, group, snap_dir):
     import matplotlib.pyplot as plt
 
     fig, ax = plt.subplots(figsize=(10, 6))
-    sus = [r for r in rows if r["verdict"] == "MANEUVER SUSPECT"]
-    other = [r for r in rows if r["verdict"] != "MANEUVER SUSPECT"]
-    ax.scatter([r["gp_age_h"] for r in other], [r["gap_km"] for r in other],
-               s=6, alpha=0.25, c="#888", label="normal for its age")
-    ax.scatter([r["gp_age_h"] for r in sus], [r["gap_km"] for r in sus],
-               s=18, alpha=0.9, c="#d62728", label="maneuver suspect")
+    station = [r for r in rows if not r["falling"]]
+    falling = [r for r in rows if r["falling"]]
+    hit = lambda r: r["verdict"] in ("PERSISTENT SUSPECT", SUSPECT)
+    once = [r for r in station if r["verdict"].startswith("SUSPECT (")]
+    persisted = [r for r in station if hit(r)]
+    quiet = [r for r in station if not hit(r) and not r["verdict"].startswith("SUSPECT (")]
+
+    ax.scatter([r["gp_age_h"] for r in quiet], [r["gap_km"] for r in quiet],
+               s=6, alpha=0.25, c="#888", label="holding station - normal for its age")
+    ax.scatter([r["gp_age_h"] for r in falling], [r["gap_km"] for r in falling],
+               s=7, alpha=0.30, c="#9467bd",
+               label=f"on the way down (>{abs(FALLING_KM_PER_DAY):g} km/day) - judged separately")
+    if once:
+        ax.scatter([r["gp_age_h"] for r in once], [r["gap_km"] for r in once],
+                   s=14, alpha=0.6, c="#ff7f0e", label="flagged once - unconfirmed")
+    checked = any("looks" in r for r in rows)
+    ax.scatter([r["gp_age_h"] for r in persisted], [r["gap_km"] for r in persisted],
+               s=20, alpha=0.95, c="#d62728",
+               label="station-keeper that moved, flag repeated" if checked
+                     else "station-keeper that moved (single snapshot)")
     for b in bands:
         hi = min(b["hi"], max(r["gp_age_h"] for r in rows))
         ax.plot([b["lo"], hi], [b["cut_km"]] * 2, c="#1f77b4", lw=1.5)

@@ -1,0 +1,37 @@
+{
+  // The vault is ~200 real files sitting inside ~35,000 on disk. Everything hidden
+  // below is already in .gitignore, but VS Code does not read .gitignore for the
+  // explorer or for Ctrl+P, so without this every search crawls the whole archive.
+  // Nothing here is deleted - supgp_archive is still collecting every 6 hours.
+  "files.exclude": {
+    "**/.git": true,
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "06 Code/supgp_archive": true,
+    "06 Code/.venv-meeting": true,
+    "06 Code/splid-devkit": true,
+    "06 Code/.brain_cwd": true,
+    "06 Code/sink_out": true
+  },
+  "search.exclude": {
+    "**/.git": true,
+    "**/__pycache__": true,
+    "06 Code/supgp_archive": true,
+    "06 Code/.venv-meeting": true,
+    "06 Code/splid-devkit": true,
+    "06 Code/output": true
+  },
+  // Stop the file watcher from tailing 35k archive files - this is what makes
+  // VS Code feel sluggish on a big vault.
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "06 Code/supgp_archive/**": true,
+    "06 Code/.venv-meeting/**": true,
+    "06 Code/splid-devkit/**": true
+  },
+  "files.trimTrailingWhitespace": false,
+  "[markdown]": {
+    "editor.wordWrap": "on",
+    "editor.quickSuggestions": false
+  }
+}

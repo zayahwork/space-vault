@@ -21,6 +21,35 @@
 - [x] Run the ISS maneuver chart — **✅ FIRST LIGHT: 3/3 maneuvers detected, $0 data** 🛰️ → [[RESULTS - First Charts]]
 - [x] Chart 2–3 more satellites — **✅ caught a Starlink mid-deorbit + found v0.1's two blind spots** → [[RESULTS - First Charts]]
 
+- [x] ✅ **CHECKED AGAINST REALITY (2026-07-22).** Top suspects move **11.3x** more than
+      satellites we called ordinary; **72%** clear a bar only **11%** of controls clear.
+      First number the detector didn't grade itself — **this is the number for Kelso and
+      Moriba.** Also caught us publishing a wrong reason for the >500 km gate.
+      → [[RESULTS - Checked Against History]]
+- [x] ✅ **Persistence went LIVE (2026-07-22 0750Z).** 488 candidates → **298 survived a
+      second look**, 190 unconfirmed, 221 cleared. ~39% didn't repeat.
+- [x] ✅ **The quiet detector is built** — `--mode alert` can return **zero** (bar learned
+      from past snapshots, provenance in `baselines.json`); `quiet.py` watches for satellites
+      that STOP maneuvering and honestly refuses until ~Jul 29 (needs 7 days of archive).
+      → [[RESULTS - The Quiet Detector]]
+- [x] ✅ **The 11.3x HARDENED (2026-07-22 pm).** Whole flagged list (all 489) checked on a
+      second, independent snapshot: same shape, top-75 at **68% vs 11%** over the bar. The
+      median ratio is volatile (11.3x → 23.8x) — **quote the over-the-bar rate, not the "x".**
+      → [[RESULTS - Checked Against History]]
+- [x] ✅ **Left Starlink (2026-07-22 pm).** Full pipeline on OneWeb + GEO. **OneWeb: works,
+      80% vs 10%** — the method is not a Starlink quirk. **Intelsat: 3/3 promising. SES: no
+      signal yet** (n=3, verifier half-blind at GEO — said first, by us). → [[RESULTS - Beyond Starlink]]
+- [x] ✅ **Daily run AUTOMATED (2026-07-22 pm).** `Maneuver Alert` scheduled task scores every
+      new snapshot in alert mode (all 4 groups, per-group baselines) 30 min after each archive
+      cycle and appends to [[RESULTS - Alert Log]]. **Jul 29 demo builds itself from here.**
+- [ ] 🕒 **~Jul 29: run `python quiet.py`** — cadence verdicts unlock once the archive spans
+      7 days. Also re-learn the bar weekly: `python detect.py --learn-baseline --pct 99`.
+- [x] ~~Re-run the detector once a second catalog snapshot is banked~~ — done, see above (`python detect.py`
+      in `06 Code`). Temporal persistence is built and tested, but it needs **two** snapshots
+      with a public catalog saved beside them and we only have one (`2026-07-22/0200Z`). The
+      scheduled archiver fetches one every run, so this unblocks itself — just re-run and the
+      524 candidates split into *persisted* vs *one-off*. → [[RESULTS - Maneuver vs Stale]]
+
 ## 📬 Ongoing (every day, ~15 min, until further notice)
 
 - [ ] **📤 Daily outreach batch — 15 emails** → `python outreach.py` in `06 Code` drafts them and
@@ -84,6 +113,14 @@
       541 candidates and no way to check them is not a detector, it's a ranked guess. Start with the
       top ones: 5,337 km and 8,412 km RMS are physically implausible for a burn and are probably
       decaying objects or bad elements → [[RESULTS - Maneuver vs Stale]]
+- [ ] 🔇 **Teach it to say "nothing happened" — and to spot a satellite going quiet.** Every
+      threshold we have is a percentile, so the tool always returns the top 5% and can never
+      report a quiet day. Worse, it can't see an **absence**: a satellite that *stops*
+      station-keeping drops off the list instead of onto it — and that's the health signal the
+      insurer pitch is built on ([[Pricing - What to Charge and Who]], $150K–400K/yr). Two
+      parts: absolute thresholds learned from the archive (so zero is possible), and per-object
+      cadence (so "this one stopped" is visible). Part 2 needs weeks of archive — build it now,
+      it unblocks itself → [[Plan - The Quiet Detector]]
 - [ ] 📐 **Sable: the structure question.** Before more detector work — what shape does the data have to
       be in for a claim to be possible at all? Age bins are non-monotonic at 24–48h vs 48–96h (618 vs 45
       objects). Do we need per-constellation baselines, per-altitude, or longer history first?

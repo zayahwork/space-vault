@@ -1,0 +1,9 @@
+Subject: how do your customers tell a real burn from a stale element set?
+
+Hi,
+
+I'm an ML engineer near Seattle, building maneuver detection on free public catalog data, and I've run into something I'd like a sanity check on from people who've done astrodynamics properly for decades.
+
+When I flag Starlink objects whose catalog orbit disagrees with the operator's published one, I get thousands. Correct for how old each catalog entry is and roughly five in six vanish. They hadn't moved; their elements were just old.
+
+COMSPOC sits with the operators and analysts who face this daily, so you'd know within a minute whether that's a well-known artifact everyone already handles, or a gap worth my time. Fifteen minutes to tell me which? I'll show the output including where it falls over — I'm after a straight answer, not a meeting.

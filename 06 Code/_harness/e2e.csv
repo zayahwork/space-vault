@@ -1,4 +1,0 @@
-id,segment,company,why_them,contact_route,email,status,sent_on,notes
-101,operator,Sink One,harness,,one@sink.localhost,sent,2026-07-21,
-102,insurer,Sink Two,harness,,two@sink.localhost,sent,2026-07-21,
-103,partner,Sink Dead,harness,,dead@sink.localhost,bounced,,"bounced at send: {'dead@sink.localhost': (550, b'5.1.1 No such user here')}"

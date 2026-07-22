@@ -1,0 +1,11 @@
+Subject: you run missions for other people — I measured how noisy their tracking data is
+
+Hi,
+
+I built a maneuver detector from free public tracking data and verified it with an independent check: 30 days of altitude history, matched control group. Flagged satellites move 11.3× more than ordinary ones; 72% show a burn signature versus 11% of controls. To be straight: that's two of my own methods agreeing, not operator ground truth.
+
+Open Cosmos is interesting to me because turnkey missions mean the ongoing "is everything behaving normally?" burden lands with you, not the customer. The measurement that started all this: about five in six apparent maneuvers in the public catalog are stale elements — so a large share of what screening tools consume is noise by construction.
+
+When an object near one of your missions changes behaviour, how do you find out — bought service, in-house tool, or a person?
+
+Fifteen minutes with whoever owns this would be genuinely useful. Not selling anything.

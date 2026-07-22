@@ -1,0 +1,11 @@
+Subject: LEO catalog work, now verified, that might complement your GEO coverage
+
+Hi — meant for Bill Therien or whoever on the technical side reads unsolicited method questions. (Your team's 2022 AMOS paper on orbit-residual behavior in GEO RPO is the kind of work I mean.)
+
+I built a maneuver detector from free public catalog data — no sensors — and just checked it with an independent method: 30 days of altitude history against a matched control group. The suspects move 11.3× more than matched ordinary satellites, and 72% show a burn signature versus 11% of controls. Two of my own methods agreeing, not operator ground truth; your telescopes are the kind of instrument that could settle it properly.
+
+That's really why I'm writing. ExoAnalytic's strength is the inverse of mine: real optical data, GEO-heavy. My work is cheap statistics across LEO — mostly separating objects that actually moved from objects whose catalog entry is simply old, which is about five of six apparent maneuvers.
+
+Does catalog staleness cause you trouble when correlating observations, or does owning your own data make it moot? And would a free LEO pre-filter be useful alongside what you already see, or redundant?
+
+Fifteen minutes for a straight answer either way. Happy to show the output and where it breaks.

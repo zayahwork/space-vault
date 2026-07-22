@@ -1,16 +1,86 @@
 # 📬 Guide — Daily Outreach (10–15 a day, without turning into a spammer)
 
-**The machine:** `06 Code/outreach.py` + `06 Code/outreach_targets.csv`.
-Forty targets are seeded across five segments. The script drafts the batch and keeps the
-ledger; **it does not send.** No mail account is connected here, and a bad send can't be unsent.
+**The machine:** `06 Code/outreach.py` + `06 Code/outreach_targets.csv` + `06 Code/drafts/`.
+Fifty-two targets across six segments. The script drafts the batch, keeps the ledger, and
+**can now send** — but only with `--live`, and only once `gmail_auth.json` exists.
 
 ```
 python outreach.py                      # today's 15 drafts
 python outreach.py -n 5 --segment insurer
-python outreach.py --sent 3 7 11        # log what actually went out
+python outreach.py --send               # dry run: exactly what would go out
+python outreach.py --send --live        # actually send, log, mark sent
+python outreach.py --sent 3 7 11        # log what went out by hand
 python outreach.py --replied 7 --note "wants a call"
 python outreach.py --status             # the ledger
 ```
+
+## Two kinds of email: template vs hand-written
+
+The five segment templates are the *cold* path — fine for fifteen unknown rows a day.
+But the targets worth the most are the ones where a real reason to write exists: the author
+of a paper we lean on, the person whose dataset we used as an answer key. Those get written
+by hand as `06 Code/drafts/<id>.txt`:
+
+```
+Subject: your low-latency maneuver paper — something I stumbled into
+Attach: output/starlink_deorbit_detected.png
+
+Patrick,
+...
+```
+
+`Attach:` is optional and repeatable; paths are relative to `06 Code`. **Don't repeat the
+signature** — the script appends it. If a draft file exists for a row, it wins over the
+segment template everywhere: preview, dry run, and send. All twelve batch-2 emails now live
+here, so they send as written instead of silently reverting to generic text.
+
+## The drip (automatic, since 2026-07-22)
+
+Scheduled task **"Outreach Drip"** runs `06 Code/drip.ps1` every hour from 8am to 7pm.
+Each run sends **at most 2**, then checks for bounces. Nothing runs overnight on purpose:
+mail that arrives at 3am is buried under the 9am pile, and nobody is awake to notice a misfire.
+
+**The schedule is a suggestion; the cap is the law.** `outreach.py` counts today's sends from
+its own audit log and refuses to exceed `DAILY_CAP` (25), so a scheduler misfire cannot become
+a blast. `MAX_PER_RUN` is 5, well under the cap, which is what forces the send to spread out.
+
+Why 25 and not 200: Gmail's actual SMTP limit for a free account is **500 recipients a day**,
+so volume is not what gets an account restricted — the *pattern* is. Cold mail that nobody
+replies to, spam complaints, and bounces are what trip it. 25/day is invisible to the rate
+limiter and slow enough that a bad batch gets caught before it repeats.
+
+```
+powershell -File drip.ps1 -DryRun      # what would go out, sends nothing
+powershell -File drip.ps1 -N 1         # one at a time
+Get-ScheduledTask "Outreach Drip"      # is it on?
+Disable-ScheduledTask "Outreach Drip"  # stop everything, now
+```
+
+Log: `06 Code/drip.log`. Ledger: `python outreach.py --status`.
+
+## Turning on sending
+
+One-time: make a Google App Password at `myaccount.google.com/apppasswords` (needs 2FA),
+then write `06 Code/gmail_auth.json` — already gitignored, never commit it:
+
+```json
+{"address": "zayahwork@gmail.com", "app_password": "abcd efgh ijkl mnop"}
+```
+
+To rehearse the whole path without mailing a human, use the local sink and throwaway copies —
+this is how the batch-2 send was verified:
+
+```
+python _smtp_sink.py --port 8026 --expect 8          # in one window
+python outreach.py --send --live --smtp-plain \
+  --smtp-host 127.0.0.1 --smtp-port 8026 \
+  --csv /tmp/t.csv --log /tmp/t.jsonl                # in another
+```
+
+The safeties are not optional and have already earned their keep: no address = no send,
+an unfilled `[placeholder]` = no send, a missing attachment = hard stop, 15/day hard cap,
+a 5xx at send time parks the address as dead, and the audit log dedupes by address so a
+crash mid-batch can't double-mail anyone.
 
 ## The 20 minutes this actually takes
 

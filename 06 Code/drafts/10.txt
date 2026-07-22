@@ -1,0 +1,11 @@
+Subject: built and checked a maneuver detector on free data — a question for Pixxel
+
+Hi,
+
+I built a detector that spots satellites breaking their own routine, from free public tracking data only, and just finished checking it with an independent method: 30 days of altitude history, matched control group. The flagged satellites move 11.3× more than the ordinary ones; 72% show a real burn signature versus 11% of controls. Two of my own methods agreeing — not operator ground truth, to be straight about it.
+
+Pixxel is the profile I most want to sanity-check against: enough satellites that conjunction warnings are routine, not enough people for anyone to specialise in them. The measurement behind my work says five of six apparent maneuvers in the public catalog are just stale elements — so most of that warning traffic may be avoidable.
+
+When something near one of your satellites starts behaving differently, how do you find out today — a tool, a bought service, or someone checking?
+
+Fifteen minutes would help me a lot. Nothing to sell — there's nothing to buy.

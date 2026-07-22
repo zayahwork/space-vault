@@ -1,0 +1,9 @@
+Subject: your pattern-of-life-violation paper, from a much cheaper angle
+
+Hi,
+
+I read your AMOS paper on unsupervised detection of pattern-of-life violations and have been chewing on it since. I'm coming at the same problem from the opposite end of the budget: public catalog data only, no proprietary feeds, no sensors.
+
+The wall I keep hitting is one your paper doesn't dwell on. Most of the catalog-versus-operator disagreement I find isn't a maneuver at all — it's data age. Out of 3,555 Starlink objects that looked like they'd moved, only 541 survived once I controlled for how stale each entry was.
+
+Is that something you filter out upstream, or does the unsupervised approach absorb it? Genuinely asking — if it's a solved problem on your side I'd rather learn that than keep rediscovering it. Happy to show my output and where it breaks.
