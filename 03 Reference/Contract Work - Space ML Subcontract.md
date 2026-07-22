@@ -64,16 +64,37 @@ and knows what kind of engineer wrote it.
 > 3. If a product thread is *live* (they replied), the contract pitch waits. Don't muddy a
 >    conversation that's working.
 
-### Clean — no existing product thread, write these first
+### Leads found — 22 Jul 2026
 
-| Company | Why them | Route |
-|---|---|---|
-| **Slingshot Aerospace** | Big SSA/analytics shop, constantly hiring, ML-heavy product | careers page → find the eng lead |
-| **Privateer Space** | Data-quality is literally their thesis; small team | site contact |
-| **ExoAnalytic Solutions** | Optical tracking at scale — drowning in data, thin on ML | site contact |
-| **Numerica** | Astrodynamics + tracking algorithms, defense-adjacent | site contact |
-| **Katalyst Space** | Small, fast, servicing-focused | site contact |
-| **Orion Space Solutions / SpaceNav** | Small SSA shops that subcontract routinely | site contact |
+> [!danger] Privateer is **not** clean — removed from this list
+> **Moriba Jah is Privateer's co-founder and Chief Scientist**, and he has a **live reply
+> thread** with us ([[Guide - Moriba Jah Call]]). A contract pitch into that company right now
+> lands next to a conversation that is already working. Rule 3 applies: **wait.** If the call
+> happens and goes well, "are you ever short an ML pair of hands?" is a question you ask a
+> person who already likes you — not a cold email.
+
+| Who | Company | Why them | Address |
+|---|---|---|---|
+| **Adrian Thompson** — Chief of AI & Data Science | Slingshot Aerospace | Best fit on the list. Hired Nov 2025 out of Waymo/TuSimple to own AI across their products — a new AI chief has a backlog and no team yet | ❌ none published; two scraper sites disagree on the domain (`slingshot.space` vs `slingshotaerospace.com`), so **don't guess** — route via the site contact form and ask for him by name |
+| **Douglas Hendrix** — CEO & co-founder | ExoAnalytic Solutions | Optical telescope network at scale: enormous data, and their leadership page lists no ML title anywhere | ✅ **`hendrix@exoanalytic.com`** — printed on their own ESA space-debris conference paper. `info@exoanalytic.com` is the published fallback |
+| **William Therien** — CTO · **Ben Lane** — VP Engineering | ExoAnalytic Solutions | The two who'd actually own the work | ❌ no address. Only one sample of their convention (`lastname@`), which isn't enough to infer from |
+| **Jeff Aristoff** — VP, Space Systems · **Joshua Horwood** · **Navraj Singh** | Numerica | Publishes the exact work we do — tracking algorithms, uncertainty, automated indications & warning. They'd understand the portfolio in one read | ⚠️ convention appears to be `First.Last@numerica.us` (e.g. `jeff.aristoff@numerica.us`) but the source PDF rate-limited twice — **verify before sending** |
+| **Nicholas Liapis** — CTO | Katalyst Space | Small, fast, Flagstaff AZ | ❌ none published |
+| **Chad Fish** — VP Strategy & CTO · **Geoff Crowley** — CEO | Orion Space Solutions (now under Arcfield) | ~76 people, R&D shop that subcontracts routinely | ❌ none published; a scraper claims `FLast@astraspace.net` (their old ASTRA domain) — unverified, don't use |
+
+**Read on the whole set:** only one address is send-ready. That's normal for engineering leads —
+unlike insurance, this industry publishes papers, not staff directories. Which points at the
+better route below.
+
+### The better route for four of these: the paper, not the person
+
+Numerica, ExoAnalytic and Slingshot all publish at **AMOS** every year, and AMOS papers print
+author emails. We already mine papers for contacts ([[Guide - Competitor Papers]]). One pass
+through the last two years of AMOS papers from these three companies would likely produce
+several *working engineer* addresses — better targets than a CTO, because the engineer knows
+exactly what's stuck and has a manager who'd rather buy hours than wait for a req to close.
+
+Worth an hour, and it doubles as product research. **Not started.**
 
 ### Conflicted — a product email already went out; different human or wait
 
