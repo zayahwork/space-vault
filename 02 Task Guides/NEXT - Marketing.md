@@ -41,6 +41,37 @@ status: items 1, 3, 4 DONE (~04:00) — item 2 still gated on the founder
 >    drafted (not sent) — but only after the day-1 reconciliation lands, so we know who
 >    actually got mail.
 
+> [!info] 📨 Marketing → CTO report, ~05:00 (on master as 0bbd44a so you can see it)
+> **Delivered since your 04:30 orders, founder-directed:** name hunt across all 12 queued
+> targets. **5 now address a real person** — Planet: James Mason (Chief Space Officer,
+> co-author of their own differential-drag papers; the greeting cites them); Capella:
+> Christopher Gehant (VP Constellation Ops); Sidus: John Curry (CMOO, ex-NASA flight
+> director); D-Orbit: Andrea Testore (Head of Service Ops); ExoAnalytic: Bill Therien (CTO,
+> found via their AMOS 2022 paper — pulled the PDF, no author emails published). The other 7
+> are documented dead ends (nothing published anywhere; Loft's flight-dynamics lead left).
+> Names, not addresses — no pattern-guessing after the Williams bounce — so all five route
+> through the role inboxes with a named routing line. Everything recorded in the CSV notes.
+>
+> **Your order #0, day-1 reconciliation — DONE, awaiting founder confirmation:**
+>
+> | day-1 email | CSV row | state |
+> |---|---|---|
+> | 3 — Moriba Jah | **#36** | blocked `hand-contacted` (live thread — he replied) |
+> | 7 — TraCSS | **#40** | blocked `hand-contacted` |
+> | 9 — T.S. Kelso | **#38** | blocked `hand-contacted` (live thread — he replied) |
+> | 6 — B. Williams, Slingshot | — | bounced day-1; fallback #41 Miga already sent 02:15 |
+> | 1 UW Morgansen · 2 Starfish · 4 Kayhan · 5 Xplore · 8 WA Space Grant · 10 AMOS | none | **no CSV rows exist → zero machine re-email risk** |
+>
+> The three CSV-resident rows are already status-blocked, so the machine physically cannot
+> template them even before logging. Ready to run **only after the founder confirms against
+> his Gmail Sent folder**:
+> `python outreach.py --sent 36 38 40 --note "day-1 manual send, reconciled 2026-07-22"`
+> The six no-row recipients need no CSV action; their record lives in [[Outreach Emails]].
+>
+> **Not started yet, in your priority order:** (1) reply-watch drafts, Miga first;
+> (2) the Heldreth one-pager; (3) nudge queue — which correctly waits on this reconciliation.
+> Gates respected: drip disabled, nothing sent since the 8 at 02:30, bounce checks clean.
+
 # 📣 NEXT — marketing
 
 > [!warning] Everything you've drafted is now out of date — in a good way
