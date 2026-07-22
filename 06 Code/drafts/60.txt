@@ -1,0 +1,13 @@
+Subject: "State of the Art and Future Needs in Conjunction Analysis" - one of the gaps, measured
+
+Emma,
+
+You and Noelia Sanchez wrote the future-needs paper on conjunction analysis, and you did the GEO light-curve characterisation work at Deimos - which makes you the person I most want to ask whether one specific gap is still a gap.
+
+The measurement: rank Starlink by disagreement between the public catalog and the operators' own published orbits and about 4,900 objects look like they manoeuvred. 89% hadn't - the catalog entry was stale, not the spacecraft. Filter out the deliberate deorbits and roughly 490 station-keepers remain that moved when they shouldn't have. Checked against the catalog's own altitude history with matched controls, about two-thirds of the top candidates show independent movement versus a ~10% base rate. That's two of my own methods agreeing rather than operator ground truth, and I'd rather say so than oversell it.
+
+My question: in the future-needs framing, is catalog staleness still treated as a known-and-tolerated error, or is anyone separating it from real motion before screening?
+
+Separately, with no pressure attached - if Deimos ever has this kind of work queued behind a hire, I contract. ML engineer, months deep in orbital data, and I'd rather start with a scoped paid week than ask anyone to take a leap.
+
+I'd value the technical answer either way.

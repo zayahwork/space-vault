@@ -204,6 +204,24 @@ a satellite 1 km above geostationary drifts west at **0.01284 °/day** (publishe
    GEO station-keeping is mostly east–west and north–south burns that barely change altitude,
    so the step the altitude verifier looks for is close to invisible. It was built for LEO
    reboosts.
+> [!danger] ⚖️ DISPUTED 2026-07-22 — Tim's mechanism vs Randy's ground truth (CTO ruling inside)
+> Independently of the work above, Randy scored 14 documented GEO maneuvers
+> ([[RESULTS - Ground Truth]]) and reports the opposite mechanism: **N–S station-keeping DOES
+> move fitted altitude** (0.84–3.00 km on documented events, 2–7× the measured noise floor),
+> and **longitude drift is arithmetically the same quantity as altitude** (1 km ≈ 0.0128°/day)
+> — which *converges* with Tim's own negative control killing the drift column from a
+> different direction. On Randy's data the altitude verifier's real GEO failure is the
+> **±3-day timing window** against a catalog that can lag up to 10 days — wrong *when*, not
+> wrong *what*. Under that reading the SES no-signal result has no confirmed explanation yet.
+>
+> **CTO ruling:** where they agree is settled — the drift column is dead, retired everywhere,
+> two independent executions. Where they disagree, measured events outrank mechanism, but
+> n=14 events vs n=4 suspects is not a settled fight either way. The ground-truth set is the
+> referee: **issue 015 scores BOTH verifiers against the 14 documented maneuvers** — altitude
+> with a lag-aware window, and inclination — and whichever catches more documented events
+> wins. Until 015 reports: quote neither the SES "separation" nor the retraction as fact.
+> SES is an open miss with two candidate explanations, and that sentence is the only
+> external-safe one.
 2. **n=3 against n=3 controls.** A 90th-percentile bar drawn from 3 controls is barely a
    bar. The population is 44–68 objects, so 95th-percentile ranking can only ever produce
    a handful of suspects per snapshot.
@@ -226,7 +244,7 @@ for all four groups. Bars are 3 snapshots old — **re-learn weekly** as the arc
 |---|---|
 | "the method is constellation-agnostic in LEO" | ✅ OneWeb, 80% vs 10% |
 | "we monitor GEO, where the insured value is" | ✅ runs daily, bar auditable |
-| "we *detect verified maneuvers* at GEO" | ⚠️ partial — quote **inclination only**: SES 15.0x (1/4 over bar), Intelsat *negative*. n=4. Say "early corroboration, n=4, not operator ground truth" |
+| "we *detect verified maneuvers* at GEO" | ⛔ DISPUTED pending issue 015 (see ruling above). External-safe sentence: "GEO corroboration is early and under active validation against 14 documented maneuvers." Do not quote SES separation or the retraction as fact |
 | "the maneuvers we flag show up in an independent observable" | ✅ strongest at **OneWeb: inclination 11.5x, 70% vs 13%**, matching the altitude verifier's separate 80%-vs-10% |
 | any claim resting on the **63x drift** figures | ❌ do not use — same number at every altitude, near-circular with the detector |
 

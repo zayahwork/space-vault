@@ -34,3 +34,10 @@ regime, from the baseline file. "quiet" = nothing over the bar.*
 - **oneweb**: 7 over the bar of 651 scored (0 more among deorbiting hardware, 0 data-quality) — top: 54679 at 26.3 km, 5.0x its bar
 - **ses**: 1 over the bar of 68 scored (0 more among deorbiting hardware, 0 data-quality) — top: 36581 at 17.7 km, 1.1x its bar
 - **starlink**: 111 over the bar of 10781 scored (10 more among deorbiting hardware, 47 data-quality) — top: 67865 at 492.2 km, 11.2x its bar
+
+## 2026-07-22/1400Z
+
+- **intelsat**: 1 over the bar of 44 scored (0 more among deorbiting hardware, 0 data-quality) — top: 27380 at 48.4 km, 1.0x its bar
+- **oneweb**: 3 over the bar of 651 scored (0 more among deorbiting hardware, 0 data-quality) — top: 48767 at 116.9 km, 2.1x its bar
+- **ses**: 1 over the bar of 68 scored (0 more among deorbiting hardware, 0 data-quality) — top: 36581 at 17.7 km, 1.1x its bar
+- **starlink**: 205 over the bar of 10781 scored (32 more among deorbiting hardware, 67 data-quality) — top: 69652 at 477.5 km, 10.9x its bar

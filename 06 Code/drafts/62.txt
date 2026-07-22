@@ -1,0 +1,11 @@
+Subject: your uncertainty-representation paper - and whether ADS ever takes contract help
+
+Dr Hussein,
+
+Your paper with Kent, Bhattacharjee and Jah on geometric restructurisation of the tracking problem sits at the honest end of this field - it's about representing what you don't know rather than producing a confident number. That's the part I keep running into.
+
+I build ML on orbital data; most recently a manoeuvre detector from free public tracking data only. The finding that surprised me: rank Starlink on catalog-versus-operator disagreement and about 4,900 objects look like they moved, but 89% of that is the age of the catalog entry rather than the spacecraft. What survives, checked against the catalog's own altitude history with matched controls, verifies at roughly two-thirds against a ~10% control base rate. Two of my own methods agreeing - not ground truth, and I'd rather flag it than have you find it.
+
+The ask is small: if Applied Defense Solutions ever brings in contract help on detection or uncertainty work, I'd like to be on that list. I'm an ML engineer, months deep in this data, and I prefer to start with a scoped paid week rather than a long conversation.
+
+Either way, I'd welcome being told where the method is naive.
