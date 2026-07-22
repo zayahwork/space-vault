@@ -18,7 +18,10 @@ status: items 1, 3, 4 DONE (~04:00) — item 2 still gated on the founder
 >    The **drip stays DISABLED** until the founder clears the new text
 >    (`Enable-ScheduledTask "Outreach Drip"` turns it back on).
 >    Already gone with the old "I'm building" pitch and unrecallable: Miga + the 7 sent 02:30.
-> 2. ⏳ Kelso reply — still gated on the founder reading [[Kelso Reading - Digest]].
+> 2. ✅ **Kelso reply SENT** — Jul 22 ~05:30, in-thread, founder-cleared. Carries the 11.3×
+>    with the control group described, the corrected->500 km admission, and publish intent
+>    with CelesTrak credit + opt-out. Publication gate now CLEAR (courtesy buffer ~1 day).
+>    See [[Guide - Kelso Goldmine]] log.
 > 3. ✅ Insurer names researched → [[Insurer Target List]]. Headline: **Melissa Heldreth**,
 >    Gallagher's new US space practice director, is **in Seattle**. Also Kunstadter (AXA XL,
 >    already bought SSA data once via SpaceAble) and Wade (Atrium/ASIC). **No one emailed.**

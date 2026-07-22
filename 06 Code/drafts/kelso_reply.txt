@@ -1,0 +1,19 @@
+Subject: Re: Starting OMM-native because of your docs — one question
+
+Dr. Kelso,
+
+This is far more than I hoped for — thank you. I went through the SMOPS keynote and the IAC-25 conjunction-assessment paper, and then spent real time in the first-gp-by-launch data.
+
+Rather than just eyeball it, I pulled the whole table and computed the median days from launch to first GP by year: 0.65 (2019), 0.88 (2022), 1.15 (2024), 1.58 (2025), and 2.71 so far in 2026. Median, not worst case — it has risen every year since 2021 and more than quadrupled since 2019. I'd assumed identification was largely a solved problem; watching the typical launch get steadily slower was not what I expected.
+
+The rideshares are the tail you'd predict from your 2017 paper. Transporter-17 (Jul 7) took 12.62 days to first GP — the worst of all 156 launches catalogued in 2026 — and it's still carried as OBJECT A with source TBD two weeks on. Transporter-16 from March is also still OBJECT A/TBD, which I take as a live instance of your "some never."
+
+What struck me most on the 2017 paper is that you solved the cooperative case: given independent operator orbits, the RMS-over-several-orbits assignment separates matches from non-matches by orders of magnitude and runs in about a minute. The part that's still open nine years later is the case where that second data set simply doesn't exist. That's a much harder problem than the one I thought you were describing, and I'd rather understand it properly than assume otherwise.
+
+The IAC-25 paper also corrected something I had wrong. I'd been treating catalog error as noise to be filtered. Short fit spans chosen specifically to avoid propagating through unmodeled maneuvers — and eGP meaning SP inherits the same blind spot — is a different problem entirely, and one that's structurally unkind to anyone trying to detect maneuvers from GP data alone. I'd been about to learn that the expensive way.
+
+Since writing the above, my detector also got its first check that wasn't self-graded. I took the satellites it flags from SupGP-versus-GP disagreement and tested them against 30 days of GP altitude history — with a matched control group of satellites it had called ordinary, the bar set at the controls' own 90th percentile. The suspects move 11.3× more than the controls, and 72% clear the bar versus 11% of controls. I'm aware of what that is and isn't: two of my own methods agreeing, both leaning on the public catalog, not ground truth. The same check also caught us being wrong in print — we'd written that the >500 km outliers were "likely decay or bad TLEs," and the altitude history says most of them are fresh 2026 launches still climbing to their working shell. We've corrected it.
+
+And on awareness — I want to do more than point people at the publications. I intend to publish the launch-delay analysis itself (the medians above and the Transporter tail), with CelesTrak credited prominently as the source, and I wanted you to hear that from me before it shows up anywhere. What you show quantitatively every day deserves to be seen against the "it's all under control" story. If you'd rather I hold off, or credit it differently, say the word.
+
+Gratefully,

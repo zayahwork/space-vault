@@ -84,4 +84,13 @@ found useful for attribution, or is it genuinely a dead end without cooperation?
 ## Log
 - Jul 20, 11:25 PM — full roadmap reply received.
 - Jul 21 — reading done, both papers + keynote digested, launch table analyzed independently
-  ([[Kelso Reading - Digest]]). Reply drafted with real findings. Status: **ready to send.**
+  ([[Kelso Reading - Digest]]). Reply drafted with real findings. Status: ready to send.
+- **Jul 22, ~05:30 — SENT**, in-thread, founder-cleared. Final version added two things over
+  the draft above: the verified 11.3×/72%-vs-11% result **with the control group described**
+  (his "compared to what?" answered before he asks) and the we-published-something-wrong
+  correction (the >500 km "decay" line — most were fresh launches still climbing). Also
+  stated publish intent for the launch-delay analysis with CelesTrak credited, with an
+  explicit opt-out offered. Sent text: `06 Code/drafts/kelso_reply.txt`; logged in
+  `outreach_log.jsonl` (kind: reply, in-thread).
+  **→ The publication gate in [[Publish - Launch Delay Finding]] is now CLEAR** — he's heard
+  it from us first. Courteous buffer: give him ~a day to object before posting.

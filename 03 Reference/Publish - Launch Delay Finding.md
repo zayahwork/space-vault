@@ -1,8 +1,8 @@
 ---
 date: 2026-07-22
 type: publication-draft
-status: READY BUT GATED — do not post until the Kelso email has gone out
-gate: "[[Guide - Kelso Goldmine]] reply sent, telling him we intend to publish + crediting CelesTrak"
+status: GATE CLEARED 2026-07-22 ~05:30 — Kelso reply sent in-thread with publish intent + credit + opt-out offer. Courtesy buffer - give him ~a day to object, then post (rerun launch_id_delay.py that morning and refresh the chart if the medians moved)
+gate: "CLEARED — [[Guide - Kelso Goldmine]] log, Jul 22 entry"
 chart: "06 Code/output/launch_delay.png"
 reproduce: "python launch_id_delay.py · python launch_delay_chart.py"
 ---
