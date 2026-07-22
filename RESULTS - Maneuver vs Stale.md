@@ -49,6 +49,10 @@ about the population, which is checkable.
 
 ## What came out (starlink, 2026-07-21 21:57Z, 10,780 comparable objects)
 
+> [!info] Superseded — kept as the record of the first run, not as current numbers
+> This is the Jul-21 single-snapshot run, and it is where the 78.76 km / 58.68 km inversion
+> below came from. For today's bands see *What today's run measured* above.
+
 | catalog age | objects | normal gap (median) | flagged above |
 |---|---|---|---|
 | 3–6 h | 299 | 6.13 km | 13.01 km |
@@ -228,9 +232,14 @@ maneuvers.
   age-band norm, 3/3 persisted). The nonsense orbits are now bucketed separately and are
   bigger than previously published: worst three are **11,731 km**, **8,608 km**, **7,781 km**
   (69694, 69715, 69487) — not the 8,412/5,337 km quoted above.
-- **The 24–48 h band's threshold (78.76 km) is higher than the 48–96 h band's (58.68 km).**
-  A threshold that isn't monotonic in age is a small-sample artifact — 618 and 45 objects.
-  Real, but not yet load-bearing.
+- ~~**The 24–48 h band's threshold (78.76 km) is higher than the 48–96 h band's (58.68 km).**~~
+  **Resolved 2026-07-22 — it was the small-sample artifact we said it was.** The inversion
+  came from thin bins (618 and 45 objects). With a fuller archive the bands are monotonic in
+  age, which is the physically expected shape: **24–48 h → 32.79 km** (n=**7,941**) sits
+  *below* **48–96 h → 58.43 km** (n=**263**). The bin that was 45 objects is now 263, and the
+  inversion went away on its own rather than being tuned away.
+  *Still not load-bearing:* the 96 h+ band holds **1 object** and falls back to the whole
+  population for its threshold. One object is not a band, and no claim should rest on it.
 - **Public GP data is smoothed around maneuvers by design** ([[Kelso Reading - Digest]] §2).
   That biases what we can see, and saying so out loud is a credibility asset.
 
