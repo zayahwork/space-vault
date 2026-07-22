@@ -1,0 +1,11 @@
+Subject: Space Traffic Coordination Monitor - the verification half, from public data
+
+Kaarel,
+
+Your Space Traffic Coordination Monitor work with the ESA team is the reason I'm writing. A coordination monitor has to answer a question I've been attacking from the other side: did the object actually do what it was supposed to do?
+
+I build detection from free public tracking data only. Rank Starlink by how far the public catalog disagrees with the operators' own published orbits and about 4,900 objects look like they manoeuvred - but 89% of that is a stale catalog entry rather than a spacecraft moving. Strip the deliberate deorbits and roughly 490 station-keepers remain that moved when they shouldn't have. Checked against the catalog's own altitude history with a matched control group, about two-thirds of the top candidates show independent movement versus a ~10% control base rate. Two of my own methods agreeing, not operator ground truth - worth saying plainly.
+
+The connection: independent, permissionless verification of behaviour is what makes a coordination claim checkable rather than self-reported. That's the same problem from the monitoring end.
+
+If Guardtime ever takes contract help on that kind of work, I'd like to be considered - ML engineer, months deep in orbital data, and I prefer to start with a scoped paid week rather than a long sales conversation. If not, I'd still value being told where the approach is naive.

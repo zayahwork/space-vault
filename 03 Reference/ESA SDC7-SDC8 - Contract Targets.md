@@ -58,5 +58,35 @@ opt-in-by-authorship addresses than every other method we've tried combined — 
 scraped data, every one of them was printed by the person themselves on a document they chose
 to publish.
 
-**Still unmined:** SDC6 and earlier, and the whole keyword list against SDC9 (we only ran five
-terms there, not ten).
+## SDC6 + the rest of SDC9 — done 22 Jul
+
+**21 more papers with addresses, ~50 more contacts.**
+
+> [!note] Method gotcha, worth remembering
+> The keyword filter returns **nothing** for SDC6 — old conferences have no keyword metadata,
+> so the search silently finds zero and looks like an empty result rather than a broken query.
+> The way in is the **conference filter** (`?conference=7` is the 6th European Conference),
+> then filter titles yourself: 198 papers listed, 23 relevant, 21 of those printed addresses.
+> Re-running the full ten keywords against SDC9 also found **13 papers the first five missed**.
+
+**New targets queued (rows 65–68):**
+
+| # | Who | Their work | Why | Status |
+|---|---|---|---|---|
+| **65** | **Kaarel Hanson** — Guardtime | *Space Traffic Coordination Monitor*, with ESA | A coordination monitor has to answer "did the object actually do what it said?" — independent, permissionless verification is the half we produce | `hold`, draft `65.txt` |
+| **66** | **Daniel Novak** — CGI | Web-based engineering solution supporting conjunction analysis (SDC6) | CGI builds the tooling under other people's space-safety work, and consultancies carry work that outlasts their headcount | `hold`, draft `66.txt` |
+| **67** | **Klaus Merz** — ESA Space Debris Office | Geometric conjunction filters | With **Tim Flohrer** (heads the office) and **Jan Siminski**, that's the institutional trio. One shot each, hand-written only | `hold` |
+| **68** | **Thomas Schildknecht** — AIUB Bern | *Using Conjunction Analysis Methods for Manoeuvre Detection* | Our exact problem from the observatory side | `todo` — placeholder guard blocks it until the paper is read |
+
+**Also on the bench, not queued:** Thomas Kelecy (Boeing, long-time SSA researcher), Thales
+Alenia Space, QinetiQ Belgium, Schafer, RAND Europe (cislunar weak signals — interesting for
+the *who-else-pays* thinking rather than outreach), plus ten more `@gmv.com` and nine more
+`@esa.int`.
+
+**Data hygiene:** one extracted address came out as `.rfernandez@upm.es` — a leading dot from
+the PDF's text layer. Anything harvested this way needs an eyeball before it's used; the
+extractor is good, not perfect.
+
+**Still unmined:** SDC5 and earlier (1993–2009 — old enough that addresses will have rotted),
+the NEO/Debris Detection conferences, and the Collision Avoidance Competition Workshop, which
+is small but exactly our topic.
