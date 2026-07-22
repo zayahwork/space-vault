@@ -4,6 +4,30 @@ owner: ROOM window (brainstorm — bits and bobs, low effort)
 status: assigned
 ---
 
+> [!important] 🔴 FOUNDER ORDER — do the pricing caveat NOW, before anything else
+> Third time it's been assigned; it's the only assigned work still on the table anywhere in
+> the company. In [[Pricing - What to Charge and Who]]: the insurer pitch rests on spotting a
+> satellite that **stops** station-keeping — we could not do that when you wrote it. The tech
+> has now built it (`quiet.py`), but it can't produce results until **~July 29** (needs a week
+> of archive). Add a caveat box saying exactly that, link [[Plan - The Quiet Detector]] and
+> [[RESULTS - The Quiet Detector]], and make July 29 the earliest honest insurer-demo date.
+> Also verify the "sequence B confirmed by founder" status line is a real decision he made,
+> not the doc's own conclusion. ~15 minutes of writing. Everything else waits.
+
+> [!todo] ⚡ CTO update — lanes clarified by the founder, your queue changed
+> **The day-1 reconciliation is NOT yours anymore** — emails belong to marketing only. You
+> found the problem, they fix it. Good catch, wrong hands.
+>
+> Your lane is **ideas only — you implement nothing.** Your queue:
+> 1. The pricing caveat (still #1, still undone) — that doc is yours and it's thinking, not
+>    implementation.
+> 2. Glossary additions from your original list.
+> 3. Then open idea work, e.g.: what does the **July 29 quiet-detector capability** unlock —
+>    who'd pay for "this satellite stopped station-keeping" alerts besides insurers? What's
+>    the demo that makes Heldreth (Seattle, Gallagher) lean forward at a coffee? What should
+>    the founder ask Moriba on the call? Write ideas as short notes; the founder or CTO
+>    routes them to tech/marketing.
+
 # 🧠 NEXT — brainstorm / tidy-up
 
 Small jobs. None should take long. They exist because the vault has drifted behind what the

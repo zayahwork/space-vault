@@ -91,6 +91,14 @@ a number we can't defend.
 > **research** conversation, not a sales one — and worth saying so to their face, because
 > admitting it is the credibility asset.
 
+> [!warning] The quiet-detector caveat (2026-07-22)
+> The detector currently flags the **top 5% by percentile** — so it flags ~5% of objects no
+> matter what actually happened up there. It can rank, but it **cannot say "quiet day —
+> nothing moved."** That's fine for research; it's disqualifying for the insurer product,
+> because "which satellites in your book are behaving abnormally" is an *alerting* claim, and
+> an alert that fires at a fixed rate regardless of reality isn't an alert. A fixed, defensible
+> threshold has to replace the percentile cut **before** anything is priced as monitoring.
+
 ## Related
 
 - [[RESULTS - Maneuver vs Stale]] — the engine and its honest caveats
