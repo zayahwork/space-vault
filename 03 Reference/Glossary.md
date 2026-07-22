@@ -68,6 +68,34 @@ tags: [glossary, learning]
 - **TraCSS.** The US government's new free traffic-warning system for satellite operators
   (run by the Office of Space Commerce). Important to us because it makes basic collision
   warnings free — so we must sell something *smarter* than basic warnings.
+- **SupGP — Supplemental GP data.** Orbit data published by the *operator themselves* (SpaceX,
+  OneWeb…) and rehosted by CelesTrak. Fresher and more accurate than the public catalog, because
+  the owner knows where their own satellite is. Our detector works by comparing SupGP against
+  the public catalog: when the operator and the catalog disagree, something happened.
+- **GP — General Perturbations (data).** The public catalog's standard orbit entries — what
+  everyone can see for free. When we say "the catalog," we mean GP.
+- **Station-keeping.** The small routine burns a satellite does to stay in its assigned spot —
+  like a driver making tiny steering corrections. A healthy satellite station-keeps constantly.
+  One that *stops* is a satellite in trouble (that's the insurer pitch).
+- **Orbit-raising.** A freshly launched satellite climbing from its drop-off altitude to its
+  working altitude, usually over weeks on small electric thrusters. The most maneuver-heavy
+  thing in the sky — new Starlinks do it constantly.
+- **Along-track vs radial.** Two ways two orbit predictions can disagree. *Along-track* =
+  same path, but the satellite is ahead of or behind schedule (like a train that's early —
+  right track, wrong place on it). *Radial* = genuinely higher or lower. A burn mostly shows
+  up along-track; truly different orbits show up radially. This split tells "it maneuvered"
+  apart from "the data is garbage."
+- **Persistence / independent looks.** A candidate only counts if it stays flagged across
+  multiple *different* measurements. "Independent" matters: CelesTrak republishes every ~30 min
+  but the data only actually changes a few times a day — comparing the same two files six times
+  is one piece of evidence, not six.
+- **RMS gap.** Our disagreement number: propagate both orbit versions for 6 hours, measure the
+  distance between them at each minute, average it (root-mean-square). Big gap = big
+  disagreement. Careful: it's dominated by along-track "early/late" error, so a huge km number
+  doesn't automatically mean a wildly different orbit.
+- **Loss ratio.** Insurance math: claims paid ÷ premiums collected. The number an insurer
+  lives and dies by — shifting it even a fraction of a percent across a book of satellites is
+  worth millions, which is why they can pay 10× what an operator can.
 - **SPLID.** A free MIT dataset of satellite behavior with the maneuvers already labeled by
   experts. Like a practice exam with the answer key — perfect for training/testing our ML
   without doing months of manual labeling.
