@@ -335,7 +335,14 @@ def classify(rows, pct, min_km, max_km=MAX_PLAUSIBLE_KM, flag=SUSPECT,
 
 # ------------------------------------------------------------------ baselines
 
-BASELINE_FILE = HERE / "baselines.json"
+BASELINE_FILE = HERE / "baselines.json"     # legacy single-group file, read-only now
+
+
+def baseline_file(group):
+    """One baseline file per group. A stored bar is a per-constellation fact -
+    Starlink's normal band says nothing about a GEO bird's, and a single shared
+    file meant learning OneWeb silently destroyed the Starlink baseline."""
+    return HERE / f"baselines_{group}.json"
 
 
 def learn_baselines(group, pct, min_km, max_km):
@@ -379,15 +386,18 @@ def learn_baselines(group, pct, min_km, max_km):
                             "cut_km": float(np.percentile(src, pct)),
                             "basis": "bin" if len(gaps) >= MIN_PER_BIN else "regime"})
         out["regimes"][regime] = entries
-    BASELINE_FILE.write_text(json.dumps(out, indent=2), encoding="utf-8")
+    baseline_file(group).write_text(json.dumps(out, indent=2), encoding="utf-8")
     return out
 
 
 def load_baselines(group):
     """Stored cuts as {(lo,hi): cut_km} per regime, or None if never learned."""
-    if not BASELINE_FILE.exists():
+    path = baseline_file(group)
+    if not path.exists():
+        path = BASELINE_FILE                 # fall back to the legacy shared file
+    if not path.exists():
         return None
-    raw = json.loads(BASELINE_FILE.read_text(encoding="utf-8"))
+    raw = json.loads(path.read_text(encoding="utf-8"))
     if raw.get("group") != group:
         return None
     raw["cuts"] = {reg: {(b["lo"], b["hi"]): b["cut_km"] for b in bands}
@@ -559,7 +569,7 @@ def main():
                 note = "" if b["basis"] == "bin" else "  (thin bin - used whole regime)"
                 print(f"    age {b['lo']:>4g}-{hi:<6} n={b['n']:<6} "
                       f"flag above {b['cut_km']:8.2f} km{note}")
-        print(f"\n  -> {BASELINE_FILE.name}  (provenance stamped inside)")
+        print(f"\n  -> {baseline_file(args.group).name}  (provenance stamped inside)")
         print(f"     WARNING: learned from {len(base['snapshots'])} snapshot(s). "
               f"A bar learned from one\n     day only knows one day's weather. "
               f"Re-learn as the archive grows.")

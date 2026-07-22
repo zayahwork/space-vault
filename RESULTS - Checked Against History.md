@@ -7,11 +7,12 @@ snapshot: 2026-07-22 0200Z
 
 # 🔬 RESULTS — checked against the catalog's own history
 
-> [!success] The headline
-> The top suspects move **11.3x more** than satellites the detector called ordinary, and
-> **72%** of them clear a bar that only **11%** of ordinary satellites clear.
-> **The detector is tracking real movement.** This is the first number here that
-> `detect.py` did not produce about itself.
+> [!success] The headline (hardened 2026-07-22, two snapshots)
+> **~two-thirds of the top suspects** clear a movement bar that only **~10% of ordinary
+> satellites** clear — replicated on two independent snapshots (72% vs 11% at 0200Z,
+> 68% vs 11% at 0800Z). The **entire flagged list**, all 489 objects, verifies at ~4x the
+> control rate. **The detector is tracking real movement.** This is the first number here
+> that `detect.py` did not produce about itself.
 
 ## 🔬 Hardened 2026-07-22 (CTO ask): does it hold at bigger samples?
 
@@ -27,9 +28,30 @@ rank 300–400 are objects that barely cleared the flag threshold, so a weaker s
 is the ranking working, not the finding failing. If the detector were noise, that column would
 be flat. Even the *bottom* of the list clears the bar 4x more often than controls.
 
-**Say it this way:** *"top candidates move ~9–11x more than controls; even the weakest
-flagged objects still verify at 4x the control rate."* Don't quote 11.3x as if it covered
-all 488.
+## 🔬 Hardened again, same day: full list + a second, independent snapshot
+
+The table above is all one snapshot (0200Z). The stronger test is whether the same structure
+shows up on a *different* snapshot with a *different* candidate list. Re-ran everything on
+0800Z — six hours later, freshly ranked, **every one of the 489 flagged objects checked**
+(nothing sampled), with a control pool pushed to 600:
+
+| sample (0800Z snapshot) | median step ratio | over the controls' bar |
+|---|---|---|
+| top 25 | 5.4x | 56% vs 12% |
+| top 75 | 23.8x | 68% vs 11% |
+| top 200 | 9.2x | 68% vs 10% |
+| **all 489 flagged (the whole list)** | **4.8x** | **37% vs 10%** |
+
+Same shape, second snapshot: strong at the top, declining down-list, never anywhere near 1x.
+
+> [!warning] Which number to quote
+> The **median ratio is volatile** — 11.3x at 0200Z became 23.8x at 0800Z for the same top-75
+> cut. That's what medians of a heavy-tailed quantity do at n=75; neither number is "the"
+> number. The **over-the-bar rate is stable** (72% → 68%) and is the one to stake credibility
+> on. **Say it this way:** *"about two-thirds of our top candidates show independent movement
+> in the catalog's own history, against a 10% base rate for matched controls — and the full
+> flagged list, all ~490 objects, still verifies at nearly 4x the control rate."* Retire the
+> bare "11.3x" from anything customer-facing; it was true once, on one day, at one cut.
 
 Persistence cross-check (all 319 persistent vs all 222 single-look suspects): persistent ones
 verify better — **46% vs 37%** over the bar, median step 0.110 vs 0.072 km. Both far above the
