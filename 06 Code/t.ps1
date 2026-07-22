@@ -48,7 +48,10 @@ $layout = @(
     @{ Effort = 'high';   Model = 'fable'; Col = 0; Row = 0; Title = 'Claude - CTO';   Branch = 'cto';   Persona = 'cto';   Colors = 0x0F },
     @{ Effort = 'high';   Model = 'opus';  Col = 1; Row = 0; Title = 'Claude - TIM';   Branch = 'tim';   Persona = 'tim';   Colors = 0x0F },
     @{ Effort = 'medium'; Model = 'opus';  Col = 0; Row = 1; Title = 'Claude - MARK';  Branch = 'mark';  Persona = 'mark';  Colors = 0x0F },
-    @{ Effort = 'high';   Model = 'opus';  Col = 1; Row = 1; Title = 'Claude - RANDY'; Branch = 'randy'; Persona = 'randy'; Colors = 0x0F }
+    @{ Effort = 'high';   Model = 'opus';  Col = 1; Row = 1; Title = 'Claude - RANDY'; Branch = 'randy'; Persona = 'randy'; Colors = 0x0F },
+    # VIDEO sits centered on top of the grid (launched last = top of z-order); the four
+    # corners of the other windows stay visible and clickable to tab between them.
+    @{ Effort = 'medium'; Model = 'opus';  Center = $true;   Title = 'Claude - VIDEO'; Branch = 'video'; Persona = 'video'; Colors = 0x0F }
 )
 
 # --- Persona system prompts (regenerated every launch so edits here take effect).
@@ -67,6 +70,7 @@ $personas = @{
     tim   = "You are Tim, the software engineer / ML engineer of Zayah's space startup. You build and harden the code: the maneuver detector, data pipelines, tests, charts. Test-first where a test is possible; every claim ships with the number that proves it. When work is done, state plainly what was verified and what was not.$commonRules"
     mark  = "You are Mark, the marketer of Zayah's space startup: outreach, social, and income. You draft emails, find real human contacts, keep the outreach ledger honest, and think about who pays and why. You NEVER send anything - drafts only; Zayah sends. Write like one specific human to another; if it smells like spam, rewrite it.$commonRules"
     randy = "You are Randy, the researcher / brainstormer of Zayah's space startup. You dig into papers, competitors, orbital mechanics, and generate ideas. Separate VERIFIED (with source) from SPECULATION (labeled) in everything you produce. Wild ideas welcome, mislabeled facts are not.$commonRules"
+    video = "You are the video editor / content producer for Zayah's channel 'Zayah in Orbit' - a 19-year-old building a space startup from his bedroom, documented as it actually happens. You turn the day's REAL events into episodes: outlines, titles, hooks, shot lists, shorts scripts, thumbnails ideas. Never invent or exaggerate events - the detector catching a real maneuver IS the drama. OPSEC duty: before anything is marked ready to publish, flag any frame or text that exposes real people's emails/contact info, auth files, or credentials - blur or cut, no exceptions.$commonRules"
 }
 foreach ($name in $personas.Keys) {
     Set-Content -Path (Join-Path $personaDir "$name.md") -Value $personas[$name] -Encoding UTF8
@@ -163,8 +167,13 @@ foreach ($win in $layout) {
         if ($proc) { $hwnd = $proc.MainWindowHandle }
     }
     if ($hwnd -ne [IntPtr]::Zero) {
-        $x = $wa.X + ($win.Col * $w)
-        $y = $wa.Y + ($win.Row * $h)
+        if ($win.Center) {
+            $x = $wa.X + [math]::Floor(($wa.Width - $w) / 2)
+            $y = $wa.Y + [math]::Floor(($wa.Height - $h) / 2)
+        } else {
+            $x = $wa.X + ($win.Col * $w)
+            $y = $wa.Y + ($win.Row * $h)
+        }
         [Win32.Native]::MoveWindow($hwnd, $x, $y, $w, $h, $true) | Out-Null
     }
 }
