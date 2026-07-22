@@ -65,6 +65,12 @@ commit, and stop. If no issue qualifies, output exactly: NO MORE TASKS
 HARD RULES: work only in this worktree on its own branch; never merge, switch branch or
 push; NEVER send email or run any script in --live/--send mode - drafting is the ceiling;
 stay inside the folders present in this worktree.
+BEFORE your final commit: append a short report block to your lane's NEXT file in
+"02 Task Guides/" (create it if your sparse view lacks one) titled "-> CTO report" with:
+(a) what you completed, (b) YOUR recommended next best move in your field and the reasoning
+- disagree with the current queue if you think something matters more, (c) anything you're
+blocked on. The CTO reads these at every gather; your recommendation genuinely steers the
+queue.
 
 RECENT COMMITS:
 $commits

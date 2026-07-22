@@ -1,6 +1,6 @@
 ---
 date: 2026-07-22
-status: OneWeb clean; GEO referee ruled (issue 015) — altitude + lag-aware ±10d window catches 12/14 documented maneuvers; live GEO suspects still n=4
+status: OneWeb clean; GEO referee ruled (issue 015) — altitude + lag-aware −3/+14d window catches 13/14 documented maneuvers (5/6 double-sourced); SES miss still unexplained; live GEO suspects still n=4
 code: "06 Code/detect.py --group oneweb|intelsat|ses, 06 Code/verify.py (LEO), 06 Code/verify_geo.py (GEO), 06 Code/referee_geo.py (issue 015)"
 snapshot: 2026-07-22 0800Z
 ---
@@ -12,11 +12,16 @@ snapshot: 2026-07-22 0800Z
 > confirmation vs a 10% control base rate.
 >
 > **GEO: the referee has ruled (issue 015).** Against the 14 externally documented GEO
-> maneuvers, the **altitude verifier with a lag-aware ±10-day window catches 12 of 14**
-> (4 of 6 double-sourced) — the inclination channel catches 8 of 14 and never beats
-> altitude. The verifier's GEO failure was its **±3-day timing window** against a catalog
-> that lags up to ~10 days — wrong *when*, not wrong *what*. The earlier "altitude is blind
-> to GEO burns by construction" claim in this note is refuted and struck below.
+> maneuvers, the **altitude verifier with a lag-aware −3/+14 day window catches 13 of 14**
+> (5 of 6 double-sourced) — the inclination channel catches 9 of 14 and never beats altitude
+> at any window width. The verifier's GEO failure was its **±3-day timing window** against a
+> catalog that lags up to ~11 days — wrong *when*, not wrong *what*. The earlier "altitude is
+> blind to GEO burns by construction" claim in this note was mine, it is refuted, and it is
+> struck below.
+>
+> **What that does *not* settle: the SES miss.** All seven documented SES events behave
+> correctly under the verifier exactly as shipped, so neither candidate explanation accounts
+> for SES's live no-signal. It goes back on the open list, unexplained.
 >
 > **Still not proven, and one measure is now discredited.** Running the GEO verifier on LEO
 > as a negative control showed the *longitude drift* column returns the same ~63–70× on every
@@ -66,13 +71,29 @@ operator, different orbit shell, different maneuver style — same signal. This 
 
 Better we say it first: **on today's data, SES detections are not corroborated.**
 
-> [!warning] Revisited twice on 2026-07-22 — final reading: the miss was the **window**, not the axis
-> First revision: `verify_geo.py` re-ran the fleet on inclination + drift and SES appeared
-> to separate on both — read at the time as "the altitude verifier looked at the wrong
-> axis". The referee test (issue 015, callout further down) then scored both verifiers
-> against 14 documented maneuvers and refuted that reading: altitude is the stronger GEO
-> observable; the failure was the **±3-day window vs up-to-10-day catalog lag**. The SES
-> drift "separation" is dead (negative control), and the inclination one is n=4 and
+> [!danger] Revisited twice on 2026-07-22 — final reading: **neither explanation survives, and
+> the SES miss is still unexplained**
+> First revision: `verify_geo.py` re-ran the fleet on inclination + drift and SES appeared to
+> separate on both — read at the time as "the altitude verifier looked at the wrong axis."
+> The referee test (issue 015, callout further down) killed that reading. But it does not
+> hand the win to the other candidate either, and the reason is specific to SES:
+>
+> **Every documented SES event is caught by the altitude verifier exactly as shipped**, at
+> ±3 days, with the catalog step arriving +0.3 to +2.4 days late — AMC-9's fragmentation
+> (9.2× its bar), AMC-9's graveyard raise (8.3×), AMC 11's graveyard raise (678×) and all
+> three of AMC 11's routine N–S station-keeping burns (2.0×, 3.3×, 6.0×). And AMC 18, SES's
+> abandoned bird, stays correctly silent. On SES's own documented record the ±3-day window
+> was never the constraint, so **the timing window cannot be why SES's live suspects showed
+> no signal** — even though it is genuinely the verifier's biggest defect elsewhere.
+>
+> So of the four options the CTO ruling named — altitude-blindness, timing window, both,
+> neither — the answer for SES is **neither**. That is worse than having an explanation, and
+> it is where the evidence points. What it does do is move the suspicion: the verifier
+> handles SES's documented maneuvers correctly, which makes `detect.py`'s **GEO suspect
+> selection** the next thing to test, not `verify.py`. That is a hypothesis with no
+> measurement behind it yet — do not quote it as a finding.
+>
+> The SES drift "separation" is dead (negative control), and the inclination one is n=4 and
 > unconfirmed.
 
 ## The detector now knows which physics it is in (issue 002, 2026-07-22)
@@ -208,65 +229,100 @@ a satellite 1 km above geostationary drifts west at **0.01284 °/day** (publishe
 1. ~~**The verifier watches altitude.**~~ **Refuted by the referee, 2026-07-22** (callout
    below). The claim was that GEO burns barely change altitude, so the step the altitude
    verifier looks for is close to invisible. Documented events say otherwise: N–S burns move
-   fitted altitude 0.8–3.0 km against a ~0.4 km noise bar, and altitude catches more
+   fitted altitude 0.8–3.0 km at 2.0–6.0× their own noise bar, and altitude catches more
    documented maneuvers than inclination at every window width. The real fault was the
-   **±3-day window** against a catalog that lags up to ~10 days.
+   **±3-day window** against a catalog that lags up to ~11 days.
 > [!success] ⚖️ RESOLVED 2026-07-22 — the referee has ruled (issue 015): **Randy's timing
-> explanation survived; the altitude-blindness mechanism did not**
-> `referee_geo.py` scored every documented GEO event in `ground_truth.csv` four ways, with
-> the same step-finding rule the shipped verifiers use (asserted identical by
-> `_test_referee.py`, 45 cases). Each event is judged against its **own era- and
-> cadence-matched bar**: the largest step abandoned GEO drifters (GCAT `GEO/ID`, no engine)
-> tracked at a comparable catalog rate ever produced over the same ±120 days. That matters —
+> explanation survived; my altitude-blindness mechanism did not**
+> `referee_geo.py` scored every documented GEO event in `ground_truth.csv` on both channels
+> at four window shapes, with the same step-finding rule the shipped verifiers use — asserted
+> identical to `verify.biggest_step_km` and `verify_geo.biggest_step` by `_test_referee.py`,
+> 53 cases, so this scores the verifiers we actually ship rather than a rewrite of them.
+>
+> Each event is judged against its **own era- and cadence-matched bar**: the largest step
+> abandoned GEO drifters (GCAT `GEO/ID`, no engine) tracked at a comparable catalog rate
+> ever produced over the same ±120 days. That matching is not bookkeeping, it decides rows —
 > a first pass with one global bar got 1.51 km, and the entire excess was two sparsely
-> tracked 1960s objects; the well-tracked drifters reproduce Randy's ~0.4 km bar from an
-> independent sample.
+> tracked 1960s objects; the well-tracked drifters reproduce Randy's ~0.42 km bar from an
+> independent sample. Era matters more still: in 2010 comparably-tracked drifters threw
+> 0.78–2.20 km steps on their own.
 >
-> All 14 scoreable events (2src = survived Randy's double-sourcing; steps in km / degrees;
-> ✅ over its bar, ✗ under; * = verdict flips if the 99th-pct bar is used instead of the max):
+> **The lag-aware window is asymmetric (−3/+14d), and that is load-bearing.** Catalog
+> lateness runs one way — an orbit determination can be published days after a burn, never
+> days before it. A symmetric ±14d window does not model lateness, it just takes the biggest
+> thing in four weeks of history: run that way, MEV-2 and Intelsat 1002 both "catch" on
+> inclination steps landing **12.3 days *before* the docking**, at 5.2× and 5.0× the bar.
+> Randy's recommended edit as literally written — `WINDOW_DAYS = 3.0 → 14.0` — would
+> introduce exactly that. The fix is a one-sided window, not a wider one.
 >
-> | event | date | src | alt ±3d | alt ±10d | inc ±3d | inc ±10d |
+> All 14 scoreable events (2src = survived Randy's double-sourcing; steps in km / degrees,
+> with how many times the row's own bar in brackets; ✅ over its bar, ✗ under;
+> \* = verdict flips if the 99th-pct bar is used instead of the max):
+>
+> | event | date | src | alt ±3d | alt −3/+14d | inc ±3d | inc −3/+14d |
 > |---|---|---|---|---|---|---|
-> | Galaxy 15 (loss of command) | 2010-04-05 | 2src | 0.033 ✗ | 2.154 ✗* | 0.0045 ✗ | 0.0101 ✗ |
-> | AMC-9 (fragmentation) | 2017-06-17 | 2src | 12.98 ✅ | 12.98 ✅ | 0.0158 ✗* | 0.0158 ✗ |
-> | Intelsat 29e (prop failure) | 2019-04-07 | 2src | 35.69 ✅ | 61.64 ✅ | 0.0116 ✅ | 0.0143 ✅ |
-> | MEV-2 (docking) | 2021-04-12 | 2src | 0.085 ✗ | 0.584 ✅ | 0.0139 ✅ | 0.0139 ✅ |
-> | Intelsat 1002 (docked-by) | 2021-04-12 | 2src | 0.052 ✗ | 0.981 ✅ | 0.0021 ✗ | 0.0058 ✗ |
-> | Intelsat 33e (breakup) | 2024-10-19 | 2src | 0.076 ✗ | 0.143 ✗ | 0.0020 ✗ | 0.0155 ✗* |
-> | AMC-9 (graveyard) | 2017-11-13 | 1src | 11.36 ✅ | 11.36 ✅ | 0.0077 ✗ | 0.0077 ✗ |
-> | Intelsat 901 (stack reloc) | 2020-03-02 | 1src | 148.16 ✅ | 148.16 ✅ | 0.1111 ✅ | 0.1111 ✅ |
-> | AMC 11 (N–S burn) | 2025-02-10 | 1src | 3.00 ✅ | 3.00 ✅ | 0.0471 ✅ | 0.0471 ✅ |
-> | Intelsat 901 (graveyard) | 2025-03-31 | 1src | 97.82 ✅ | 307.60 ✅ | 0.0027 ✗ | 0.0080 ✗ |
-> | AMC 11 (N–S burn) | 2025-08-08 | 1src | 0.836 ✅ | 1.280 ✅ | 0.0466 ✅ | 0.0466 ✅ |
-> | AMC 11 (N–S burn) | 2025-10-21 | 1src | 1.227 ✅ | 1.550 ✅ | 0.0435 ✅ | 0.0435 ✅ |
-> | AMC 11 (graveyard) | 2026-04-22 | 1src | 267.82 ✅ | 267.82 ✅ | 0.0135 ✅ | 0.0135 ✅ |
-> | Intelsat 25 (graveyard) | 2026-05-04 | 1src | 112.45 ✅ | 112.45 ✅ | 0.0293 ✅ | 0.0293 ✅ |
+> | Galaxy 15 (loss of command) | 2010-04-05 | 2src | 0.033 ✗ | 2.154 (1.0×) ✗\* | 0.0045 ✗ | 0.0101 ✗ |
+> | AMC-9 (fragmentation) | 2017-06-17 | 2src | 12.98 (9.2×) ✅ | 12.98 ✅ | 0.0158 ✗\* | 0.0158 ✗ |
+> | Intelsat 29e (prop failure) | 2019-04-07 | 2src | 35.69 (104×) ✅ | 61.64 ✅ | 0.0116 (1.2×) ✅ | 0.0143 ✅ |
+> | MEV-2 (docking) | 2021-04-12 | 2src | 0.085 ✗ | 0.584 (1.1×) ✅ | 0.0139 (1.8×) ✅ | 0.0139 ✅ |
+> | Intelsat 1002 (docked-by) | 2021-04-12 | 2src | 0.052 ✗ | 0.981 (1.8×) ✅ | 0.0021 ✗ | 0.0024 ✗ |
+> | Intelsat 33e (breakup) | 2024-10-19 | 2src | 0.076 ✗ | **29.87 (74×) ✅** | 0.0020 ✗ | 0.0313 (1.5×) ✅ |
+> | AMC-9 (graveyard) | 2017-11-13 | 1src | 11.36 (8.3×) ✅ | 11.36 ✅ | 0.0077 ✗ | 0.0077 ✗ |
+> | Intelsat 901 (stack reloc) | 2020-03-02 | 1src | 148.16 (154×) ✅ | 148.16 ✅ | 0.1111 (5.8×) ✅ | 0.1111 ✅ |
+> | AMC 11 (N–S burn) | 2025-02-10 | 1src | 3.00 (6.0×) ✅ | 3.00 ✅ | 0.0471 (2.7×) ✅ | 0.0471 ✅ |
+> | Intelsat 901 (graveyard) | 2025-03-31 | 1src | 97.82 (196×) ✅ | 307.60 ✅ | 0.0027 ✗ | 0.0080 ✗ |
+> | AMC 11 (N–S burn) | 2025-08-08 | 1src | 0.836 (2.0×) ✅ | 0.933 ✅ | 0.0466 (5.2×) ✅ | 0.0466 ✅ |
+> | AMC 11 (N–S burn) | 2025-10-21 | 1src | 1.227 (3.3×) ✅ | 1.550 ✅ | 0.0435 (4.8×) ✅ | 0.0435 ✅ |
+> | AMC 11 (graveyard) | 2026-04-22 | 1src | 267.82 (678×) ✅ | 267.82 ✅ | 0.0135 (1.8×) ✅ | 0.0135 ✅ |
+> | Intelsat 25 (graveyard) | 2026-05-04 | 1src | 112.45 (285×) ✅ | 112.45 ✅ | 0.0293 (4.0×) ✅ | 0.0293 ✅ |
 >
 > | measurement | all 14 | double-sourced 6 |
 > |---|---|---|
 > | (a) altitude, ±3d as shipped | 10/14 | 2/6 |
-> | (b) altitude, lag-aware ±10d | **12/14** | **4/6** |
+> | (b) altitude, lag-aware −3/+10d | 12/14 | 4/6 |
+> | (b′) altitude, lag-aware −3/+14d | **13/14** | **5/6** |
 > | (c) inclination, ±3d | 8/14 | 2/6 |
-> | (d) inclination, ±10d (fairness control) | 8/14 | 2/6 |
+> | (d) inclination, −3/+14d (fairness control) | 9/14 | 3/6 |
+>
+> **±10 days is one day short.** Intelsat 33e's 29.87 km step lands at **+10.98 days** —
+> `ground_truth.csv` rounds that lag to 10, and a ±10d window misses the best-evidenced
+> late signal in the set by 24 hours. At −3/+14d it comes in at 74× its bar. The constant
+> to ship is 14, which is what Randy's own write-up recommended; the CSV's rounded lag
+> column is what made 10 look sufficient.
 >
 > No row lacked GP_HISTORY — all 14 scored on real catalog data back to 2010 (thinnest:
-> Galaxy 15, 53 records). AMC 18, the documented **non**-maneuvering control, stayed silent
-> in all four columns. MEV-1 is excluded because its own orbit-raising transit (35,670 km
-> "step") contaminates its window. Three verdicts flip between the max-bar and the
-> 99th-pct bar (marked *); neither headline number depends on them.
+> Galaxy 15, 53 records over its ±25 days, 1.1/day). One row, AMC-9 2017-11-13, had no
+> drifter tracked within 0.5–2× its own rate that season and is scored against a widened
+> cadence match; it is marked `widened` in the run output and its verdict (8.3× the bar)
+> does not depend on the relaxation. AMC 18, the documented **non**-maneuvering control,
+> stayed silent in every column at every window — including ±14d, so widening did not break
+> the one true negative we have (n=1; that is a check, not a false-positive rate). MEV-1 is
+> excluded because its own orbit-raising transit (a 35,670 km "step") contaminates its
+> window.
 >
-> **What survived, honestly.** The two events ±10d catches that ±3d missed — MEV-2 and
-> Intelsat 1002 — had their catalog step land **+5.6 and +5.2 days after the event**:
-> measured catalog lag, exactly Randy's mechanism, and N–S burns *do* move fitted altitude
-> (AMC 11's documented N–S burns show 0.8–3.0 km, all caught on altitude). Inclination —
-> the channel built on the altitude-blindness theory — catches **fewer** events than
-> altitude at the very same ±3d window (8 vs 10) and never beats it on the double-sourced
-> subset; its one unique contribution is catching MEV-2 inside ±3d, a week before altitude
-> could. So: **the SES miss explanation that survived is the timing window** (and for some
-> events, *neither*: Galaxy 15 and Intelsat 33e are missed by every column — both are
-> "operator lost control" events where nobody burned, so there is no step to find; those
-> belong to `quiet.py`, not to any verifier). Inclination stays as a secondary channel, not
-> a replacement. The drift column stays retired — both authors killed it independently.
+> **Galaxy 15 is not a catch, and this corrects Randy too.** `RESULTS - Ground Truth` scores
+> its 2.15 km step at 5× the bar and counts it as caught-once-widened. That used a bar
+> measured in the modern catalog. Against 2010-era drifters tracked at Galaxy 15's own rate,
+> the noise floor is **1.68–2.20 km** — its "signal" is 1.0× the bar, inside the noise. It
+> is missed at every window on both channels. That does not weaken the Galaxy 15 story, it
+> relocates it: nothing burned, the *rhythm stopped*, and a step-finder cannot see an absence.
+> That is `quiet.py`'s premise and this is the second independent piece of evidence for it.
+>
+> **What survived, honestly, and it is not my half.** The events the lag-aware window catches
+> that ±3d missed had their catalog step land **+5.2, +5.6 and +11.0 days after** the
+> documented date: measured lateness, exactly Randy's mechanism. And N–S station-keeping —
+> the maneuver class my whole argument rested on — **does** move fitted altitude: AMC 11's
+> three documented N–S burns show 0.84, 1.23 and 3.00 km at 2.0×, 3.3× and 6.0× their own
+> bars, all three caught by the altitude verifier *as shipped*, inside ±3 days. I wrote that
+> the dominant GEO maneuver was invisible to an altitude verifier "by construction, not by
+> bad luck." The documented record says that is simply false, and `verify_geo.py`'s stated
+> reason for existing goes with it. Inclination catches **fewer** events than altitude at
+> every window width (8 vs 10 at ±3d, 9 vs 13 at −3/+14d) and never beats it on the
+> double-sourced subset. It keeps exactly one distinction worth having: it is the only
+> channel that sees the MEV-2 docking inside ±3 days, a plane change altitude needs five
+> more days to notice. So inclination stays as a **secondary** channel on its own merits,
+> not as the replacement I built it to be. The drift column stays retired — both of us
+> killed it independently, from different directions.
 2. **n=3 against n=3 controls.** A 90th-percentile bar drawn from 3 controls is barely a
    bar. The population is 44–68 objects, so 95th-percentile ranking can only ever produce
    a handful of suspects per snapshot.
@@ -289,7 +345,7 @@ for all four groups. Bars are 3 snapshots old — **re-learn weekly** as the arc
 |---|---|
 | "the method is constellation-agnostic in LEO" | ✅ OneWeb, 80% vs 10% |
 | "we monitor GEO, where the insured value is" | ✅ runs daily, bar auditable |
-| "we *detect verified maneuvers* at GEO" | ⚠️ partial. External-safe sentence: **"Validated against 14 externally documented GEO maneuvers, our altitude method with a lag-aware window catches 12 of 14, and a documented non-maneuvering control stays silent."** Do NOT say we catch *live* GEO suspects — live suspect verification is still n=4 and unproven. Do not quote the SES "separation" |
+| "we *detect verified maneuvers* at GEO" | ⚠️ partial. External-safe sentence: **"Scored against 14 externally documented GEO maneuvers, our altitude method with a lag-aware window catches 13 of 14 — 5 of the 6 that carry two independent sources — and a documented non-maneuvering control stays silent."** Then the caveat, in the same breath: **detection is not same-day — the catalog itself runs up to 11 days late.** Do NOT say we verify *live* GEO suspects (still n=4, unproven), do not quote the SES "separation", and do not quote 13/14 without the double-sourced 5/6 beside it |
 | "the maneuvers we flag show up in an independent observable" | ✅ strongest at **OneWeb: inclination 11.5x, 70% vs 13%**, matching the altitude verifier's separate 80%-vs-10% |
 | any claim resting on the **63x drift** figures | ❌ do not use — same number at every altitude, near-circular with the detector |
 
@@ -304,5 +360,5 @@ python verify_geo.py --group intelsat      # GEO-shaped: inclination + longitude
 python verify_geo.py --group oneweb        # LEO negative control - exposed the drift issue
 python _test_verify_geo.py                 # 21 cases
 python referee_geo.py                      # issue 015: both verifiers vs 14 documented maneuvers
-python _test_referee.py                    # 45 cases, incl. step-math identity with shipped verifiers
+python _test_referee.py                    # 53 cases, incl. step-math identity with shipped verifiers
 ```
