@@ -1,22 +1,23 @@
 ---
-date: 2026-07-21
-status: working prototype, unverified against real maneuver records
+date: 2026-07-22
+status: persistence RUNNING on real archive; still unverified against real maneuver records
 code: "06 Code/detect.py"
 ---
 
 # 🛰️ RESULTS — telling a maneuver apart from a stale catalog
 
-> [!success] The headline (updated 2026-07-22)
-> Ranking Starlink on raw disagreement with the catalog surfaces **~4,900 objects**. Three
+> [!success] The headline (re-measured 2026-07-22 1400Z — all three filters now RUNNING)
+> Ranking Starlink on raw disagreement with the catalog surfaces **6,948 objects**. Three
 > filters explain almost all of it:
-> 1. **Old data** — 89% of the naive list was just a stale catalog entry, not movement.
-> 2. **Falling hardware** — 79% of what survived was satellites being deliberately deorbited.
+> 1. **Old data** — 92% of the naive list was just a stale catalog entry, not movement.
+> 2. **Falling hardware** — 83% of what survived was satellites being deliberately deorbited.
 >    They move every day, on purpose, and nobody pays to hear it.
-> 3. **Didn't repeat** — a real maneuver still disagrees next time you look. *(Built and
->    tested, but blocked — see below.)*
+> 3. **Didn't repeat** — a real maneuver still disagrees next time you look. **No longer
+>    blocked: this ran across 4 snapshots / 3 independent looks.**
 >
-> What's left: **490 satellites holding station that moved when they shouldn't have** — and
-> **378 of those were invisible** under the old ranking, crowded out by falling junk.
+> What's left: **489 satellites holding station that moved when they shouldn't have** — and
+> **400 of those were invisible** under the old ranking, crowded out by falling junk. Of those
+> 489, **376 (77%) survived a second independent look**; 113 rest on a single look so far.
 
 ## The problem this fixes
 
@@ -90,15 +91,25 @@ New verdicts: **PERSISTENT SUSPECT** (flagged in ≥2 independent looks) · **un
 (flagged only in the newest look — a fresh burn *or* a one-off; the next snapshot decides) ·
 **cleared** (was flagged, normal now — catalog caught up, or it was noise).
 
-> [!bug] 🚧 BLOCKER — the check is built but **cannot run yet**
-> Persistence needs **two snapshots that can both be scored**, and a snapshot can only be
-> scored if a public catalog (`gp_active.csv.gz`) was captured beside it. Right now **exactly
-> one snapshot has that**: `2026-07-22/0200Z`. Archiving the catalog was only added partway
-> through Jul 21, so every earlier snapshot is unscoreable.
+> [!success] ✅ UNBLOCKED 2026-07-22 — persistence ran for real, on the real archive
+> The archiver has now banked **three** catalogs (`0200Z`, `0750Z`, `1400Z`), so the check that
+> was blocked below is **running against real data, no rehearsal, no time-travelled catalog**.
 >
-> `detect.py` says so loudly and refuses to fake it. **It will start working on its own** as
-> soon as the archiver banks a second catalog — the scheduled task already fetches one every
-> run. Nothing to fix, just wait for the next snapshot, then re-run.
+> **Scored across 4 snapshots spanning 12.0h** (`0200Z/0750Z/0800Z/1400Z`), which collapse to a
+> **median of 3 independent looks** per object — the byte-identical republishes are being
+> discarded exactly as designed.
+>
+> ```
+> PERSISTENT SUSPECTS  376  of 10,781 (3.5%)  ← flagged in ≥2 independent looks
+> unconfirmed          113  ← flagged only in the newest look; next snapshot decides
+> cleared              344  ← was flagged, normal now (catalog caught up, or it was noise)
+> ```
+>
+> **The filter is doing real work:** 344 candidates — **42% of the 833 ever flagged** — failed
+> to repeat and were dropped. Under the old single-snapshot method every one of those would
+> have been reported as a maneuver candidate. The top of the list is solid, though: the 15
+> largest gaps are all **3/3 persisted** (one is 2/3), so the strongest candidates are the ones
+> repeating most reliably — which is the direction you want that correlation to run.
 >
 > **What it must never do instead:** score the Jul-21 snapshots against the Jul-22 catalog.
 > That's borrowing from the future — it gives catalog entries *negative* age, drops them in
@@ -107,10 +118,23 @@ New verdicts: **PERSISTENT SUSPECT** (flagged in ≥2 independent looks) · **un
 > old snapshot no longer falls back to fetching today's catalog live. **That fallback was
 > live in the code and would have silently produced exactly this error.**
 
-Rehearsed end-to-end on a throwaway copy of the archive (plumbing proof, **not a result** —
-it used a time-travelled catalog): the machinery runs, and on that rehearsal 18% of the
-age-aware list failed to repeat. Logic is covered by `06 Code/_test_detect.py` — six cases
-including the fake-corroboration trap. All pass.
+The earlier rehearsal on a throwaway archive suggested 18% of the age-aware list would fail to
+repeat. **On the real archive it is 42%** (344 of 833). The rehearsal understated it by more
+than 2×, which is the expected direction — it used one time-travelled catalog, so objects were
+being compared against an identical file and looked far more persistent than they are. Logic is
+covered by `06 Code/_test_detect.py` — nine cases including the fake-corroboration trap, all
+passing as of 2026-07-22.
+
+### What today's run measured (starlink, 2026-07-22 1400Z, 10,781 comparable)
+
+| catalog age | objects | normal gap (median) | flagged above |
+|---|---|---|---|
+| 12–24 h | 1,522 | 9.11 km | 49.74 km |
+| 24–48 h | 7,941 | 7.95 km | 32.79 km |
+| 48–96 h | 263 | 10.86 km | 58.43 km |
+| 96+ h | 1 | 1.13 km | 36.56 km *(too few — used whole population)* |
+
+Population split: **9,760 holding station** · **1,021 on the way down** (>0.4 km/day).
 
 ## 🪂 Third filter — separating "moved" from "falling" (added 2026-07-22)
 
@@ -142,13 +166,15 @@ down is only interesting if it's extreme compared to *other satellites on their 
 > [!warning] What this did NOT do — shorten the list
 > The threshold is a percentile, so ~5% of each group gets flagged **no matter what happens up
 > there**. Separating the groups doesn't cut the list, it **swaps who's on it**:
-> - **428 of the old 540** candidates were deorbiting hardware → now judged separately, only
->   **53** are unusual for their own kind
-> - **378 station-keeping satellites** are now on the list that the old ranking **never showed
+> - **448 of the 537** candidates were deorbiting hardware → now judged separately, only
+>   **54** are unusual for their own kind
+> - **400 station-keeping satellites** are now on the list that the old ranking **never showed
 >   at all** — they were buried under falling junk
 >
-> Old list: 79% garbage, and it surfaced only 112 of the satellites we actually care about.
-> New list: 490 station-keepers, 378 of them newly visible.
+> Old list: 83% garbage, and it surfaced only 89 of the satellites we actually care about.
+> New list: 489 station-keepers, 400 of them newly visible.
+> *(Re-measured 2026-07-22 1400Z. The previous figures — 428/540/53/378/490 — were the 0200Z
+> snapshot; same conclusion, and the sizes move a little snapshot to snapshot.)*
 
 > [!danger] The open problem this exposes
 > Because the cut is a percentile, **the detector can never say "quiet day."** It will hand you
@@ -170,11 +196,14 @@ the filter doesn't fire where it shouldn't.
 > `detect.py` now applies a **hard 500 km gate** before the age-aware statistics. No
 > station-keeping burn moves an object hundreds of km RMS over 6 hours, so any larger gap
 > means the two element sets describe wholly different orbits — a decaying/reentering object
-> or a bad TLE, not a maneuver. The worst two (**8,412 km** and **5,337 km**) that used to sit
-> at the top of the candidate list are now bucketed as **data-quality flags**, never shown as
-> detections. They're also excluded from the per-age-bin baseline so a handful of nonsense
-> orbits can't distort the thresholds the honest candidates are judged against. Tune with
-> `--max-km`.
+> or a bad TLE, not a maneuver. The objects that used to sit at the top of the candidate list
+> are now bucketed as **data-quality flags**, never shown as detections. They're also excluded
+> from the per-age-bin baseline so a handful of nonsense orbits can't distort the thresholds
+> the honest candidates are judged against. Tune with `--max-km`.
+>
+> **2026-07-22 count: 67 objects** (was 17 when this was written) — worst three 11,731 km,
+> 8,608 km, 7,781 km. The gate is catching ~4× more than first published, so it is load-bearing,
+> not a formality. See the CHECKED note above for why "decay or bad TLE" is the wrong reason.
 
 ![[detect_starlink_2026-07-21_2157Z.png]]
 
@@ -185,14 +214,20 @@ maneuvers.
 ## ⚠️ What this is NOT (read before telling anyone)
 
 - **These are candidates, not detections.** Nothing here has been checked against an actual
-  maneuver record. Tim owns that check — see [[01 TASKS]].
-- **None of them have been seen twice yet.** The persistence check above is built and tested
-  but has only one scoreable snapshot to work with, so today's 524 candidates each rest on a
-  single measurement. Until that number is two, treat the list as unconfirmed.
-- **The top suspects are suspicious in the wrong way.** The largest gaps are 5,337 km and
-  8,412 km RMS. No station-keeping burn does that. Those are far more likely to be decaying
-  objects, or bad element sets, than maneuvers. Until they're explained, the *top* of the
-  list is the *least* trustworthy part of it.
+  maneuver record. That is still the single biggest unverified claim in this note. Tim owns
+  that check — see [[01 TASKS]].
+- **376 have now been seen twice; 113 have not.** ~~None of them have been seen twice yet.~~
+  Superseded 2026-07-22 — persistence ran across 3 independent looks. The 376 PERSISTENT
+  SUSPECTS rest on ≥2 independent measurements. The 113 unconfirmed still rest on one, and
+  should be described that way to anyone outside the company.
+- **12 hours is a short baseline.** Persistence currently spans `0200Z`→`1400Z` of a single
+  day. "Repeated over 12 hours" is genuinely stronger than one look, but it is not "repeated
+  over a week." Don't let it get quoted as the latter.
+- **The top of the list is no longer the least trustworthy part** — that changed when the
+  500 km gate went in. The largest surviving candidate is **491.7 km** (NORAD 60029, 62× its
+  age-band norm, 3/3 persisted). The nonsense orbits are now bucketed separately and are
+  bigger than previously published: worst three are **11,731 km**, **8,608 km**, **7,781 km**
+  (69694, 69715, 69487) — not the 8,412/5,337 km quoted above.
 - **The 24–48 h band's threshold (78.76 km) is higher than the 48–96 h band's (58.68 km).**
   A threshold that isn't monotonic in age is a small-sample artifact — 618 and 45 objects.
   Real, but not yet load-bearing.
@@ -206,7 +241,9 @@ The pitch was never *"we detect maneuvers"* — everyone claims that. It's:
 > **Most of what looks like a maneuver is just old data. We can tell the difference, from
 > free public data, for anyone.**
 
-That's a claim with a number attached, and the number is 85%.
+That's a claim with a number attached, and the number is **92%** (re-measured 2026-07-22;
+it was published as 85%, then 89% — it has moved with each re-measurement, so quote it with
+the date attached, not as a constant).
 
 ## Reproduce it
 
@@ -216,5 +253,5 @@ python detect.py --group starlink --chart --csv   # persistence on by default (l
 python detect.py --group oneweb --chart
 python detect.py --history 1                      # single snapshot, old behaviour
 python detect.py --snapshot 2026-07-21/2025Z      # replay a past snapshot
-python _test_detect.py                            # persistence logic, 6 cases
+python _test_detect.py                            # persistence logic, 9 cases
 ```

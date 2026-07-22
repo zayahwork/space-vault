@@ -402,6 +402,13 @@ def load_baselines(group):
         return None
     raw["cuts"] = {reg: {(b["lo"], b["hi"]): b["cut_km"] for b in bands}
                    for reg, bands in raw["regimes"].items()}
+    # Guarantee a key per regime, so a baseline file that is missing one entirely
+    # cannot hand analyze() a None. None means "rank mode" to classify(), so a
+    # truncated or hand-edited file would silently rank that whole regime while the
+    # run still called itself alert mode - the one failure here that leaves no trace
+    # in the output. An empty dict refuses loudly instead, which is the house rule.
+    for regime in ("station", "falling"):
+        raw["cuts"].setdefault(regime, {})
     return raw
 
 
