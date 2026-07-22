@@ -21,6 +21,12 @@
 - [x] Run the ISS maneuver chart — **✅ FIRST LIGHT: 3/3 maneuvers detected, $0 data** 🛰️ → [[RESULTS - First Charts]]
 - [x] Chart 2–3 more satellites — **✅ caught a Starlink mid-deorbit + found v0.1's two blind spots** → [[RESULTS - First Charts]]
 
+- [ ] 🕒 **Re-run the detector once a second catalog snapshot is banked** (`python detect.py`
+      in `06 Code`). Temporal persistence is built and tested, but it needs **two** snapshots
+      with a public catalog saved beside them and we only have one (`2026-07-22/0200Z`). The
+      scheduled archiver fetches one every run, so this unblocks itself — just re-run and the
+      524 candidates split into *persisted* vs *one-off*. → [[RESULTS - Maneuver vs Stale]]
+
 ## 📬 Ongoing (every day, ~15 min, until further notice)
 
 - [ ] **📤 Daily outreach batch — 15 emails** → `python outreach.py` in `06 Code` drafts them and

@@ -26,7 +26,8 @@
       "Write(.claude/agents/)",
       "Edit(.claude/agents/)",
       "Read(.claude/agents/)",
-      "Bash(PYTHONIOENCODING=utf-8 python -c ' *)"
+      "Bash(PYTHONIOENCODING=utf-8 python -c ' *)",
+      "Read(//c/Space/06 Code/supgp_archive/**)"
     ]
   }
 }
