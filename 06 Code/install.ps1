@@ -43,6 +43,11 @@ if (-not (Test-Path $PROFILE) -or (Get-Content $PROFILE -Raw) -notmatch 'functio
 } else {
     Write-Host "[OK] 't' already in PowerShell profile (left as is)"
 }
+$syncLine = "function sync { & '$vault\06 Code\sync.ps1' @args }"
+if (-not (Test-Path $PROFILE) -or (Get-Content $PROFILE -Raw) -notmatch 'function sync ') {
+    Add-Content -Path $PROFILE -Value $syncLine
+    Write-Host "[OK] 'sync' added to PowerShell profile"
+}
 $binDir = Join-Path $env:USERPROFILE '.local\bin'
 if (-not (Test-Path $binDir)) {
     New-Item -ItemType Directory -Path $binDir -Force | Out-Null
