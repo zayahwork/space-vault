@@ -26,6 +26,8 @@ Usage:
   python outreach.py -n 5 --segment insurer
   python outreach.py --send               # dry run: exactly what would go out
   python outreach.py --send --live        # actually send, log, mark sent
+  python outreach.py --send --ids 61 59   # hand-send named rows, in that order
+  python outreach.py --send --live --ids 61 59
   python outreach.py --check-bounces      # read bounce mail, mark dead addresses
   python outreach.py --sent 3 7 11        # log what went out by hand
   python outreach.py --replied 7 --note "wants a call"
@@ -300,8 +302,14 @@ def sent_addresses(log=None):
             if e.get("ok") and e.get("to")}
 
 
-def blockers(row, checks=None, mailed=None):
-    """Every reason this row must not be auto-sent. Empty list = clear to send."""
+def blockers(row, checks=None, mailed=None, ignore_status=False):
+    """Every reason this row must not be auto-sent. Empty list = clear to send.
+
+    ignore_status is for --ids only: a human naming a row by number has already
+    made the decision that `status` exists to make on their behalf. Every other
+    guard - dead route, duplicate address, missing address, unfilled template -
+    still applies, because those catch mistakes rather than enforce a policy.
+    """
     bad = []
     dead = unreachable(row, checks or {})
     if dead:
@@ -312,7 +320,7 @@ def blockers(row, checks=None, mailed=None):
         bad.append(f"no email address (route: {row['contact_route'] or '?'})")
     elif "@" not in row["email"] or " " in row["email"].strip():
         bad.append(f"email doesn't look like an address: {row['email']!r}")
-    if row["status"] not in ("todo", "drafted"):
+    if not ignore_status and row["status"] not in ("todo", "drafted"):
         bad.append(f"status is {row['status']}, not todo/drafted")
     # draft() quietly falls back to the operator template for unknown segments.
     # Fine when a human is reading it first; not fine when nobody is. A
@@ -506,17 +514,32 @@ def check_bounces(rows, args):
 
 def send_batch(rows, args):
     """Dry run unless --live. Returns exit code."""
-    pool = [r for r in rows
-            if r["status"] in ("todo", "drafted")
-            and (not args.segment or r["segment"] == args.segment)]
-    n = min(args.n, MAX_PER_RUN)
+    # --ids is the hand-send path: a named list, in the order given, regardless
+    # of status. It exists because the best emails we write are the ones parked
+    # on `hold` precisely so the drip can never touch them - and "the machine
+    # must not send this" should not mean "the human has to retype it into
+    # Gmail and lose the audit log, the bounce handling and the Sent copy".
+    by_id = {r["id"]: r for r in rows}
+    if args.ids:
+        missing = [i for i in args.ids if i not in by_id]
+        if missing:
+            raise SystemExit(f"\n  no such row(s): {', '.join(missing)}\n")
+        pool = [by_id[i] for i in args.ids]
+    else:
+        pool = [r for r in rows
+                if r["status"] in ("todo", "drafted")
+                and (not args.segment or r["segment"] == args.segment)]
+    # A named list means "these, in this order" - but MAX_PER_RUN still binds,
+    # so naming nine rows sends five and says so rather than quietly dropping four.
+    n = min(len(pool) if args.ids else args.n, MAX_PER_RUN)
 
     checks = {} if args.skip_validation else validation()
     log = read_log()
     mailed = sent_addresses(log)
     ready, held = [], []
     for r in pool:
-        (held if blockers(r, checks, mailed) else ready).append(r)
+        (held if blockers(r, checks, mailed, ignore_status=bool(args.ids))
+         else ready).append(r)
 
     already = sent_today(log)
     left = max(0, DAILY_CAP - already)
@@ -532,7 +555,7 @@ def send_batch(rows, args):
         print("\n  held back:")
         for r in held[:20]:
             print(f"    #{r['id']:<3} {r['company']:<30} "
-                  f"{'; '.join(blockers(r, checks, mailed))}")
+                  f"{'; '.join(blockers(r, checks, mailed, ignore_status=bool(args.ids)))}")
         if len(held) > 20:
             print(f"    ... and {len(held) - 20} more")
     if not batch:
@@ -635,6 +658,9 @@ def main():
     ap.add_argument("--status", action="store_true")
     ap.add_argument("--send", action="store_true",
                     help="dry run of the send batch; add --live to actually send")
+    ap.add_argument("--ids", nargs="+", default=None, metavar="ID",
+                    help="hand-send exactly these rows, in this order, whatever "
+                         "their status. Every other safety still applies.")
     ap.add_argument("--live", action="store_true",
                     help="really send. Requires --send and gmail_auth.json.")
     ap.add_argument("--smtp-host", default="smtp.gmail.com")
@@ -668,6 +694,9 @@ def main():
 
     if args.live and not args.send:
         print("\n  --live does nothing without --send. Refusing.\n")
+        return 2
+    if args.ids and not args.send:
+        print("\n  --ids only means something with --send. Refusing.\n")
         return 2
     if args.check_bounces:
         return check_bounces(rows, args)
