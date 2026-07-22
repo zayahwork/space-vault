@@ -100,10 +100,32 @@ python detect.py --mode alert                # zero is a possible answer
 python quiet.py                              # cadence; refuses until ~Jul 29
 python _test_detect.py                       # 9 cases - persistence logic
 python _test_quiet.py                        # 15 cases - cadence logic
+python _test_alert.py                        # 19 cases - alert mode's stored-bar path
 ```
 
 > [!warning] Test-count correction (2026-07-22)
 > This block previously claimed `_test_detect.py` was **"12 cases, incl. alert mode."** It is
 > **9 cases, and none of them touch alert mode** — they are all persistence. Counted, not
-> assumed. Alert mode is still exercised only by running it, so the stored-bar path
-> (`stored_cuts`, `learn_baselines`) remains untested code carrying a published claim.
+> assumed.
+
+> [!success] ✅ Alert mode's stored-bar path is now tested (2026-07-22) — `_test_alert.py`, 19 cases
+> The code carrying *"zero is a possible answer"* had no tests. It does now, and the headline
+> claim is pinned by construction: **40 objects all sitting under a stored bar return zero
+> flags**, while the *same population* in rank mode still has to hand somebody back. That
+> contrast is the feature, and it is now a test rather than a sentence.
+>
+> Also pinned: the stored bar decides (not today's crowd) · `--min-km` still floors it · the
+> 500 km plausibility gate runs first in alert mode too · an age band with **no** stored bar
+> flags nothing rather than borrowing today's percentile · a baseline stamped for another
+> constellation is refused, not applied · provenance survives the round trip.
+>
+> **One latent bug found and fixed.** `load_baselines` returned `cuts` with only the regimes
+> present in the file. `classify()` reads `None` as *"rank mode"*, so a truncated or
+> hand-edited baseline missing a regime would have **silently ranked that entire regime while
+> the run still called itself alert mode** — the one failure here that leaves no trace in the
+> output. `load_baselines` now guarantees a key per regime (`{}` = refuse loudly).
+> Not live: `learn_baselines` always writes both regimes, so no shipped file was affected.
+> An *empty* regime is different from a missing one and was already handled correctly —
+> `baselines_oneweb.json` is genuinely shaped that way, since nothing up there is decaying.
+>
+> Alert mode re-run end-to-end after the change: **205 objects, unchanged.**
