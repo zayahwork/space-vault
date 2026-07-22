@@ -1,0 +1,11 @@
+Subject: your AI-for-RSO-characterisation work at GMV NSL - contract hands, not an application
+
+Keiran,
+
+Your SDC8 paper on AI for resident space object characterisation with lightcurves - with Anton, Ramirez, Smith and Dick - is the closest published work to what I do, so I'll be direct rather than clever.
+
+I'm an ML engineer who has spent months on orbital data. Most recently a manoeuvre detector built only from free public tracking data: it ranks objects that broke their own routine, and rather than grade itself, it gets checked against the catalog's own altitude history with a matched control group. About two-thirds of the top candidates show independent movement against a ~10% control base rate. When the archive is too short to answer honestly, the tool refuses to answer instead of guessing.
+
+I noticed that paper had contributors from outside the GMV NSL team, which is why this email exists: if characterisation or detection work is queued behind a hire that hasn't closed, I contract. Hourly or a fixed scope - and I'd rather start with one paid, scoped week so you can judge the work instead of the pitch.
+
+If it's the wrong moment, a one-line "not now" is a perfectly good answer and I won't chase it.
