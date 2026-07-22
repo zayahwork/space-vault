@@ -32,6 +32,8 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -Namespace Win32 -Name Native -MemberDefinition @'
 [DllImport("user32.dll")]
 public static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
+[DllImport("user32.dll")]
+public static extern bool BringWindowToTop(IntPtr hWnd);
 '@
 
 $wa = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
@@ -134,7 +136,7 @@ function Ensure-Worktree($branch) {
     return $wtPath
 }
 
-# --- Launch + snap into quadrants.
+# --- Phase 1: launch ALL windows at once (no waiting between them).
 foreach ($win in $layout) {
     $launchDir = $Path
     if ($win.Branch) {
@@ -145,6 +147,7 @@ foreach ($win in $layout) {
     # Resume if this slot's session already has a transcript on disk; otherwise create it.
     # (Claude keys transcripts by the launch folder, so check against $launchDir.)
     $id = $sessions[$win.Title]
+    $win.Sid = $id
     $launchMunged = ($launchDir -replace '[^A-Za-z0-9]', '-')
     $personaFile = Join-Path $personaDir "$($win.Persona).md"
     $opts = "--model $($win.Model) --effort $($win.Effort) --append-system-prompt-file $personaFile"
@@ -156,24 +159,23 @@ foreach ($win in $layout) {
     } else {
         $inner = "$clean claude --session-id $id $opts"
     }
-    # Claude retitles the window to the session name seconds after boot, so we can NOT
-    # find the window by title. Instead: snapshot cmd PIDs, launch (the intermediate
-    # cmd is hidden so it never owns a window), and grab the one new cmd that appears
-    # with a window handle - that's ours, whatever it calls itself.
-    $before = @(Get-Process cmd -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id)
     Start-Process cmd -WindowStyle Hidden -WorkingDirectory $launchDir `
         -ArgumentList "/c start `"$($win.Title)`" cmd /k `"$inner`""
+}
 
-    $hwnd = [IntPtr]::Zero
-    $deadline = (Get-Date).AddSeconds(8)
-    while ($hwnd -eq [IntPtr]::Zero -and (Get-Date) -lt $deadline) {
-        Start-Sleep -Milliseconds 150
-        $proc = Get-Process cmd -ErrorAction SilentlyContinue |
-            Where-Object { $_.Id -notin $before -and $_.MainWindowHandle -ne 0 } |
-            Sort-Object StartTime -Descending | Select-Object -First 1
-        if ($proc) { $hwnd = $proc.MainWindowHandle }
-    }
-    if ($hwnd -ne [IntPtr]::Zero) {
+# --- Phase 2: snap each window into place. Claude retitles windows seconds after boot,
+# --- so titles are useless - instead each window's command line contains its unique
+# --- session ID, which is how we tell them apart no matter what they call themselves.
+$pending  = [System.Collections.ArrayList]@($layout)
+$deadline = (Get-Date).AddSeconds(25)
+while ($pending.Count -gt 0 -and (Get-Date) -lt $deadline) {
+    Start-Sleep -Milliseconds 200
+    $cmds = Get-CimInstance Win32_Process -Filter "Name='cmd.exe'" -ErrorAction SilentlyContinue
+    foreach ($win in @($pending)) {
+        $owner = $cmds | Where-Object { $_.CommandLine -like "*$($win.Sid)*" } | Select-Object -First 1
+        if (-not $owner) { continue }
+        $gp = Get-Process -Id $owner.ProcessId -ErrorAction SilentlyContinue
+        if (-not $gp -or $gp.MainWindowHandle -eq 0) { continue }
         if ($win.Center) {
             $x = $wa.X + [math]::Floor(($wa.Width - $w) / 2)
             $y = $wa.Y + [math]::Floor(($wa.Height - $h) / 2)
@@ -181,6 +183,15 @@ foreach ($win in $layout) {
             $x = $wa.X + ($win.Col * $w)
             $y = $wa.Y + ($win.Row * $h)
         }
-        [Win32.Native]::MoveWindow($hwnd, $x, $y, $w, $h, $true) | Out-Null
+        [Win32.Native]::MoveWindow($gp.MainWindowHandle, $x, $y, $w, $h, $true) | Out-Null
+        $win.Hwnd = $gp.MainWindowHandle
+        $pending.Remove($win)
     }
+}
+if ($pending.Count -gt 0) {
+    Write-Warning "Could not position: $(($pending | ForEach-Object Title) -join ', ')"
+}
+# The centered window (VIDEO) belongs on top of the grid regardless of launch order.
+foreach ($win in $layout) {
+    if ($win.Center -and $win.Hwnd) { [Win32.Native]::BringWindowToTop($win.Hwnd) | Out-Null }
 }
