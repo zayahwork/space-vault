@@ -16,10 +16,20 @@ address is dead, so the row is marked bounced and never retried; a 4xx means
 try later and the row is left alone. Bounces that arrive later, as mail, are
 picked up by --check-bounces over IMAP.
 
-Sending needs 06 Code/gmail_auth.json (gitignored):
+Sending needs 06 Code/gmail_auth.json (gitignored). One account:
   {"address": "you@gmail.com", "app_password": "abcd efgh ijkl mnop"}
+or several, which is how the daily ceiling gets raised without leaning harder
+on any single account:
+  {"accounts": [{"address": "...", "app_password": "..."},
+                {"address": "...", "app_password": "..."}]}
 That is a Google App Password (myaccount.google.com/apppasswords), not the
 account password - normal passwords are refused by SMTP.
+
+With more than one account the send rotates between them and each carries its
+own DAILY_CAP, so two accounts means fifty a day rather than fifty from one
+mailbox. The From: address, the Message-ID domain and the Sent copy all follow
+whichever account actually sent it, and the log records it, so a reply landing
+in the wrong inbox is traceable.
 
 Usage:
   python outreach.py                      # today's 15 drafts
@@ -351,7 +361,17 @@ def blockers(row, checks=None, mailed=None, ignore_status=False):
     return bad
 
 
+PLACEHOLDER_SECRET = "PASTE"    # an account still waiting for its password
+
+
 def load_auth():
+    """Every usable sending account, in the order they should be rotated.
+
+    Accepts the old single-account shape and the newer {"accounts": [...]} one.
+    An account whose password is still the placeholder is skipped with a warning
+    rather than a crash: one account half-configured should not stop the other
+    from sending.
+    """
     if not AUTH_PATH.exists():
         raise SystemExit(
             f"\n  no {AUTH_PATH.name}. Sending needs a Google App Password:\n"
@@ -359,10 +379,23 @@ def load_auth():
             f"  Make one at myaccount.google.com/apppasswords (2FA required).\n"
             f"  Write it to {AUTH_PATH} - it is already gitignored.\n")
     auth = json.loads(AUTH_PATH.read_text(encoding="utf-8"))
-    for k in ("address", "app_password"):
-        if not auth.get(k):
-            raise SystemExit(f"\n  {AUTH_PATH.name} is missing '{k}'.\n")
-    return auth
+    raw = auth.get("accounts") or [auth]
+
+    accounts, waiting = [], []
+    for i, a in enumerate(raw, 1):
+        address, secret = (a.get("address") or "").strip(), (a.get("app_password") or "").strip()
+        if not address:
+            raise SystemExit(f"\n  {AUTH_PATH.name}: account {i} has no 'address'.\n")
+        if not secret or secret.startswith(PLACEHOLDER_SECRET):
+            waiting.append(address)
+            continue
+        accounts.append({"address": address, "app_password": secret})
+
+    for address in waiting:
+        print(f"  note: {address} has no app password yet - skipping it this run.")
+    if not accounts:
+        raise SystemExit(f"\n  {AUTH_PATH.name}: no account has an app password.\n")
+    return accounts
 
 
 def build_message(row, from_addr):
@@ -443,6 +476,25 @@ def sent_today(log=None):
     today = datetime.date.today().isoformat()
     return sum(1 for e in (read_log() if log is None else log)
                if e.get("ok") and e.get("day") == today)
+
+
+def sent_today_by_account(accounts, log=None):
+    """Per-account count for today. The cap is per mailbox, not per project.
+
+    Sends logged before multi-account support carry no 'from', and every one of
+    them came from the first account, so they are counted against it. Guessing
+    the other way would hand a used-up mailbox a fresh allowance.
+    """
+    today = datetime.date.today().isoformat()
+    primary = accounts[0]["address"].lower()
+    counts = {a["address"].lower(): 0 for a in accounts}
+    for e in (read_log() if log is None else log):
+        if not (e.get("ok") and e.get("day") == today):
+            continue
+        who = (e.get("from") or primary).lower()
+        if who in counts:
+            counts[who] += 1
+    return counts
 
 
 def smtp_permanent(exc):
@@ -559,6 +611,27 @@ def check_bounces(rows, args):
     return 0
 
 
+def assign_senders(accounts, room, count):
+    """Which account sends which email, alternating while allowances last.
+
+    Alternating rather than draining one account first is the point: two
+    mailboxes each sending a dozen unremarkable emails look like two people,
+    while one mailbox sending twenty-five and another sending none looks like
+    one overworked mailbox and a spare.
+    """
+    remaining = dict(room)
+    out, i = [], 0
+    while len(out) < count:
+        if all(v <= 0 for v in remaining.values()):
+            break
+        acct = accounts[i % len(accounts)]
+        i += 1
+        if remaining[acct["address"]] > 0:
+            remaining[acct["address"]] -= 1
+            out.append(acct)
+    return out
+
+
 def send_batch(rows, args):
     """Dry run unless --live. Returns exit code."""
     # --ids is the hand-send path: a named list, in the order given, regardless
@@ -590,13 +663,29 @@ def send_batch(rows, args):
     if args.mix and not args.ids:
         ready = interleave(ready)      # --ids means "this order", so never reshuffle it
 
+    # The cap belongs to the mailbox, not to the project: two accounts means two
+    # allowances, not one shared one. Loading the accounts here (rather than at
+    # send time) is what lets the count printed above match what will happen.
+    accounts = load_auth() if (args.live and not args.smtp_plain) else None
+
     already = sent_today(log)
-    left = max(0, DAILY_CAP - already)
+    if accounts:
+        per = sent_today_by_account(accounts, log)
+        room = {a["address"]: max(0, DAILY_CAP - per[a["address"].lower()])
+                for a in accounts}
+        left = sum(room.values())
+        cap_note = f"{DAILY_CAP}/day on each of {len(accounts)} accounts"
+    else:
+        room = None
+        left = max(0, DAILY_CAP - already)
+        cap_note = f"{DAILY_CAP}/day"
     batch = ready[:min(n, left)]
 
     print(f"\n  {len(pool)} unsent targets. {len(ready)} sendable, "
           f"{len(held)} held back. This run: {len(batch)}.")
-    print(f"  {already} already sent today; {left} left under the {DAILY_CAP}/day cap.")
+    print(f"  {already} already sent today; {left} left under the {cap_note} cap.")
+    if room and len(room) > 1:
+        print("  " + " · ".join(f"{a}: {n_left} left" for a, n_left in room.items()))
     if ready and not left:
         print("\n  daily cap reached. Tomorrow.\n")
         return 0
@@ -611,22 +700,23 @@ def send_batch(rows, args):
         print("\n  nothing sendable. Find real addresses first.\n")
         return 0
 
-    from_addr = "DRY-RUN@localhost"
-    auth = None
     if args.live and args.smtp_plain:
         # No login on the plain path, so no password needed. The only server
         # that accepts this is the local sink; Gmail refuses unauthenticated.
-        from_addr = "harness@localhost"
-    elif args.live:
-        auth = load_auth()
-        from_addr = auth["address"]
+        senders = [{"address": "harness@localhost"}] * len(batch)
+    elif accounts:
+        senders = assign_senders(accounts, room, len(batch))
+    else:
+        senders = [{"address": "DRY-RUN@localhost"}] * len(batch)
 
     print("\n  " + ("SENDING FOR REAL" if args.live else "DRY RUN - nothing leaves this machine"))
-    for r in batch:
-        msg = build_message(r, from_addr)
+    for r, acct in zip(batch, senders):
+        msg = build_message(r, acct["address"])
         print(f"{'-' * 74}\n  #{r['id']}  {r['company']}  ->  {msg['To']}")
         if msg["Cc"]:
             print(f"  cc: {msg['Cc']}")
+        if accounts and len(accounts) > 1:
+            print(f"  from: {acct['address']}")
         print(f"  subject: {msg['Subject']}")
     print("-" * 74)
 
@@ -636,24 +726,36 @@ def send_batch(rows, args):
 
     today = datetime.date.today().isoformat()
     sent = failed = bounced = 0
-    server = None
-    try:
+    servers = {}                      # address -> live connection, opened on demand
+    dead = set()                      # accounts that refused us; skip their turn
+
+    def connection(acct):
+        """The logged-in connection for this account, opened once and reused."""
+        if acct["address"] in servers:
+            return servers[acct["address"]]
         if args.smtp_plain:
-            server = smtplib.SMTP(args.smtp_host, args.smtp_port, timeout=30)
+            s = smtplib.SMTP(args.smtp_host, args.smtp_port, timeout=30)
         else:
-            server = smtplib.SMTP_SSL(args.smtp_host, args.smtp_port,
-                                      context=ssl.create_default_context(),
-                                      timeout=30)
-            server.login(auth["address"], auth["app_password"])
-        for i, r in enumerate(batch):
+            s = smtplib.SMTP_SSL(args.smtp_host, args.smtp_port,
+                                 context=ssl.create_default_context(), timeout=30)
+            s.login(acct["address"], acct["app_password"])
+        servers[acct["address"]] = s
+        return s
+
+    try:
+        for i, (r, acct) in enumerate(zip(batch, senders)):
             if r["email"].strip().lower() in mailed:
                 # Two rows in the same batch sharing an address: the pre-loop
                 # set can't catch the second one, so re-check here.
                 print(f"  skipped #{r['id']} {r['company']}: duplicate address")
                 continue
-            msg = build_message(r, from_addr)
+            if acct["address"] in dead:
+                print(f"  skipped #{r['id']} {r['company']}: "
+                      f"{acct['address']} is out of action")
+                continue
+            msg = build_message(r, acct["address"])
             try:
-                server.send_message(msg)
+                connection(acct).send_message(msg)
             except Exception as e:
                 failed += 1
                 perm = smtp_permanent(e)
@@ -664,30 +766,38 @@ def send_batch(rows, args):
                 print(f"  {'BOUNCED' if perm else 'FAILED '} #{r['id']} "
                       f"{r['company']}: {e}")
                 log_send({"kind": "send", "id": r["id"], "company": r["company"],
-                          "to": msg["To"], "ok": False, "error": str(e),
-                          "bounced": perm})
+                          "to": msg["To"], "from": acct["address"], "ok": False,
+                          "error": str(e), "bounced": perm})
                 if isinstance(e, (smtplib.SMTPServerDisconnected,
-                                  smtplib.SMTPSenderRefused)):
-                    # The connection or the account is the problem, not the
-                    # address. Grinding through the rest just logs 14 copies.
-                    print("  connection/sender refused - stopping the batch.")
-                    break
+                                  smtplib.SMTPSenderRefused,
+                                  smtplib.SMTPAuthenticationError)):
+                    # This account is the problem, not the address. Retire it and
+                    # let the others carry on - with one account that ends the
+                    # batch exactly as it always did.
+                    dead.add(acct["address"])
+                    servers.pop(acct["address"], None)
+                    print(f"  {acct['address']} refused - retiring it for this run.")
+                    if all(a["address"] in dead for a in (accounts or [acct])):
+                        print("  no accounts left - stopping the batch.")
+                        break
                 continue
             sent += 1
             mailed.add(r["email"].strip().lower())
             r["status"] = "sent"
             r["sent_on"] = today
             log_send({"kind": "send", "id": r["id"], "company": r["company"],
-                      "to": msg["To"], "subject": msg["Subject"],
+                      "to": msg["To"], "from": acct["address"],
+                      "subject": msg["Subject"],
                       "message_id": msg["Message-ID"], "ok": True})
             save(rows)          # after each one: a crash can't lose the record
-            print(f"  sent #{r['id']} {r['company']} -> {msg['To']}")
+            print(f"  sent #{r['id']} {r['company']} -> {msg['To']}"
+                  + (f"  (from {acct['address']})" if accounts and len(accounts) > 1 else ""))
             if i < len(batch) - 1 and args.gap:
                 time.sleep(args.gap)
     finally:
-        if server is not None:
+        for s in servers.values():
             try:
-                server.quit()
+                s.quit()
             except Exception:
                 pass
 

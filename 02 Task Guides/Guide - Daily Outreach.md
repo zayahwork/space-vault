@@ -113,6 +113,28 @@ so volume is not what gets an account restricted — the *pattern* is. Cold mail
 replies to, spam complaints, and bounces are what trip it. 25/day is invisible to the rate
 limiter and slow enough that a bad batch gets caught before it repeats.
 
+### Three accounts, three allowances (2026-07-22)
+
+The cap belongs to the **mailbox**, not to the project. `gmail_auth.json` now holds a list of
+accounts and the send **alternates between them**, so three warmed accounts means **75/day**
+without any single mailbox doing more than the 25 that has always been safe.
+
+Alternating matters more than the arithmetic. Three mailboxes each sending a handful of
+unremarkable emails look like three people; one mailbox sending twenty-five while two sit idle
+looks like one overworked mailbox and two spares.
+
+- `From:`, the Message-ID domain and the Sent copy all follow whichever account actually sent —
+  so a reply lands in that account's inbox. **Check all three inboxes**, or forward them into one.
+- Every log line now records `from`, so a reply can always be traced to the mailbox that earned it.
+- Sends logged before this change carry no `from` and are counted against the primary, which is
+  where they genuinely came from.
+- An account whose password is missing is skipped with a note, not a crash — the others still send.
+- One account still behaves exactly as before. Nothing about the old single-account file changed.
+
+**Supply, not capacity, is still the ceiling.** 75/day is a limit, not a target: we do not have
+75 good emails a day, and sending 75 mediocre ones would waste the address pool faster than we
+can refill it. See [[Outreach - Batch 3 Address Supply]].
+
 ```
 powershell -File drip.ps1 -DryRun      # what would go out, sends nothing
 powershell -File drip.ps1 -NoJitter    # send now, skip the dice (manual run)
@@ -130,6 +152,16 @@ then write `06 Code/gmail_auth.json` — already gitignored, never commit it:
 
 ```json
 {"address": "zayahwork@gmail.com", "app_password": "abcd efgh ijkl mnop"}
+```
+
+Or, for several accounts — the shape actually in use now:
+
+```json
+{"accounts": [
+  {"address": "zayahwork@gmail.com",      "app_password": "..."},
+  {"address": "zayahnelson97@gmail.com",  "app_password": "..."},
+  {"address": "zayahwork1@gmail.com",     "app_password": "..."}
+]}
 ```
 
 To rehearse the whole path without mailing a human, use the local sink and throwaway copies —
