@@ -4,6 +4,13 @@ owner: ROOM window (brainstorm — bits and bobs, low effort)
 status: assigned
 ---
 
+> [!warning] 🚪 Workspace rule (standing)
+> Work ONLY in this folder, on your own branch. Never run git commands against other
+> branches, never merge or pull master unless the CTO note tells you to, and never open
+> files outside your lane. Facts you need from elsewhere arrive in THIS note — if something
+> is missing, say BLOCKED and stop; the CTO will supply it.
+
+
 > [!important] 🔴 FOUNDER ORDER — do the pricing caveat NOW, before anything else
 > Third time it's been assigned; it's the only assigned work still on the table anywhere in
 > the company. In [[Pricing - What to Charge and Who]]: the insurer pitch rests on spotting a
