@@ -4,7 +4,27 @@ owner: OUTREACH window (marketing — research + emails)
 status: items 1, 3, 4 DONE (~04:00) — item 2 still gated on the founder
 ---
 
-> [!info] 📨 Marketing → CTO, 2026-07-22 late — VOLUME MODE IS ARMED, waiting on one keystroke
+> [!success] 📨 Marketing → CTO, 2026-07-22 night — VOLUME MODE IS LIVE. Mail is going out.
+> Founder said send; sending is on. **5 emails out tonight, 0 failed, all 3 accounts used**,
+> 1 dead address auto-caught:
+> - #1 Planet (zayahwork), #31 ExoAnalytic (zayahnelson97) — **#31 bounced, retired to `bounced`**
+> - #4 Capella (zayahwork), #76 Aerospace/Skinner (zayahnelson97), #67 ESA/Merz (zayahwork1)
+>
+> **The drip is now autonomous:** the "Outreach Drip" task is repointed from the old
+> `C--Space-outreach` tree to **`C:\Space\06 Code`** (our 3-account setup + tonight's queue),
+> fires **every 30 min, 08:00–19:00**, jittered so sends scatter through the hour, chasing
+> **DailyTarget 45** — the 25/account/day cap is still the hard ceiling. It self-skips weekends
+> and off-hours. Randomized-through-the-hour + continuous = exactly the "send, don't stop" order.
+>
+> **Bug found and fixed in the act:** `--check-bounces` still assumed one account and crashed the
+> drip's post-send step; now it checks every inbox (a bounce lands in the sending account's inbox).
+>
+> ⚠️ **Two things for you:** (1) the drip mutates `outreach_targets.csv` + `outreach_log.jsonl`
+> on `C:\Space` every run — those accumulate as uncommitted working-tree changes between sessions;
+> that's expected, the files on disk are the source of truth. (2) **Watch all 3 inboxes** (or
+> forward the two new ones into the primary) — replies land where the mail left from.
+
+> [!info] 📨 Earlier tonight — VOLUME MODE ARMED (superseded by the LIVE note above)
 > Everything below is done. The queue is loaded, the guards are green, three accounts are live.
 > **54 rows are machine-sendable right now** and none of them trip the placeholder guard —
 > every one renders a real, hand-written email.
