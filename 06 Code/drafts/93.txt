@@ -1,0 +1,11 @@
+Subject: your DebriSat ML paper - and a labelling problem you may recognise
+
+Bogachan,
+
+I read your SDC9 paper with Prof. Fitz-Coy on ML identification of low-density DebriSat fragments. Different objects to mine, but I suspect the same underlying frustration: the model is the easy part and the labels are the whole problem.
+
+I detect satellite maneuvers from free public data - the catalog against the operators' own published ephemerides. About five in six apparent maneuvers are stale catalog entries rather than real movement. As of July 22, ~68-72% of the top suspects show a real, independently-checked burn signature versus ~10% of matched controls, checked against 30 days of altitude history with controls matched on shell, altitude band and epoch window. Two of my own methods agreeing, not operator ground truth - I'd rather say that than have you find it.
+
+Where DebriSat has ground truth because someone physically measured the fragments, I have none: no operator publishes a maneuver log. So I use a matched control group as a stand-in and treat its ~10% hit rate as a false-positive floor. I'd like to know how your group thinks about that trade - you have expensive, real labels, and I'd like to understand what they buy you that a control group can't.
+
+I'm an ML engineer working on this independently in the US, and genuinely just want to compare notes with someone at the same stage of the problem.

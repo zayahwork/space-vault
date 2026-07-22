@@ -1,0 +1,11 @@
+Subject: differential drag as a signal rather than a maneuver - your SDC9 paper
+
+Daniele,
+
+Your SDC9 paper with Ratcliffe, Braun and Lemmens on the effectiveness of differential drag for collision avoidance is unusually relevant to me, because differential drag is the thing my detector actually reads.
+
+I build maneuver detection from free public data alone - the catalog against the operators' published ephemerides - and the hard part is separating a deliberate drag manoeuvre from an object simply having a different ballistic coefficient, or from a catalog entry that has gone stale. About five in six apparent maneuvers turn out to be staleness. As of July 22, ~68-72% of the top suspects show a real, independently-checked burn signature versus ~10% of matched controls, checked against 30 days of altitude history with controls matched on shell, altitude band and epoch window. Two of my own methods agreeing, not operator ground truth - I'd rather say that than have you find it.
+
+The question: in your analysis, how distinguishable is an intentional differential-drag manoeuvre from ordinary drag variability, when all you have is a public element set? You quantified how well it *works* for avoidance; I'm asking how visible it is from outside, which I suspect you can answer in a sentence.
+
+And plainly, since IMS staffs this kind of work under contract: if there's ever a scoped piece of detection or data-quality work worth buying a week of, I'd like to be considered.

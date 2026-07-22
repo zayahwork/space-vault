@@ -1,0 +1,11 @@
+Subject: your open-source TLE orbit determination work - and whether CS Group takes contract help
+
+Thomas,
+
+Your SDC8 paper on open-source TLE-based orbit determination is the reason I'm writing: I've spent months living inside exactly that input, and almost nobody publishes what they actually learned from it.
+
+What I build is a maneuver detector that runs on free public data only - the catalog against the operators' own published ephemerides. The finding that reorganised the project: rank Starlink by that disagreement and about 4,900 objects look like they moved, but roughly five in six of those are the catalog entry being stale rather than the spacecraft. As of July 22, ~68-72% of the top suspects show a real, independently-checked burn signature versus ~10% of matched controls, checked against 30 days of altitude history with controls matched on shell, altitude band and epoch window. Two of my own methods agreeing, not operator ground truth - I'd rather say that than have you find it.
+
+The question I'd put to you, since you've clearly hit the same wall: when you fit an orbit from TLEs, do you treat element-set age as a modelled quantity or as noise you tolerate? I've been treating it as the signal - it's most of what my detector actually measures - and I don't know whether that's clever or a beginner's mistake wearing a nice hat.
+
+And plainly, since CS Group does flight dynamics under contract and I'm one person: if you ever bring in outside help on detection or catalogue work, I'd like to be on that list. I'd rather start with a scoped paid week than a long conversation.

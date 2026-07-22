@@ -1,0 +1,11 @@
+Subject: low-thrust manoeuvres seen from outside - your SDC8 paper
+
+Prof. Armellin,
+
+Your SDC8 paper with Palermo and Di Lizia on numerically efficient low-thrust collision-avoidance manoeuvre design sits right on top of my hardest case. I detect maneuvers from the outside, from free public data alone, and low thrust is where my method is both weakest and most interesting.
+
+Concretely: I rank objects by how far the public catalog disagrees with the operators' own published ephemerides. Starlink is electric propulsion, so what survives my filtering is real low-thrust LEO manoeuvring - about 490 candidates once five in six apparent maneuvers are discarded as stale catalog entries. As of July 22, ~68-72% of the top suspects show a real, independently-checked burn signature versus ~10% of matched controls, checked against 30 days of altitude history with controls matched on shell, altitude band and epoch window. Two of my own methods agreeing, not operator ground truth - I'd rather say that than have you find it.
+
+The question I'd like your view on: for a continuous low-thrust arc, is there any principled floor on what is detectable from element sets alone, or is it purely a matter of how stale the catalog is? I can measure my sensitivity empirically, but I can't tell whether I'm near a real limit or just near my own method's limit.
+
+I'm an ML engineer working independently, not a graduate student, so I have nobody to ask this over coffee. Happy to send the candidate set as real low-thrust test data if that's ever useful to you.

@@ -1,0 +1,11 @@
+Subject: estimating without a truth set - a question from your cislunar STM paper
+
+Prof. DeMars,
+
+I read your cislunar space-traffic surveillance paper with Frueh and Howell. My problem is much less exotic - LEO, public data, one person - but the estimation difficulty underneath it seems to be the same one you spend your time on.
+
+I detect maneuvers by ranking objects on how far the public catalog disagrees with the operators' own published ephemerides. About five in six apparent maneuvers turn out to be stale catalog entries rather than movement. As of July 22, ~68-72% of the top suspects show a real, independently-checked burn signature versus ~10% of matched controls, checked against 30 days of altitude history with controls matched on shell, altitude band and epoch window. Two of my own methods agreeing, not operator ground truth - I'd rather say that than have you find it.
+
+Here is the part I can't resolve on my own. I have no covariance and no maneuver log, so I substituted a matched control group and treat its ~10% hit rate as an empirical false-positive rate. From an estimation-theory standpoint, is that a legitimate stand-in for a calibrated statistic, or a number that will quietly mislead me as the population changes? You are exactly the person who would know which.
+
+I'm in Washington State, so a US-hours call is easy if that's simpler than email. And if a student would enjoy tearing the method apart, I'll hand over the data and the controls.
