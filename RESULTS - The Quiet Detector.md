@@ -18,7 +18,7 @@ code: "06 Code/detect.py --mode alert, 06 Code/quiet.py"
 >    ~2026-07-29.
 
 > [!bug] 🐞 Found and fixed 2026-07-22 — cadence would have false-flagged healthy satellites
-> `quiet.py` had **no tests**. Writing them (`_test_quiet.py`, 15 cases) turned up a real
+> `quiet.py` had **no tests**. Writing them (`_test_quiet.py`, 14 cases) turned up a real
 > defect in `judge()`, and it landed on exactly the wrong population.
 >
 > The typical spike-to-spike interval was taken straight from the median of observed spikes,
@@ -99,10 +99,41 @@ python detect.py --learn-baseline --pct 99   # re-learn as archive grows
 python detect.py --mode alert                # zero is a possible answer
 python quiet.py                              # cadence; refuses until ~Jul 29
 python _test_detect.py                       # 9 cases - persistence logic
-python _test_quiet.py                        # 15 cases - cadence logic
+python _test_quiet.py                        # 14 cases - cadence logic
 python _test_alert.py                        # 19 cases - alert mode's stored-bar path
 python _test_learn.py                        # 15 cases - learning the bar from the archive
+python _test_orbital.py                      # 24 cases - the orbital math underneath it all
 ```
+
+> [!success] ✅ Orbital math tested (2026-07-22) — `_test_orbital.py`, 24 cases, **no bugs found**
+> `altitude_km`, `descent_km_per_day`, `epoch_jd`, `capture_jd` and `rms_difference` sit
+> beneath every figure in every RESULTS note, and nothing gates them — there is no "refuses
+> until the archive grows" to hide a mistake behind. A flipped sign flows straight into the
+> published numbers and looks exactly like a real result.
+>
+> These are the only functions here with **external ground truth**, so they are checked
+> against physics rather than against themselves:
+>
+> | check | result |
+> |---|---|
+> | geostationary altitude (textbook 35,786 km) | **35,786.0 km** |
+> | ISS mean motion (flies 400–430 km) | **415.6 km** |
+> | Starlink mean motion (shell ~550 km) | **548.4 km** |
+> | Kepler's third law, written via rad/s instead of period | agrees to **<1e-6 km** at 4 orbits |
+> | TLE epoch 24001.5 → 2024-01-01 12:00 UTC | **JD 2460311.0** |
+> | J2000 (2000-01-01 12:00 UTC), by definition | **JD 2451545.0 exactly** |
+>
+> Also pinned: the **sign convention the whole deorbit filter rides on** — positive
+> `MEAN_MOTION_DOT` gives a *negative* drop (falling), negative gives positive (being
+> raised), zero gives exactly zero. If that ever inverts, the detector separates precisely
+> the wrong population and every regime-split number in these notes inverts with it. The
+> OMM `n-dot/2` convention is confirmed applied as **2×, not 1×** — using the raw value would
+> halve every descent and reclassify deorbiting hardware as station-keeping. The published
+> **0.4 km/day** threshold sits at `MEAN_MOTION_DOT` **6.5232e-04**, asserted from both sides.
+> `rms_difference` is 0 against itself, symmetric in its arguments (the guard on starting
+> from the *later* of the two epochs), and grows with the size of the element change.
+>
+> **No defect found.** The math was already right.
 
 > [!success] ✅ `learn_baselines` tested (2026-07-22) — `_test_learn.py`, 15 cases, **no bugs found**
 > The last untested link in the alert-mode chain, and the highest-consequence one: it writes a
