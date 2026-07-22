@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 type: AFK
 owner: Randy (research)
 blocked-by: []
@@ -13,5 +13,7 @@ blocked-by: []
 - At least 15–20 externally documented maneuver events are collected across our four constellations (Starlink deorbits announced by SpaceX, OneWeb relocations, Intelsat/SES station-keeping or relocation filings and press, ILS/FCC orbital-slot moves).
 - First honest recall/precision estimate: of externally documented events in our data window, how many did we flag? Of our top suspects, how many can be externally confirmed?
 - Every row states which of **"I verified this"** or **"I'd assume so"** applies. No inferred ground truth.
+
+**Closed 2026-07-22 (night):** every done-when was already demonstrated by committed work — `06 Code/ground_truth.csv` + `RESULTS - Ground Truth.md` existed with 24 events (> the 15–20 asked), every row marked verified/assumed, and the honest recall estimate (11/15 scoreable; 2/6 double-sourced) written up. The status flag had simply never been flipped. Issue 016 then extended the same artifact to 34 typed rows the same night.
 
 **Notes:** sources to mine: operator press releases and status pages, FCC/ITU filings for GEO relocations, Space-Track decay messages, Jonathan McDowell's GCAT and launch/deorbit logs, NASA CARA / conjunction bulletins, AMOS papers with named events. Web access rule: WebSearch works in non-interactive sessions, WebFetch doesn't — fetch pages with Python urllib. This dataset also becomes the demo's credibility slide.

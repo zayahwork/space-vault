@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 type: AFK
 owner: Randy (research)
 blocked-by: []

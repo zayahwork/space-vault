@@ -1,12 +1,20 @@
 ---
 date: 2026-07-22
-status: first independent scoring of the detector against documented reality
+status: first independent scoring of the detector against documented reality; expanded to 37 typed events the same night
 code: "06 Code/ground_truth.csv"
 sources: McDowell GCAT · Space-Track SATCAT + GP_HISTORY · Northrop/Intelsat PRs · S4S · SpaceX FCC filings
 supersedes: the GEO hypothesis in [[RESULTS - Beyond Starlink]]
 ---
 
-# 🎯 RESULTS — the detector vs. 24 documented maneuvers
+# 🎯 RESULTS — the detector vs. 37 documented maneuvers
+
+> [!info] Updated the night of 2026-07-22
+> The set grew from 24 to **37 events** and every row now carries a `maneuver_type` tag —
+> see [[#The per-type view — what each observable can and cannot catch]]. The scoring
+> numbers below (33% / 73% / the noise floor) are **unchanged**: all ten new rows are
+> reentries that predate our archive, so they add evidence, not score. Verified rows went
+> **7 → 17** because ten new decays are corroborated by both Space-Track and McDowell's
+> GCAT. Text below this box still says "24" where it describes the original stress test.
 
 > [!quote] The honest summary — read this before any other number on this page
 > We assembled 24 documented events and then stress-tested every row, demanding a **second
@@ -71,14 +79,21 @@ tracking record *is*. This rule cost us 8 rows that were marked verified on the 
 |---|---|
 | Intelsat 901 graveyard raise | Northrop's release is the only document; every trade story derives from it, **and we supplied the date ourselves** |
 | AMC 18 (null object) | McDowell's classification derives from the same public catalog we measure — not independent of us |
-| 5 × Starlink reentries | Space-Track is authoritative but alone: **McDowell's `rcat.tsv` was last updated 2026-07-17 20:11 UTC, before all five decays** |
+| 5 × Starlink reentries | Space-Track is authoritative but alone: **McDowell's `satcat.tsv` was last updated 2026-07-17 20:11 UTC, before all five decays** |
 | STARLINK-37977 orbit-raise | SpaceX's FCC filings describe orbit-raising generically, never per-satellite. The classification is our inference |
 
 > [!note] A downgrade is not a doubt
 > The five Starlink reentries are almost certainly real — Space-Track's decay record is the
 > authoritative US government source. They fell to *assumed* on a **procedural** rule, not
-> because anyone disputes them. **Re-check `rcat.tsv` in a week and they should promote.**
+> because anyone disputes them. **Re-check `satcat.tsv` and they should promote.**
 > That's the difference between "we don't believe it" and "we can't yet corroborate it."
+>
+> ⚠️ **Correction (issue 018):** earlier notes told the next shift to re-check `rcat.tsv`.
+> That is wrong — GCAT's `rcat` is the **Suborbital Rocket (Exoatmospheric) Catalog**
+> ("objects whose apogee was 80 km or more"), per GCAT's own catalog index. A Starlink
+> payload would never appear in it whether it had reentered or not, so the original
+> "not in rcat" reasoning proved nothing. **`satcat.tsv` — Status `R` with a `DDate` — is
+> the correct source.** Same conclusion, sound reasoning.
 
 **Two things the stress test actually corrected:**
 - **Intelsat 29e's date moved from 2019-04-09 to 2019-04-07** — Intelsat's own release puts
@@ -151,13 +166,101 @@ Against that bar the catches aren't marginal — they're enormous: the Intelsat 
 raise is **732× the bar**, AMC 11's is **638×**. Even the weakest true positive (a routine
 station-keeping nudge) is 2× clear.
 
-### LEO — 8 events, 1 scoreable
+### LEO — 8 events at stress-test time, 1 scoreable *(now 18 — the ten added rows are all pre-archive reentries, so still 1 scoreable)*
 
 | verdict | n | why |
 |---|---|---|
 | ✅ caught | 1 | STARLINK-37977, mid orbit-raise, flagged at 9.3× its bar |
 | 🔍 flagged but undocumented | 2 | STARLINK-36738 and ONEWEB-0685 — no public source can confirm *or* deny |
 | 🚫 **not scoreable** | **5** | five Starlink reentries, all invisible to us — see below |
+
+---
+
+## The per-type view — what each observable can and cannot catch
+
+Every row now carries a `maneuver_type` tag so the verifier comparison (tech lane, issue
+015) can say WHICH kinds of burns each observable sees. Counts computed from the CSV,
+not by hand:
+
+| maneuver_type | events | verified | caught | missed | timing-miss | not scoreable / other |
+|---|---|---|---|---|---|---|
+| **deorbit** (graveyard + reentry) | 19 | 10 | 4 | 0 | 0 | 15 reentries pre-date the archive |
+| **NS-stationkeeping** | 3 | 0 | 3 | 0 | 0 | — |
+| **anomaly-sudden** (breakup, leak, fragmentation) | 3 | 3 | 2 | 0 | 1 | — |
+| **docking** (servicer + target) | 3 | 3 | 0 | 2 | 0 | 1 excluded (MEV-1 transit) |
+| **anomaly-quiet** (Galaxy 15, AMC 18) | 2 | 1 | 0 | 0 | 1 | 1 true negative |
+| **relocation** | 1 | 0 | 1 | 0 | 0 | — |
+| **reboost** | 1 | 0 | 1 | 0 | 0 | — |
+| **unknown** (our flags, unconfirmable) | 2 | 0 | — | — | — | 2 flagged-undocumented |
+| **EW-stationkeeping** | 3 | 0 | 3 | 0 | 0 | signature-inferred, not documented |
+| **total** | **37** | **17** | 14 | 2 | 2 | |
+
+**What the table says, plainly:**
+
+- **The step detector's wins concentrate in exactly two types: deliberate altitude
+  changes (deorbit, reboost, relocation) and N–S station-keeping.** 9 of its 11 catches
+  are those. That's a coherent product claim: *we see satellites that move on purpose.*
+- **The quiet fraction is half the dataset.** 2 rows are tagged `anomaly-quiet`, but the
+  15 unscoreable reentries fail for the *same underlying reason* — the signal is an
+  absence (the operator stops publishing; the expected correction never comes). **17 of
+  37 documented events (46%) can only ever be covered by `quiet.py`-class logic, not by
+  any jump detector.** That is the measured size of the bet the insurer story places on
+  the Jul 29 unlock.
+- **Docking is 0-for-2 and structurally so** — the target doesn't move. If servicing
+  missions matter to a buyer, that needs a different observable (relative-motion, not
+  altitude), and we should say so rather than promise it.
+- **EW-stationkeeping now has three examples — but they are inferred, not documented**
+  (issue 018, 2026-07-22 night). The signature is unmistakable and self-checking: a
+  **pair of opposite-sign longitude-drift corrections about a day apart** — one burn to
+  start the drift, one to stop it — with **inclination held at noise** (0.0010–0.0051°,
+  all under the measured 0.0058° null). N–S burns move inclination by ~0.045°; these do
+  not, which is what makes them east–west.
+
+  | satellite | dates | drift change | Δinc | Δalt |
+  |---|---|---|---|---|
+  | Intelsat 1002 | 2025-02-23 / 02-28 | +0.2321 → −0.2668 °/day | 0.0010° | 20.77 km (49× bar) |
+  | Astra 3B | 2025-09-07 / 09-08 | +0.1785 → −0.1974 °/day | 0.0021° | 15.36 km (37× bar) |
+  | AMC 11 | 2025-06-10 / 06-11 | −0.0386 → +0.0339 °/day | 0.0051° | 3.01 km (7× bar) |
+
+  **All three are caught, comfortably.** Two things follow. First, **the altitude step
+  detector is not blind to east–west burns either** — which further narrows what the
+  original "wrong observable at GEO" story could ever have explained. Second, **AMC 11
+  now carries both burn types**, and **Intelsat 1002 carries an EW burn our method catches
+  and a docking it missed** — both are clean controlled comparisons for the tech lane's
+  verifier work.
+
+  The honest limit stands: **no operator publishes per-maneuver EW data, so a *documented*
+  east–west burn remains unobtainable.** These rows are marked `assumed` on exactly the
+  same footing as the N–S rows, and the verifier comparison should treat them as
+  signature-labelled, not ground truth.
+
+**Where the ten new rows came from, and the honest independence caveat.** Space-Track's
+SATCAT decay records (8 Starlink decays 2026-07-02..07-14, both OneWeb decays) each
+corroborated against McDowell's GCAT `satcat.tsv` reentry phases — three match to the
+minute with a reentry location. That satisfies our two-source rule as previously applied
+(it's exactly the promotion path the note above prescribes for the July 17–21 rows). The
+caveat worth keeping in view: GCAT's reentry dating draws on the same government tracking
+network Space-Track publishes, so this is the *weakest* form of independence in the set —
+independent curation and estimation (McDowell's `?`-flagged times are his own), not an
+independent sensor.
+
+**Re-check performed 2026-07-22 night (issue 018), second pass:** the five July 17–21
+Starlink reentries were re-queried by streaming `satcat.tsv` fresh from planet4589.org —
+**19,010,777 bytes, file stamp `Updated 2026 Jul 17 2011:55`, byte-identical to the
+earlier pull.** All five remain Status `O` with no decay date, so **0 of 5 promoted and
+all five stay `assumed`**, now with the re-check date recorded in their `source_2`.
+
+The blocker is simply that **GCAT has not published an update since July 17** — this is
+data lag on his side, not disagreement, and nothing we can do from here. Re-check is
+cheap (one stream, one filter); next shift should just run it again. The `source_2` note
+in each row now cites `satcat.tsv` rather than the earlier, incorrect `rcat.tsv`.
+
+**A OneWeb fact worth its own line:** Space-Track records **exactly two OneWeb decays
+ever** (ONEWEB-0251 and -0265, both 2022, both early on-orbit failures). OneWeb does not
+actively deorbit — dead OneWebs are abandoned in place and decay over months to years.
+So the OneWeb ground-truth gap isn't a documentation gap, it's physical: **for OneWeb,
+"went quiet" is the only failure signature that will ever exist.** Another point for
+`quiet.py`.
 
 ---
 
