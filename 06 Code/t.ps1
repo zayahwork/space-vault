@@ -5,12 +5,12 @@
 #                     exist there just open in the folder itself)
 #   t -Fresh          start all 4 with blank conversations instead of resuming
 #
-# Layout - each window is its own work stream on its own branch, in its own
-# git worktree, so nothing collides:
-#   Top-left     PLAN     high effort    master    the vault, planning, merges
-#   Top-right    DETECTOR high effort    detector  maneuver detection builds
-#   Bottom-left  OUTREACH medium effort  outreach  emails, contact checking
-#   Bottom-right ROOM     low effort     room      crew tooling, quick questions
+# Layout - the crew. Each window boots as a persona on its own branch in its own
+# git worktree, walled off from the others. Zayah alone merges finished work to master.
+#   Top-left     CTO    high effort     cto     technical direction, orders, review
+#   Top-right    TIM    high effort     tim     software/ML engineering
+#   Bottom-left  MARK   medium effort   mark    outreach, social, income
+#   Bottom-right RANDY  medium effort   randy   research, brainstorming
 #
 # Each window slot owns a permanent session ID, so closing the grid and typing `t`
 # again resumes each window exactly where it left off. Use -Fresh to wipe that and
@@ -37,16 +37,40 @@ $wa = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
 $w  = [math]::Floor($wa.Width / 2)
 $h  = [math]::Floor($wa.Height / 2)
 
-# ScreenColors: low nibble = text, high nibble = background.
-# Palette slot 8 is repainted to a proper dark grey below (Windows' stock slot 8 is a
-# washed-out #808080), so 0x8F = bright white text on dark grey.
+# ScreenColors: low nibble = text, high nibble = background. All black on white.
+# Palette slot 8 stays repainted dark grey in case any window wants 0x8F later.
 $darkGrey = 0x2B2B2B   # conhost stores colours as 0x00BBGGRR - grey reads the same either way
+# The crew: each window is a persona on its OWN branch in its OWN worktree.
+# They are walled off from each other - Zayah is the only one who merges to master.
+# Model/effort split (usage balancing): CTO and Randy think hard on Fable, Tim builds
+# on Fable high, Mark drafts on Opus medium - marketing needs voice, not peak reasoning.
 $layout = @(
-    @{ Effort = 'high';   Col = 0; Row = 0; Title = 'Claude 1 - PLAN - HIGH';       Branch = $null;       Colors = 0x0F },
-    @{ Effort = 'high';   Col = 1; Row = 0; Title = 'Claude 2 - DETECTOR - HIGH';   Branch = 'detector';  Colors = 0x0F },
-    @{ Effort = 'medium'; Col = 0; Row = 1; Title = 'Claude 3 - OUTREACH - MEDIUM'; Branch = 'outreach';  Colors = 0x0F },
-    @{ Effort = 'low';    Col = 1; Row = 1; Title = 'Claude 4 - ROOM - LOW';        Branch = 'room';      Colors = 0x0F }
+    @{ Effort = 'high';   Model = 'fable'; Col = 0; Row = 0; Title = 'Claude - CTO';   Branch = 'cto';   Persona = 'cto';   Colors = 0x0F },
+    @{ Effort = 'high';   Model = 'fable'; Col = 1; Row = 0; Title = 'Claude - TIM';   Branch = 'tim';   Persona = 'tim';   Colors = 0x0F },
+    @{ Effort = 'medium'; Model = 'opus';  Col = 0; Row = 1; Title = 'Claude - MARK';  Branch = 'mark';  Persona = 'mark';  Colors = 0x0F },
+    @{ Effort = 'high';   Model = 'fable'; Col = 1; Row = 1; Title = 'Claude - RANDY'; Branch = 'randy'; Persona = 'randy'; Colors = 0x0F }
 )
+
+# --- Persona system prompts (regenerated every launch so edits here take effect).
+$personaDir = Join-Path $env:USERPROFILE '.claude\t-personas'
+if (-not (Test-Path $personaDir)) { New-Item -ItemType Directory -Path $personaDir | Out-Null }
+$commonRules = @"
+
+HARD BOUNDARIES (Zayah's standing orders - these override politeness and initiative):
+- Work ONLY inside this folder (your own worktree) on your own branch. Never git switch, never merge, never push.
+- Other agents' worktrees, branches, and diffs are OFF LIMITS. Never read, list, or reference them. Missing facts come through Zayah, not through their files.
+- Never touch master/main. Zayah reviews your committed work and merges it to main himself when he decides it's done.
+- Commit your own work on your own branch as you go, with clear messages - your commits are your handoff to Zayah.
+"@
+$personas = @{
+    cto   = "You are the CTO of Zayah's space startup (maneuver detection from public orbital data). You own technical direction: architecture, priorities, review standards, risk calls. You turn Zayah's goals into precise, written technical orders and honest assessments. Skeptical, brief, numbers over adjectives, no hype.$commonRules"
+    tim   = "You are Tim, the software engineer / ML engineer of Zayah's space startup. You build and harden the code: the maneuver detector, data pipelines, tests, charts. Test-first where a test is possible; every claim ships with the number that proves it. When work is done, state plainly what was verified and what was not.$commonRules"
+    mark  = "You are Mark, the marketer of Zayah's space startup: outreach, social, and income. You draft emails, find real human contacts, keep the outreach ledger honest, and think about who pays and why. You NEVER send anything - drafts only; Zayah sends. Write like one specific human to another; if it smells like spam, rewrite it.$commonRules"
+    randy = "You are Randy, the researcher / brainstormer of Zayah's space startup. You dig into papers, competitors, orbital mechanics, and generate ideas. Separate VERIFIED (with source) from SPECULATION (labeled) in everything you produce. Wild ideas welcome, mislabeled facts are not.$commonRules"
+}
+foreach ($name in $personas.Keys) {
+    Set-Content -Path (Join-Path $personaDir "$name.md") -Value $personas[$name] -Encoding UTF8
+}
 
 # --- Console look: per-title registry settings (conhost picks these up because the
 # --- window is created with this exact title via `start "<title>"`).
@@ -117,10 +141,12 @@ foreach ($win in $layout) {
     # (Claude keys transcripts by the launch folder, so check against $launchDir.)
     $id = $sessions[$win.Title]
     $launchMunged = ($launchDir -replace '[^A-Za-z0-9]', '-')
+    $personaFile = Join-Path $personaDir "$($win.Persona).md"
+    $opts = "--model $($win.Model) --effort $($win.Effort) --append-system-prompt-file $personaFile"
     if (Test-Path (Join-Path $env:USERPROFILE ".claude\projects\$launchMunged\$id.jsonl")) {
-        $inner = "claude --resume $id --effort $($win.Effort)"
+        $inner = "claude --resume $id $opts"
     } else {
-        $inner = "claude --session-id $id --effort $($win.Effort)"
+        $inner = "claude --session-id $id $opts"
     }
     Start-Process cmd -WorkingDirectory $launchDir -ArgumentList "/c start `"$($win.Title)`" cmd /k `"$inner`""
 
