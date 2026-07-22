@@ -11,7 +11,11 @@
 param(
     [string]$Path = (Join-Path $env:USERPROFILE '.claude\worktrees\C--Space-detector'),
     [int]$Loop = 1,
-    [string]$Effort = 'medium'
+    [string]$Effort = 'medium',
+    # Lane worktrees are sparse: a worker only has issues/<lane>/ on disk, so the recursive
+    # scan below naturally picks up only that lane's cards. Extra tools per lane (e.g.
+    # research needs WebSearch) ride in via -Tools.
+    [string]$Tools = 'Bash(python *),Bash(pip *),Bash(git *)'
 )
 
 if (-not (Test-Path (Join-Path $Path 'issues'))) {
@@ -23,8 +27,9 @@ Set-Location -LiteralPath $Path
 for ($i = 1; $i -le $Loop; $i++) {
     Write-Host "`n=== ralph iteration $i of $Loop | $(Get-Date -Format 'HH:mm') | $Path ===" -ForegroundColor Cyan
 
-    $issues  = (Get-ChildItem 'issues\*.md' | ForEach-Object {
-        "--- FILE: issues/$($_.Name) ---`n" + (Get-Content $_.FullName -Raw)
+    $issues  = (Get-ChildItem 'issues' -Recurse -Filter '*.md' | Where-Object { $_.Name -notmatch '^(PRD|README)' } | ForEach-Object {
+        $rel = $_.FullName.Substring((Get-Location).Path.Length + 1) -replace '\\','/'
+        "--- FILE: $rel ---`n" + (Get-Content $_.FullName -Raw)
     }) -join "`n`n"
     $commits = (git log -5 --oneline) -join "`n"
     $prompt  = @"
@@ -33,6 +38,9 @@ commits are below. Follow the repo's /ralph rules exactly: pick ONE open, unbloc
 type: AFK issue (bug fixes > feedback-loop infrastructure > tracer bullets > polish),
 complete it test-first where possible, run the feedback loops, mark it status: done,
 commit, and stop. If no issue qualifies, output exactly: NO MORE TASKS
+HARD RULES: work only in this worktree on its own branch; never merge, switch branch or
+push; NEVER send email or run any script in --live/--send mode - drafting is the ceiling;
+stay inside the folders present in this worktree.
 
 RECENT COMMITS:
 $commits
