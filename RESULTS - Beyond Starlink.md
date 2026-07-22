@@ -49,6 +49,14 @@ Better we say it first: **on today's data, SES detections are not corroborated.*
 
 ## Why GEO verification is weak by construction (not an excuse — a mechanism)
 
+> [!danger] ⛔ RETRACTED 2026-07-22 — point 1 below is wrong
+> Scored against 14 documented GEO maneuvers, **N–S station-keeping does move altitude**
+> (0.84–3.00 km, 2–7× the measured noise floor), and **longitude drift is arithmetically
+> the same quantity as altitude** (1 km = 0.0128°/day). The proposed "GEO-shaped verifier"
+> would change nothing. The real failure is the ±3-day timing window vs. a catalog that
+> lags up to 10 days. **SES's no-signal result now has no explanation.**
+> → [[RESULTS - Ground Truth]]
+
 1. **The verifier watches altitude.** GEO station-keeping is mostly east–west and
    north–south burns that barely change altitude — the step the verifier looks for is
    close to invisible. It was built for LEO reboosts. A GEO-shaped verifier (longitude
