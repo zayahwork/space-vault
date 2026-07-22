@@ -158,6 +158,14 @@ down is only interesting if it's extreme compared to *other satellites on their 
 Sanity check: run on OneWeb (1,200 km, nothing decaying) and the falling group is **0 objects** —
 the filter doesn't fire where it shouldn't.
 
+> [!danger] ✅ CHECKED 2026-07-22 — and the reason below is WRONG
+> The claim *"likely decay or bad TLE"* was checked against 30 days of altitude history
+> ([[RESULTS - Checked Against History]]). Only **5 of 29** are actually decaying. The other
+> 24 are **16 freshly-launched satellites still climbing** (2026 launches at 325–460 km) and
+> **8 old satellites with flat histories** (genuinely bad element sets).
+> **Keeping them out of the candidate list is still correct** — none are station-keeping
+> maneuvers. But the stated reason is mostly wrong. Don't repeat the sentence below.
+
 > [!warning] Hard plausibility gate (added 2026-07-21)
 > `detect.py` now applies a **hard 500 km gate** before the age-aware statistics. No
 > station-keeping burn moves an object hundreds of km RMS over 6 hours, so any larger gap
