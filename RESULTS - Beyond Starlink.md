@@ -1,6 +1,6 @@
 ---
 date: 2026-07-22
-status: method generalizes to OneWeb cleanly; GEO runs but is not yet verified
+status: OneWeb clean; GEO now regime-aware (issue 002) but still unverified against real maneuver records
 code: "06 Code/detect.py --group oneweb|intelsat|ses, 06 Code/verify.py --group ..."
 snapshot: 2026-07-22 0800Z
 ---
@@ -39,13 +39,63 @@ operator, different orbit shell, different maneuver style — same signal. This 
 - Verify: **all 3 suspects over the controls' bar** (vs 1/3 controls), median step 16.3x
   the controls'. Right direction — but n=3 is an anecdote with a table around it.
 
-## SES (GEO, 68 objects) — the honest miss
+## SES (~~GEO~~ **mixed GEO+MEO**, 68 objects) — the honest miss
+
+> [!warning] Correction 2026-07-22 — SES is not a GEO fleet
+> Measured, not assumed: **38 of the 68 sit at GEO (35,786 km) and 30 sit at 8,066 km** —
+> that is O3b, SES's MEO constellation. Calling the whole fleet "GEO" and judging it with
+> one set of constants put half the population under the other half's physics. This may be
+> part of why SES shows no signal below; it is not a *sufficient* explanation, and the miss
+> stands until something corroborates it.
 
 - 3 suspects, 75% of the naive list was stale.
 - Verify: **NO SIGNAL.** Suspects' median step 0.8x the controls', 1/3 vs 1/3 over the bar.
   The suspects look like everything else.
 
 Better we say it first: **on today's data, SES detections are not corroborated.**
+
+## The detector now knows which physics it is in (issue 002, 2026-07-22)
+
+Before today the same code, the same table and the same confident tone came out whatever
+altitude it was pointed at. It ran on GEO — nothing crashed — but **two of its three filters
+cannot fire up there**, and it never said so.
+
+| | starlink (LEO) | intelsat (GEO) | ses (mixed) |
+|---|---|---|---|
+| median altitude | 475.2 km | 35,786.6 km | 35,786 / 8,066 km |
+| km/day range | −55.44 … +24.18 | −0.077 … +0.160 | −0.085 … +0.192 |
+| objects "on the way down" | 1,021 | **0** | **0** |
+| median gap | 9.68 km | 7.44 km | 0.97 km |
+
+**1. The decay split is inert above LEO, and now says so.** It needs an object to lose
+0.4 km/day. Nothing at GEO comes within a factor of two, because there is no atmosphere to
+lose it to. Printing `on the way down: 0` as though it had looked and found none is lying by
+omission — the run now prints `DECAY SPLIT INERT here`, names the range the population
+actually spans, and states that 0 means **not applicable**.
+
+**2. The floor was a Starlink number wearing a lab coat.** `--min-km 5.0` is about *half*
+Starlink's median gap but *five times* SES's — the same nominal number is ~10× more
+restrictive relative to the population it judges, silently excluding most of a GEO fleet from
+ever being flagged. Floors are now per regime: **LEO 5.0 · MEO 2.0 · GEO 1.0 km**.
+
+**3. The floor is stamped per OBJECT, not per constellation** — because operators do not
+respect the boundary. SES's two halves are now judged against 1.0 and 2.0 km respectively. A
+fleet-wide scalar could only have been wrong for one half.
+
+> [!danger] The GEO floor is a judgement, not a measurement
+> 1.0 km sits above the sub-km noise and leaves normal station-keeping reachable, and that is
+> the whole argument for it. It has **not** been validated against a real GEO maneuver record.
+> Evidence it may still be wrong: every one of Intelsat's 44 objects clears it (median gap
+> 7.44 km), so for that fleet the floor does no filtering at all — while for SES (median
+> 0.97 km) it bites hard. Until there is ground truth, this is the least defensible constant
+> in `detect.py`, and it should not be tuned to make output look better.
+
+Baseline files now stamp `orbital_regime` and the floors actually applied
+(`baselines_ses.json` records `[1.0, 2.0]` and `mixed`, because one scalar would be a lie
+about how that bar was made). Starlink's numbers are **unchanged** — verified figure by
+figure across the whole run.
+
+Covered by `06 Code/_test_geo.py`, 22 cases.
 
 ## Why GEO verification is weak by construction (not an excuse — a mechanism)
 

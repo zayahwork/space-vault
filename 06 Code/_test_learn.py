@@ -24,9 +24,11 @@ _real_snapshot_dirs = detect.snapshot_dirs
 _real_analyze = detect.analyze
 
 
-def row(gap, age_h, falling=False):
-    return {"gap_km": gap, "gp_age_h": age_h, "falling": falling,
-            "verdict": "agrees", "flagged": False}
+def row(gap, age_h, falling=False, min_km=5.0, alt=475.0):
+    """A row shaped as analyze() emits it - including the per-object floor and altitude
+    it stamps on, since learn_baselines records which floors were actually applied."""
+    return {"gap_km": gap, "gp_age_h": age_h, "falling": falling, "min_km": min_km,
+            "altitude_km": alt, "verdict": "agrees", "flagged": False}
 
 
 def snap(name):
@@ -34,7 +36,15 @@ def snap(name):
 
 
 def install(by_snap):
-    """Swap the archive for a hand-built one. by_snap: {snap_dir: run-or-None}."""
+    """Swap the archive for a hand-built one. by_snap: {snap_dir: run-or-None}.
+
+    Fills in the regime fields analyze() always returns, so the fixture keeps matching
+    the real contract rather than a trimmed-down version of it.
+    """
+    for run in by_snap.values():
+        if run is not None:
+            run.setdefault("regime", "LEO")
+            run.setdefault("min_km", 5.0)
     detect.snapshot_dirs = lambda: list(by_snap)
     detect.analyze = lambda s, *a, **k: by_snap[s]
 
@@ -143,6 +153,20 @@ try:
 
     passed &= check("the settings it was learned under are stamped in",
                     (out["group"], out["pct"], out["min_km"]), (TEST_GROUP, 50.0, 5.0))
+    passed &= check("  including which orbital regime it describes",
+                    out["orbital_regime"], "LEO")
+
+    # A straddling fleet (SES is really like this: GEO birds plus O3b at 8,066 km) had
+    # its two halves judged against different floors. Recording one scalar would be a
+    # lie about how the bar was made, so both are kept.
+    install({snap("0000Z"): {
+        "rows": ([row(g, 15.0, min_km=1.0, alt=35786.0) for g in range(1, 16)] +
+                 [row(g, 15.0, min_km=2.0, alt=8066.0) for g in range(16, 31)]),
+        "skipped": None, "regime": "mixed", "min_km": 5.0}})
+    out = detect.learn_baselines(TEST_GROUP, 50.0, None, 500.0)
+    passed &= check("a straddling fleet records BOTH floors, not one scalar",
+                    out["min_km"], [1.0, 2.0])
+    passed &= check("  and is stamped as mixed", out["orbital_regime"], "mixed")
     passed &= check("  and it is written where load_baselines will find it",
                     path.exists(), True)
     back = detect.load_baselines(TEST_GROUP)
