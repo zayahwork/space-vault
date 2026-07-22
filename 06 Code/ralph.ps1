@@ -22,10 +22,34 @@ if (-not (Test-Path (Join-Path $Path 'issues'))) {
     Write-Error "No issues/ folder in $Path - run /issues first (and merge/commit so the worktree sees it)."
     exit 1
 }
+
+# --- Daily usage budget (founder order 2026-07-22: spend 10-14% of the weekly plan per day,
+# never over 14%). We cannot read the plan meter, so we ration the thing we control: headless
+# iterations per calendar day, shared across ALL lanes via one counter file. Calibrate
+# DailyCap against the /usage page; the counter resets itself at midnight.
+$BudgetFile = 'C:\Space\06 Code\ralph_budget.json'
+$DailyCap   = 24
+function Get-Budget {
+    $today = Get-Date -Format 'yyyy-MM-dd'
+    $b = if (Test-Path $BudgetFile) { Get-Content $BudgetFile -Raw | ConvertFrom-Json } else { $null }
+    if ($null -eq $b -or $b.date -ne $today) { $b = [pscustomobject]@{ date = $today; used = 0; cap = $DailyCap } }
+    return $b
+}
+function Spend-Budget {
+    $b = Get-Budget; $b.used++
+    $b | ConvertTo-Json | Out-File $BudgetFile -Encoding utf8
+}
+
 Set-Location -LiteralPath $Path
 
 for ($i = 1; $i -le $Loop; $i++) {
-    Write-Host "`n=== ralph iteration $i of $Loop | $(Get-Date -Format 'HH:mm') | $Path ===" -ForegroundColor Cyan
+    $b = Get-Budget
+    if ($b.used -ge $b.cap) {
+        Write-Host "Daily iteration budget spent ($($b.used)/$($b.cap)) - stopping. Resets at midnight." -ForegroundColor Yellow
+        exit 3
+    }
+    Spend-Budget
+    Write-Host "`n=== ralph iteration $i of $Loop | budget $($b.used + 1)/$($b.cap) | $(Get-Date -Format 'HH:mm') | $Path ===" -ForegroundColor Cyan
 
     $issues  = (Get-ChildItem 'issues' -Recurse -Filter '*.md' | Where-Object { $_.Name -notmatch '^(PRD|README)' } | ForEach-Object {
         $rel = $_.FullName.Substring((Get-Location).Path.Length + 1) -replace '\\','/'
