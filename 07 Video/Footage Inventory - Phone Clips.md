@@ -20,6 +20,13 @@ still deliver 1080p clean. That's a real editing weapon and it's worth knowing w
 
 **Total: 5m 10s. Realistically usable: ~2m 40s.**
 
+### Added 2026-07-22 14:02 — `2026-07-22 13-59-23.mp4` (2:46, screen + webcam PiP)
+
+Not a phone clip, but it belongs in the Day 1 pool. **Face and screen in one recording**,
+webcam bottom-right, and the best-lit footage of you we have.
+🚨 **It also names real people on screen and cannot ship as shot** — PiP crop only.
+Full finding: [[OPSEC - Screen Capture Finding]].
+
 ## ⚠️ The problem: the longest clip is the darkest
 
 `IMG_5167` is 2:29 — **half of all the phone footage we have** — and it is shot in a dark
