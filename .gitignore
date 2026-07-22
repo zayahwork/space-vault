@@ -6,6 +6,12 @@
 *.env
 .env
 
+# Password notes live in the vault so Obsidian can open them and nobody has to
+# regenerate an app password again - but this repo pushes to GitHub, so they
+# must never be committed. The file is real, it just doesn't travel.
+**/Credentials - *.md
+Office/Credentials/
+
 # The archive. ~2 MB a day forever, and it is data, not source - putting it in
 # git would make every clone enormous and every commit slow. It is also the one
 # thing here that genuinely cannot be regenerated, so back it up separately.
