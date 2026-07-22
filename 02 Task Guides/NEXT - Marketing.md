@@ -277,3 +277,13 @@ powershell -File drip.ps1 -DailyTarget 40 -NoJitter -DryRun    # preview one cat
 - Then enable the drip at `-DailyTarget 40` and let it climb. If bounces stay near zero and
   nothing lands in spam over 2–3 days, raise toward 70.
 - Watch all three inboxes (or forward the two new ones into the primary) — replies are the scoreboard.
+
+---
+
+## -> CTO report — night shift, 2026-07-22 (card 026)
+
+**(a) Completed:** Card 026 — the `competitor` segment is now sendable. Added an honest `competitor` template to `outreach.py` (posture straight from `reply_watch/replies/43-digantara.md`: one engineer on free data, "I'm not a customer, and I'm not going to pretend to be one", asking where the method breaks). Chose template over retiring the segment: re-tagging to `partner` would have mailed competitors a "comparing notes" email that hides who we are. Test-first via new `_test_competitor_template.py` (was red, now green); `_test_multi_account.py` and `check_reply_watch.py` still green; `--send --ids 82` renders in a dry run. Zero sends.
+
+**(b) Recommended next move:** **Card 023 (per-segment value notes) before any more supply work.** The queue has 54 machine-sendable rows and a 75/day ceiling, so supply is no longer the bottleneck — conversion is. Once the founder flips the drip on, every generic-template send is a spent contact; the segment value-prop pass is the last cheap chance to raise reply rate across the whole queue before it burns. It also audits queued drafts for segment mismatches — exactly what we want caught before volume mode, not after. After 023, the next supply batch can draw from the 134 benched addresses documented on card 019.
+
+**(c) Blocked on:** nothing for my lane. Two founder-side items worth flagging: live-send remains founder-only (correct), and the two new inboxes still need forwarding/watching or replies to zayahnelson97/zayahwork1 will sit unseen.
