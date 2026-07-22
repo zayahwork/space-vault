@@ -18,14 +18,80 @@ snapshot: 2026-07-22 0200Z
 > anyway: recomputing all 80 cached objects under the old ±3d and the new window gives
 > **identical steps on 80 of 80**. Nothing on this page was re-baselined quietly.
 
-> [!success] The headline (hardened 2026-07-22, two snapshots)
-> **~two-thirds of the top suspects** clear a movement bar that only **~10% of ordinary
-> satellites** clear — replicated on two independent snapshots (72% vs 11% at 0200Z,
-> 68% vs 11% at 0800Z). The **entire flagged list**, all 489 objects, verifies at ~4x the
-> control rate. **The detector is tracking real movement.** This is the first number here
-> that `detect.py` did not produce about itself.
+> [!danger] ⬆️ **THE HEADLINE MOVED — 68–72% was an UNDERESTIMATE. Re-measured: 96% vs 11%** (issue 003, 2026-07-22)
+> The 68–72% figure was measured within minutes of the snapshot it scored. At that moment
+> the **forward half of the ±3-day window contained no data** — the catalog had not yet
+> published the orbit determinations that show the burns. Re-scored on the same two
+> snapshots once they had aged, the same top-75 suspects give **96% vs 11%**.
+>
+> Measured, not argued — top 75 on 0200Z, sweeping how much of the forward window exists:
+>
+> | forward reach available | bar (km) | suspects over | controls over |
+> |---|---|---|---|
+> | 0.00 d ← *what the published run could see* | 0.151 | 57/75 (**76%**) | 8/75 (11%) |
+> | 0.25 d | 0.151 | 70/75 (93%) | 8/75 (11%) |
+> | 0.50 d | 0.156 | 72/75 (**96%**) | 8/75 (11%) |
+> | 1.50 d / 3.00 d | 0.156 | 72/75 (96%) | 8/75 (11%) |
+>
+> At zero forward reach this reproduces **76%**, next to the published 72% — the mechanism
+> checks out. The rate **plateaus by ~0.5 days** and does not climb further, so 96% is the
+> settled value, not a number that keeps drifting up.
+>
+> **The controls stay pinned at 11% throughout.** That is what makes this a real correction
+> and not general inflation: only the suspects moved.
+>
+> **What this costs us:** a same-day verification at LEO under-reports. Any figure quoted
+> from a run fired immediately after a snapshot is a floor, not the result. Re-run ~12 hours
+> later before quoting.
 
-## 🔬 Hardened 2026-07-22 (CTO ask): does it hold at bigger samples?
+> [!success] The headline (re-measured 2026-07-22 at full observability)
+> **96% of the top 75 suspects** clear a movement bar that only **11% of ordinary
+> satellites** clear, on both snapshots. The separation survives to a much longer list —
+> **52–63% at n=300 against a 10% control rate** (table below). **The detector is tracking
+> real movement.** This is the first number here that `detect.py` did not produce about
+> itself.
+>
+> ~~68–72% vs ~10%~~ — struck, not deleted: it was measured too early, see the callout above.
+
+## 📏 Larger-n hardening under the production window (issue 003, 2026-07-22)
+
+Measured **once**, by `06 Code/hardening.py`, under the window the live pipeline actually
+runs (`verify.window_for_regime` — LEO −3/+3 d after issue 018) and with the groups chosen
+by the same `verify.select_groups` the production path calls. So a bigger n is the same
+measurement with more objects in it, not a different measurement.
+
+| snapshot | n | bar (km) | median ratio | **SUSPECTS over bar** | CONTROLS over bar |
+|---|---|---|---|---|---|
+| 0200Z | 25 | 0.085 | 172× | **23/25 (92%)** | 3/25 (12%) |
+| 0200Z | 75 | 0.156 | 32× | **72/75 (96%)** | 8/75 (11%) |
+| 0200Z | 150 | 0.114 | 11× | **119/150 (79%)** | 15/150 (10%) |
+| 0200Z | 300 | 0.153 | 5.4× | **155/300 (52%)** | 30/300 (10%) |
+| 0800Z | 25 | 0.145 | 91× | **23/25 (92%)** | 3/25 (12%) |
+| 0800Z | 75 | 0.149 | 79× | **72/75 (96%)** | 8/75 (11%) |
+| 0800Z | 150 | 0.124 | 40× | **129/150 (86%)** | 15/150 (10%) |
+| 0800Z | 300 | 0.140 | 9.0× | **188/300 (63%)** | 30/300 (10%) |
+
+**It sags with n, exactly as a ranked list should.** 96% at the top 75, 79–86% at 150,
+52–63% at 300. The list is ranked by how far each object sits above its own age-bin bar, so
+objects at rank 250 barely cleared the flag threshold and a weaker signal down there is the
+ranking working. If the detector were noise this column would be flat at ~10%.
+
+**Even at n=300 the separation is 5–6× the control rate**, and the control rate holds at
+10% at every n — which it must, since the bar is the controls' own 90th percentile. That
+column is a sanity check, not a second measurement, and it is printed beside the suspects'
+every time precisely so nobody reads the left column alone.
+
+**The honest asymmetry between the two snapshots.** At n=300 the two snapshots disagree
+more than at small n (52% vs 63%). Down-list ranks are where the two candidate lists differ
+most, so that spread is the real uncertainty on any large-n claim — quote the range, not the
+better half.
+
+> [!note] Both rows are settled, not provisional
+> The rates above plateau by ~0.5 days of forward reach and do not move after
+> (checked at n=75 and n=300 on both snapshots). These are the aged values, not the
+> too-early ones that produced the old 68–72%.
+
+## 🔬 Hardened 2026-07-22 (CTO ask): does it hold at bigger samples? *(superseded by the table above — kept for history; measured before the observability correction)*
 
 | sample | median step, suspects vs controls | over the controls' bar |
 |---|---|---|

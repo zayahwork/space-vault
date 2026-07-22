@@ -44,9 +44,13 @@ station-keeping there is the textbook rhythm.
 | persistence | **5 of 10 flagged in 2/2 independent looks** |
 | verify vs controls | median step **0.129 km vs 0.003 km**; **80% over the controls' bar vs 10%** |
 
-The 80%-vs-10% is a *stronger* separation than Starlink's own top-tier (68–72%). Different
-operator, different orbit shell, different maneuver style — same signal. This is the
-"it's a method, not a Starlink quirk" evidence.
+The 80%-vs-10% is comparable to Starlink's own top tier. (Starlink's headline was re-measured
+to **96%** once its snapshots aged past the catalog-lag window — see
+[[RESULTS - Checked Against History]]; OneWeb's 80% is an early-observability number too and
+would likely rise the same way if re-run aged. The like-for-like comparison is early-vs-early:
+OneWeb 80%, Starlink 76% at zero forward reach.) Different operator, different orbit shell,
+different maneuver style — same signal. This is the "it's a method, not a Starlink quirk"
+evidence.
 
 ## Intelsat (GEO, 44 objects) — promising, unproven
 
