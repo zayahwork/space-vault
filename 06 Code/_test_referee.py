@@ -54,6 +54,33 @@ def test_step_window_excludes():
     check("+5d step reports its lag", off, 5.0, 1e-9)
 
 
+def test_asymmetric_window_refuses_steps_before_the_event():
+    """Catalog lateness runs one way. A step 12 days BEFORE a docking cannot have been
+    caused by it, and a lag-aware window must not count it - which is exactly what a
+    symmetric +/-14d window does to MEV-2 and Intelsat 1002 in the real data."""
+    p = pts((-13, 100.0, 1.00), (-12, 100.0, 1.04), (0, 100.0, 1.04), (1, 100.0, 1.04))
+    lag_aware, _, _ = R.step_in_window(p, T0, 2, 3.0, 14.0)
+    symmetric, off, _ = R.step_in_window(p, T0, 2, 14.0, 14.0)
+    check("earlier step rejected by the lag-aware window", lag_aware, 0.0, 1e-9)
+    check("symmetric window swallows it", symmetric, 0.04, 1e-9)
+    check("...and reports a NEGATIVE lag, which is the tell", off < 0, True)
+
+
+def test_default_after_days_reproduces_a_symmetric_window():
+    p = pts((-2, 100.0, 1.0), (2, 105.0, 1.0))
+    check("after_days defaults to before_days",
+          R.step_in_window(p, T0, 1, 3.0)[0],
+          R.step_in_window(p, T0, 1, 3.0, 3.0)[0], 1e-12)
+
+
+def test_window_table_is_lag_aware_where_it_claims_to_be():
+    labelled = {lab: (b, a) for b, a, lab in R.WINDOWS}
+    check("the shipped-as-is window is symmetric 3/3", labelled["+/-3d"], (3.0, 3.0))
+    check("the 10-day lag window looks back only 3", labelled["-3/+10d"], (3.0, 10.0))
+    check("the 14-day lag window looks back only 3", labelled["-3/+14d"], (3.0, 14.0))
+    check("the naive comparison window is symmetric", labelled["+/-14d"], (14.0, 14.0))
+
+
 def test_step_no_pairs_is_not_zero_movement():
     p = pts((-20, 100.0, 1.0), (-19, 100.0, 1.0))
     size, off, pairs = R.step_in_window(p, T0, 1, 3.0)
@@ -114,38 +141,76 @@ def test_wider_window_cannot_lower_the_bar():
     centre, so the wide null can only be >= the narrow one. If this ever fails, the
     windowing is broken and every 'lag-aware' catch below it is an artefact."""
     p = pts(*[(d, 100.0 + (0.4 if d % 7 == 0 else 0.0), 1.0) for d in range(-40, 41)])
-    null = R.measure_null({1: p}, (3.0, 10.0), stride_days=5)
-    n3, n10 = max(null["alt_3"]), max(null["alt_10"])
+    null = R.measure_null({1: p}, [(3.0, 3.0, "a"), (10.0, 10.0, "b")], stride_days=5)
+    n3, n10 = max(null["alt_3_3"]), max(null["alt_10_10"])
     check("wide-window null >= narrow-window null", n10 >= n3, True)
 
 
 def test_measure_null_skips_thin_history():
     thin = pts((0, 100.0, 1.0), (1, 100.0, 1.0))
-    null = R.measure_null({1: thin}, (3.0, 10.0))
-    check("thin object contributes no null windows", len(null["alt_3"]), 0)
+    null = R.measure_null({1: thin}, [(3.0, 3.0, "a")])
+    check("thin object contributes no null windows", len(null["alt_3_3"]), 0)
+
+
+# ---------------------------------------------------------------- cadence matching
+
+def dense(rate_per_day, days=20):
+    n = int(rate_per_day * days)
+    return [(T0 + timedelta(days=days * i / max(n - 1, 1)), 100.0, 1.0)
+            for i in range(n)]
+
+
+def test_cadence():
+    check("cadence is records per day", R.cadence(dense(3.0), 20), 3.0, 0.01)
+    check("no span -> no cadence", R.cadence(dense(3.0), 0), 0.0, 1e-9)
+
+
+def test_cadence_matching_throws_out_the_sparse_and_the_dense():
+    """The bug this exists to prevent: Syncom 3, tracked 0.7x/day, set a 1.5 km bar and
+    would have buried every real GEO maneuver under 3 km."""
+    hist = {1: dense(3.0), 2: dense(0.7), 3: dense(9.0)}
+    kept, audit = R.cadence_matched(hist, event_cadence=3.0, span_days=20)
+    check("comparably-tracked null kept", sorted(kept), [1])
+    check("sparsely-tracked null rejected", dict((n, k) for n, _, k in audit)[2], False)
+    check("over-tracked null rejected too", dict((n, k) for n, _, k in audit)[3], False)
+    check("audit reports every candidate, kept or not", len(audit), 3)
+
+
+def test_cadence_matching_reports_when_nothing_matches():
+    kept, audit = R.cadence_matched({1: dense(0.2)}, event_cadence=3.0, span_days=20)
+    check("no match -> empty bar sample, not a silent default", kept, {})
+    win = [(3.0, 3.0, "a")]
+    bars = R.bars_from_null(R.measure_null(kept, win))
+    check("empty bar sample -> NO BAR verdict, not a free catch",
+          R.score_event({"date": T0}, dense(3.0), bars, win)["cols"]["alt_3_3"]["verdict"],
+          "NO BAR")
 
 
 # ---------------------------------------------------------------- scoring
 
 def test_score_event_verdicts():
-    bars = {"alt_3": {"max": 0.5, "p99": 0.3}, "alt_10": {"max": 0.6, "p99": 0.35},
-            "inc_3": {"max": 0.006, "p99": 0.004}, "inc_10": {"max": 0.007,
-                                                              "p99": 0.005}}
+    win = [(3.0, 3.0, "narrow"), (3.0, 10.0, "lag-aware")]
+    bars = {"alt_3_3": {"max": 0.5, "p99": 0.3}, "alt_3_10": {"max": 0.6, "p99": 0.35},
+            "inc_3_3": {"max": 0.006, "p99": 0.004},
+            "inc_3_10": {"max": 0.007, "p99": 0.005}}
     ev = {"date": T0}
     # -2 and -1 give the +/-3d window a pair of its own, so a "missed" there means the
     # window looked and saw nothing - not that it had nothing to look at.
     p = pts((-2, 100.0, 1.0), (-1, 100.0, 1.0), (5, 102.15, 1.0), (6, 102.15, 1.0))
-    res = R.score_event(ev, p, bars)
-    check("late altitude step missed at +/-3d", res["cols"]["alt_3"]["verdict"], "missed")
-    check("late altitude step caught at +/-10d", res["cols"]["alt_10"]["verdict"],
+    res = R.score_event(ev, p, bars, win)
+    check("late altitude step missed at +/-3d", res["cols"]["alt_3_3"]["verdict"],
+          "missed")
+    check("late altitude step caught at -3/+10d", res["cols"]["alt_3_10"]["verdict"],
           "caught")
-    check("no inclination movement -> missed", res["cols"]["inc_10"]["verdict"], "missed")
+    check("no inclination movement -> missed", res["cols"]["inc_3_10"]["verdict"],
+          "missed")
 
 
 def test_score_event_no_data_is_reported_not_dropped():
-    bars = {k: {"max": 1.0, "p99": 0.5} for k in ("alt_3", "alt_10", "inc_3", "inc_10")}
-    res = R.score_event({"date": T0}, [], bars)
-    check("no history -> NO DATA verdict", res["cols"]["alt_3"]["verdict"], "NO DATA")
+    win = [(3.0, 3.0, "narrow")]
+    bars = {k: {"max": 1.0, "p99": 0.5} for k in ("alt_3_3", "inc_3_3")}
+    res = R.score_event({"date": T0}, [], bars, win)
+    check("no history -> NO DATA verdict", res["cols"]["alt_3_3"]["verdict"], "NO DATA")
     check("no history -> record count 0", res["records"], 0)
 
 
