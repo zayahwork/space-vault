@@ -20,7 +20,8 @@
 # seeded in: auth files are copied, and the SupGP archive is junction-linked (one
 # real archive on disk, visible from every stream).
 param(
-    [string]$Path = "C:\Space",
+    # Default: the vault this script lives in (works wherever the repo is cloned).
+    [string]$Path = (Split-Path $PSScriptRoot -Parent),
     [switch]$Fresh
 )
 
