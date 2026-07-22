@@ -266,13 +266,23 @@ SUSPECT = "MANEUVER SUSPECT"
 FALLING_SUSPECT = "DESCENDING (extreme even for hardware on the way down)"
 
 
-def classify(rows, pct, min_km, max_km=MAX_PLAUSIBLE_KM, flag=SUSPECT):
+def classify(rows, pct, min_km, max_km=MAX_PLAUSIBLE_KM, flag=SUSPECT,
+             stored_cuts=None):
     """Attach a verdict to every row, using its own age bin as the yardstick.
 
     Call this once per orbital regime. Objects holding station and objects being
     deorbited disagree with the catalog for completely different reasons and at
     completely different scales, so mixing them means the deorbiting ones set a
     threshold the station-keepers can never reach - and sail over it themselves.
+
+    Two ways to set the bar, and they answer different questions:
+      stored_cuts=None  - RANK: the bar is a percentile of today's population.
+                          Always returns ~(100-pct)% of objects. Can never say
+                          "nothing happened", because someone is always most unusual.
+      stored_cuts given - ALERT: the bar was learned from past snapshots and held
+                          fixed ({(lo,hi): cut_km} per age band). Today's population
+                          can all sit under it, so zero is a possible answer - which
+                          is the entire point.
 
     A hard plausibility gate runs first: any gap >= max_km is physically impossible
     for a real maneuver and is flagged as a data-quality issue, then excluded from
@@ -296,7 +306,13 @@ def classify(rows, pct, min_km, max_km=MAX_PLAUSIBLE_KM, flag=SUSPECT):
             continue
         # A percentile off 4 objects is not a baseline. Fall back to the whole
         # population rather than inventing a threshold from nothing.
-        if sel.sum() < MIN_PER_BIN:
+        if stored_cuts is not None and (lo, hi) in stored_cuts:
+            cut, basis, n = stored_cuts[(lo, hi)], "stored", int(sel.sum())
+        elif stored_cuts is not None:
+            # No stored bar for this band - refuse to invent one from today's crowd,
+            # that would silently turn alert mode back into rank mode for these rows.
+            cut, basis, n = float("inf"), "no stored baseline", int(sel.sum())
+        elif sel.sum() < MIN_PER_BIN:
             cut, basis, n = float(np.percentile(gaps, pct)), "population", int(sel.sum())
         else:
             cut, basis, n = float(np.percentile(gaps[sel], pct)), "bin", int(sel.sum())
@@ -317,6 +333,68 @@ def classify(rows, pct, min_km, max_km=MAX_PLAUSIBLE_KM, flag=SUSPECT):
     return bands
 
 
+# ------------------------------------------------------------------ baselines
+
+BASELINE_FILE = HERE / "baselines.json"
+
+
+def learn_baselines(group, pct, min_km, max_km):
+    """Learn each cohort's normal band from EVERY scoreable snapshot, and persist it.
+
+    This is what makes "nothing happened" a possible answer. A percentile of today's
+    population always hands back the top (100-pct)% - someone is always most unusual.
+    A bar learned from past days and held fixed can sit above the whole of a quiet
+    day, so alert mode can honestly return zero.
+
+    The file carries its own provenance - which snapshots, when, what percentile -
+    because a threshold nobody can audit is a tuned number wearing a lab coat.
+    """
+    pools = {"station": {}, "falling": {}}     # (lo,hi) -> [gaps]
+    used = []
+    for snap in snapshot_dirs():
+        run = analyze(snap, group, pct, min_km, max_km, allow_live=False)
+        if not run or run.get("skipped") or not run["rows"]:
+            continue
+        used.append(str(snap.relative_to(ARCHIVE)).replace("\\", "/"))
+        for r in run["rows"]:
+            if r["gap_km"] >= max_km:
+                continue                        # data-quality rows poison baselines
+            regime = "falling" if r["falling"] else "station"
+            for lo, hi in zip(AGE_BINS, AGE_BINS[1:]):
+                if lo <= r["gp_age_h"] < hi:
+                    pools[regime].setdefault((lo, hi), []).append(r["gap_km"])
+                    break
+    if not used:
+        sys.exit("no scoreable snapshots to learn from")
+
+    out = {"group": group, "learned_utc": datetime.now(timezone.utc).isoformat(),
+           "pct": pct, "min_km": min_km, "snapshots": used, "regimes": {}}
+    for regime, bands in pools.items():
+        every = [g for v in bands.values() for g in v]
+        entries = []
+        for (lo, hi), gaps in sorted(bands.items()):
+            # Same small-sample rule as ranking: a bar off 4 objects is not a bar.
+            src = gaps if len(gaps) >= MIN_PER_BIN else every
+            entries.append({"lo": lo, "hi": hi, "n": len(gaps),
+                            "cut_km": float(np.percentile(src, pct)),
+                            "basis": "bin" if len(gaps) >= MIN_PER_BIN else "regime"})
+        out["regimes"][regime] = entries
+    BASELINE_FILE.write_text(json.dumps(out, indent=2), encoding="utf-8")
+    return out
+
+
+def load_baselines(group):
+    """Stored cuts as {(lo,hi): cut_km} per regime, or None if never learned."""
+    if not BASELINE_FILE.exists():
+        return None
+    raw = json.loads(BASELINE_FILE.read_text(encoding="utf-8"))
+    if raw.get("group") != group:
+        return None
+    raw["cuts"] = {reg: {(b["lo"], b["hi"]): b["cut_km"] for b in bands}
+                   for reg, bands in raw["regimes"].items()}
+    return raw
+
+
 def pooled_comparison(rows, pct, min_km, max_km):
     """What the list would look like if both regimes were ranked together.
 
@@ -332,7 +410,7 @@ def pooled_comparison(rows, pct, min_km, max_km):
     return len(pooled), falling_in_pooled, len(now - pooled)
 
 
-def analyze(snap_dir, group, pct, min_km, max_km, allow_live=True):
+def analyze(snap_dir, group, pct, min_km, max_km, allow_live=True, stored=None):
     """One snapshot end to end: measure every object, judge it against its age bin.
 
     Returns None if the snapshot can't be scored - no file for this group, or no
@@ -376,8 +454,11 @@ def analyze(snap_dir, group, pct, min_km, max_km, allow_live=True):
     # if it is extreme among OTHER deorbiting satellites.
     on_station = [r for r in rows if not r["falling"]]
     falling = [r for r in rows if r["falling"]]
-    bands = classify(on_station, pct, min_km, max_km, flag=SUSPECT)
-    classify(falling, pct, min_km, max_km, flag=FALLING_SUSPECT)
+    cuts = stored["cuts"] if stored else {}
+    bands = classify(on_station, pct, min_km, max_km, flag=SUSPECT,
+                     stored_cuts=cuts.get("station") if stored else None)
+    classify(falling, pct, min_km, max_km, flag=FALLING_SUSPECT,
+             stored_cuts=cuts.get("falling") if stored else None)
 
     return {"dir": snap_dir, "rows": rows, "bands": bands, "failed": failed,
             "gp_src": gp_src, "n_sup": len(sup), "n_gp": len(gp), "skipped": None,
@@ -457,9 +538,39 @@ def main():
                          "called persistent")
     ap.add_argument("--snapshot", default=None,
                     help="score this snapshot instead of the newest, e.g. 2026-07-21/2025Z")
+    ap.add_argument("--mode", choices=["rank", "alert"], default="rank",
+                    help="rank: percentile of today's crowd, always returns ~5%%. "
+                         "alert: fixed bar learned from past snapshots - can return zero")
+    ap.add_argument("--learn-baseline", action="store_true",
+                    help="learn each cohort's normal band from every scoreable "
+                         "snapshot, write baselines.json, and exit")
     ap.add_argument("--chart", action="store_true")
     ap.add_argument("--csv", action="store_true", help="write the full table")
     args = ap.parse_args()
+
+    if args.learn_baseline:
+        base = learn_baselines(args.group, args.pct, args.min_km, args.max_km)
+        print(f"  learned from {len(base['snapshots'])} snapshots: "
+              f"{', '.join(base['snapshots'])}")
+        for regime, bands in base["regimes"].items():
+            print(f"\n  {regime}:")
+            for b in bands:
+                hi = "inf" if b["hi"] > 1e8 else f"{b['hi']:g}"
+                note = "" if b["basis"] == "bin" else "  (thin bin - used whole regime)"
+                print(f"    age {b['lo']:>4g}-{hi:<6} n={b['n']:<6} "
+                      f"flag above {b['cut_km']:8.2f} km{note}")
+        print(f"\n  -> {BASELINE_FILE.name}  (provenance stamped inside)")
+        print(f"     WARNING: learned from {len(base['snapshots'])} snapshot(s). "
+              f"A bar learned from one\n     day only knows one day's weather. "
+              f"Re-learn as the archive grows.")
+        return 0
+
+    stored = None
+    if args.mode == "alert":
+        stored = load_baselines(args.group)
+        if stored is None:
+            sys.exit("alert mode needs a stored baseline - run "
+                     "'python detect.py --learn-baseline' first")
 
     every = snapshot_dirs()
     if args.snapshot:
@@ -477,8 +588,12 @@ def main():
 
     print(f"  snapshot   {snap_dir.relative_to(ARCHIVE)}"
           f"{'  (replay - live fetch disabled)' if replaying else ''}")
+    if stored:
+        print(f"  mode       ALERT - fixed bar learned from "
+              f"{len(stored['snapshots'])} snapshot(s), "
+              f"{stored['pct']:g}th pct, {stored['learned_utc'][:16]}Z")
     latest = analyze(snap_dir, args.group, args.pct, args.min_km, args.max_km,
-                     allow_live=not replaying)
+                     allow_live=not replaying, stored=stored)
     if latest is None:
         sys.exit(f"{args.group} not in {snap_dir.relative_to(ARCHIVE)}")
     if latest["skipped"]:
@@ -496,7 +611,7 @@ def main():
     if args.history > 1:
         for older in every[-args.history:-1]:
             run = analyze(older, args.group, args.pct, args.min_km, args.max_km,
-                          allow_live=False)
+                          allow_live=False, stored=stored)
             if run and not run["skipped"] and run["rows"]:
                 runs.insert(-1, run)
             elif run and run["skipped"]:
@@ -519,11 +634,14 @@ def main():
     print(f"    on the way down    {latest['n_falling']:>6}"
           f"   - losing > {abs(FALLING_KM_PER_DAY):g} km/day, judged separately\n")
 
-    print("  what a NORMAL gap looks like for a STATION-KEEPING object, by catalog age:")
+    if stored:
+        print("  the STORED bar for a station-keeping object, by catalog age:")
+    else:
+        print("  what a NORMAL gap looks like for a STATION-KEEPING object, by catalog age:")
     print(f"  {'age (h)':>12}  {'objects':>8}  {'median km':>10}  {'flag above':>11}")
     for b in bands:
         hi = "inf" if b["hi"] > 1e8 else f"{b['hi']:g}"
-        star = "" if b["basis"] == "bin" else "  (too few - used whole population)"
+        star = "" if b["basis"] in ("bin", "stored")             else "  (too few - used whole population)"
         print(f"  {b['lo']:>5g}-{hi:<6}  {b['n']:>8}  {b['median_km']:>10.2f}"
               f"  {b['cut_km']:>11.2f}{star}")
 
@@ -596,8 +714,22 @@ def main():
     if failed:
         print(f"  propagation failed {failed:>5}  (usually reentering)")
 
+    if stored:
+        if not suspects and not descending:
+            print(f"\n  ** NOTHING HAPPENED. **\n"
+                  f"     Every one of {len(rows)} objects sits inside the normal band "
+                  f"learned from\n     {len(stored['snapshots'])} earlier snapshot(s). "
+                  f"A percentile could never say this -\n     it would have handed back "
+                  f"the top {100-stored['pct']:g}% anyway. Zero is a real answer\n"
+                  f"     now, which is what makes a nonzero day mean something.")
+        else:
+            print(f"\n  {len(suspects)} object(s) over a bar that was set BEFORE today. "
+                  f"These are not\n  'today's most unusual' - they are outside what "
+                  f"{len(stored['snapshots'])} past snapshot(s)\n  called normal. "
+                  f"A quiet day would have returned zero.")
+
     caught = len(suspects) + len(descending) + len(stale)
-    if caught:
+    if not stored and caught:
         n_pooled, n_falling, n_new = pooled_comparison(rows, args.pct, args.min_km,
                                                        args.max_km)
         print(f"\n  Ranking on raw gap alone would have surfaced {caught} objects."
