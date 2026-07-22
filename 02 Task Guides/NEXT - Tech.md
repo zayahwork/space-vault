@@ -1,62 +1,57 @@
 ---
 date: 2026-07-22
-owner: DETECTOR window (tech — heavy lifting)
+owner: Tim (tech)
 status: assigned
 ---
 
-> [!todo] ⚡ CTO update ~04:30 — the second catalog snapshot is BANKED (`0750Z`)
-> Persistence can run **right now**: `python detect.py --group starlink`. Do it first — it's
-> one command, it splits the candidates into *persisted* vs *one-off*, and it's the second
-> number for the Kelso conversation. Update [[RESULTS - Maneuver vs Stale]] with the split,
-> then carry on with the quiet detector below.
+> [!warning] 🚪 Workspace rule (standing)
+> Work ONLY in your folder, on your own branch. Never touch master, other branches, or
+> other lanes' files. Missing facts arrive in THIS note — if something is missing, say
+> BLOCKED, pull the next unblocked card from `issues/`, and keep building.
 
-# 🔧 NEXT — tech
+# 🔧 NEXT — tech (Tim)
 
-> [!success] What you just did matters
-> **11.3×** is the first number this company has that survives *"how do you know?"* The
-> control group is why it counts. That number is going in front of Kelso and Moriba.
-> Everything below protects it or extends it.
+> [!success] Where we stand after last night
+> The number that goes in front of people is now: **~68–72% of top suspects clear a bar only
+> ~10% of matched controls clear** (replicated on two snapshots). The old **11.3× multiple is
+> RETIRED** — it swung to 23.8× between runs. If you see 11.3× in any note, fix it and say so.
+> OneWeb verified the method isn't a Starlink fluke. GEO is our named blind spot: SES shows
+> no signal because the verifier watches altitude and GEO burns barely change altitude.
+> `quiet.py` is built and correctly refusing until ~Jul 29. The 6-hourly Maneuver Alert task
+> is running itself.
 
-## 1. Quick win first — re-run the persistence split (minutes, not hours)
+## Standing order: never idle
 
-The archiver banks a catalog every run. The moment a second snapshot has `gp_active.csv.gz`
-beside it:
+Your queue is `issues/`. Work top-priority unblocked card; when blocked (waiting on data,
+review, or archive depth), pull the next unblocked card. The queue is stocked — there is
+always something to build. If the queue ever runs dry, say so in your commit message and the
+CTO restocks it same day.
 
-```bash
-cd "C:\Space\06 Code"
-ls supgp_archive/*/*/gp_active.csv.gz     # 2+ = go
-python detect.py --group starlink
-```
+## 1. Warm-up — issue 001 (tests for detect.py core math)
 
-That splits the candidate list into **persisted** vs **one-off** — a second number for the
-Kelso conversation, and it costs one command. Update [[RESULTS - Maneuver vs Stale]] with it.
+`06 Code/tests/test_detect.py` per the card. Every RESULTS number rides on this math and it
+has zero automated coverage. Small, closed-ended, do it first.
 
-## 2. Main build — the quiet detector
+## 2. Main build this week — issue 002 (GEO-aware verifier)
 
-Full spec: [[Plan - The Quiet Detector]]. Approved by the founder, it's on the roadmap.
+The founder meets a GEO insurance broker ~Jul 30. Right now we are half-blind exactly in her
+market. Longitude drift + inclination, not altitude — full spec on the card. Target: a real
+SES answer (signal with numbers, or miss explained with numbers) by **Jul 29**. Either
+outcome updates `RESULTS - Beyond Starlink.md`.
 
-Short version: every threshold we have is a percentile, so the tool always returns the top 5%
-and can never say "nothing happened." Worse, a satellite that **stops** station-keeping drops
-*off* the list instead of onto it — and that absence is the health signal the insurer pitch is
-priced on ($150K–400K/yr, [[Pricing - What to Charge and Who]]).
+## 3. When blocked or done — issue 003 (larger-n hardening)
 
-Two parts:
-- **Absolute thresholds** learned from the archive and stored with their provenance, so zero
-  is a possible answer. Buildable today.
-- **Per-object cadence**, so each satellite is judged against its own rhythm. Needs weeks of
-  archive — build it and let it refuse loudly until there's enough, the way persistence does.
+Rates at n=150 and n=300 on both snapshots. If the separation sags, we want it in writing
+before Kelso or a broker finds it.
 
-Don't shrink the history window to force output. We've caught ourselves doing that twice.
+## Coming up (blocked, don't start early)
 
-## 3. If there's time — harden the 11.3×
-
-It went 8.3× at n=25 → 11.3× at n=75. It's strengthening, which is the right direction, but
-it's the number we're about to stake the company's credibility on. Push n higher and see if it
-holds. If it sags, we want to know before Kelso does, not after.
+- **Issue 005** — broker demo build, unblocks ~Jul 27 (needs real archive; no synthetic-data
+  demos).
+- **Issue 006** — quiet.py first real run + weekly bar re-learn, ~Jul 29. Never shrink the
+  history window to force output.
 
 ## Standing rule
 
-Keep doing the thing you did in the verify commit: when the work contradicts something we've
-published, say so and fix the note. You caught us on the >500 km reason — 16 of those were
-newly launched satellites still climbing, not decaying junk. That correction is worth more
-than the feature was.
+When the work contradicts something we've published, say so and fix the note. That habit has
+already paid twice (the >500 km climbers, the retired 11.3×). It's worth more than features.

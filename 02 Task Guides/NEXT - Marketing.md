@@ -11,6 +11,36 @@ status: items 1, 3, 4 DONE (~04:00) — item 2 still gated on the founder
 > is missing, say BLOCKED and stop; the CTO will supply it.
 
 
+> [!todo] ⚡ CTO orders — 2026-07-22 (day plan, grilled with the founder — these supersede everything below)
+> The pipe is live and has sent real mail (five sends logged 02:35, message-IDs in
+> `outreach_log.jsonl`). Today, in this order:
+>
+> 1. **The Heldreth email goes out TODAY.** Melissa Heldreth, Gallagher US space practice
+>    director, Seattle. Founder-approved this morning. Spec: **5–7 sentences, no
+>    attachment**, from Zayah's address via the live pipe. Lead with the verified number
+>    (below). One sentence that a "went-quiet" health signal for insured GEO fleets comes
+>    online next week. Coffee ask, Seattle-local framing, and **steer the dates**: offer
+>    Jul 30 / Jul 31 / Aug 1 explicitly ("slammed until the 30th") so an early acceptance
+>    can't land before the capability unlocks. Log it, add the CSV row. The
+>    [[Insurer Target List]] one-pager becomes the **meeting leave-behind** — keep building
+>    it in parallel, it does NOT ride along as an attachment.
+> 2. **Book the Moriba Jah call this week.** Email his EA Deidra (`team.moriba@outlook.com`)
+>    today with 2–3 concrete slots. Prep doc already exists
+>    ([[Idea - Moriba Call Question Prep]]).
+> 3. **Kelso reply stays armed.** Fires the moment the founder says "go" (he's reading
+>    [[Kelso Reading - Digest]] today). Update the draft's numbers per the language rule
+>    below before it fires.
+> 4. **Drip continues** on the rewritten drafts. Reply-watch stays hot — a reply gets
+>    answered in minutes.
+>
+> **Language rule, effective now: the 11.3× multiple is RETIRED** (it swung to 23.8×
+> between snapshots). The number we quote is **"~68–72% of our top suspects show a real,
+> independently-checked burn signature, against ~10% of matched controls."** Sweep every
+> unsent draft and the Kelso reply for 11.3× / 72%-vs-11% phrasing and replace it. The
+> honest caveat (two of our own methods agreeing, not operator ground truth) stays,
+> verbatim. Randy is building operator ground truth this week (issue 004) — soon we get to
+> upgrade the caveat itself.
+
 > [!done] Progress — 2026-07-22 ~04:00
 > 1. ✅ **All 16 unsent drafts rewritten around the number** — every one leads with "built
 >    and checked" and carries 11.3× / 72%-vs-11% plus the honest caveat, verbatim. That's the
@@ -82,8 +112,9 @@ status: items 1, 3, 4 DONE (~04:00) — item 2 still gated on the founder
 # 📣 NEXT — marketing
 
 > [!warning] Everything you've drafted is now out of date — in a good way
-> As of tonight the detector has a **verified number**: our suspects move **11.3× more** than
-> matched ordinary satellites, and **72% show a real burn signature against 11% of controls**.
+> As of tonight the detector has a **verified number**: **~68–72% of our top suspects show a
+> real burn signature against ~10% of matched controls** (replicated on two snapshots; the
+> old 11.3× multiple is retired — see the CTO orders above).
 > Checked with a completely separate method on 30 days of altitude history.
 > → [[RESULTS - Checked Against History]]
 >
@@ -98,8 +129,8 @@ status: items 1, 3, 4 DONE (~04:00) — item 2 still gated on the founder
 The old pitch was a claim. The new one is evidence:
 
 > *"Most of what looks like a maneuver is just old data — we can tell the difference from free
-> public data. Checked against 30 days of altitude history: our candidates move 11.3× more than
-> matched controls."*
+> public data. Checked against 30 days of altitude history: ~68–72% of our top candidates show
+> a real burn signature, against ~10% of matched controls."*
 
 Keep it short and keep the caveat honest — this is two of our own methods agreeing, not
 operator ground truth. Saying that out loud has earned us credibility twice already.
@@ -107,8 +138,9 @@ operator ground truth. Saying that out loud has earned us credibility twice alre
 ## 2. The Kelso reply — add the number
 
 The draft in [[Guide - Kelso Goldmine]] is ready and gated on the founder reading
-[[Kelso Reading - Digest]]. When it goes, it should mention the 11.3× and specifically **the
-control group** — Kelso is exactly the person who will notice that we bothered to run one,
+[[Kelso Reading - Digest]]. When it goes, it should mention the verified rate (~68–72% vs
+~10%) and specifically **the control group** — Kelso is exactly the person who will notice
+that we bothered to run one,
 and exactly the person who'd have asked "compared to what?"
 
 Also worth telling him: we caught ourselves publishing a wrong reason for the >500 km gate and
