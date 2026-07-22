@@ -1,6 +1,6 @@
 Subject: LEO catalog work, now verified, that might complement your GEO coverage
 
-Hi,
+Hi — meant for Bill Therien or whoever on the technical side reads unsolicited method questions. (Your team's 2022 AMOS paper on orbit-residual behavior in GEO RPO is the kind of work I mean.)
 
 I built a maneuver detector from free public catalog data — no sensors — and just checked it with an independent method: 30 days of altitude history against a matched control group. The suspects move 11.3× more than matched ordinary satellites, and 72% show a burn signature versus 11% of controls. Two of my own methods agreeing, not operator ground truth; your telescopes are the kind of instrument that could settle it properly.
 

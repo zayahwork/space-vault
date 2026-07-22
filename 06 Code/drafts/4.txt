@@ -1,6 +1,6 @@
 Subject: checked a hunch about conjunction noise — 5 of 6 alerts are stale data
 
-Hi,
+Hi — this is meant for Christopher Gehant or the constellation operations team; grateful to whoever routes it.
 
 I built a maneuver detector on free public tracking data and just finished checking it against 30 days of altitude history with a matched control group. Result: the objects it flags move 11.3× more than the ones it calls ordinary, and 72% show a burn signature versus 11% of controls. Caveat stated plainly: two of my own methods agreeing, not operator ground truth.
 

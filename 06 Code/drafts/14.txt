@@ -1,6 +1,6 @@
 Subject: a question small operators rarely get asked — with a number attached
 
-Hi,
+Hi — written for John Curry or the mission operations team; thanks to whoever passes it along.
 
 I built a maneuver detector that runs entirely on free public tracking data, and checked it with a second method: 30 days of altitude history against a matched control group. The flagged objects move 11.3× more than the ordinary ones; 72% show a real burn signature versus 11% of controls. Caveat up front — two of my own methods agreeing, not operator ground truth.
 
