@@ -2,7 +2,7 @@
   "_comment": "Loop-stack lane registry. loop.ps1, ralph.ps1 and gather.ps1 read this. One lane = one worktree = one branch = one kanban folder. Video lane is manual-only by founder order.",
   "budget_file": "C:\\Space\\06 Code\\ralph_budget.json",
   "stop_flag": "C:\\Space\\06 Code\\STOP_LOOPS",
-  "daily_cap": 16,
+  "daily_cap": 10,
   "lanes": {
     "tim": {
       "worktree": "C:\\Users\\Administrator\\.claude\\worktrees\\C--Space-tim",
