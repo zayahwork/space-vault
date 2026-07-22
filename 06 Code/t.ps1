@@ -148,22 +148,28 @@ foreach ($win in $layout) {
     $launchMunged = ($launchDir -replace '[^A-Za-z0-9]', '-')
     $personaFile = Join-Path $personaDir "$($win.Persona).md"
     $opts = "--model $($win.Model) --effort $($win.Effort) --append-system-prompt-file $personaFile"
+    # Clear inherited child-session markers first (if t was started from inside a Claude
+    # session, they'd silently turn transcript saving OFF and kill session resume).
+    $clean = "set CLAUDE_CODE_CHILD_SESSION=&set CLAUDECODE=&"
     if (Test-Path (Join-Path $env:USERPROFILE ".claude\projects\$launchMunged\$id.jsonl")) {
-        $inner = "claude --resume $id $opts"
+        $inner = "$clean claude --resume $id $opts"
     } else {
-        $inner = "claude --session-id $id $opts"
+        $inner = "$clean claude --session-id $id $opts"
     }
-    Start-Process cmd -WorkingDirectory $launchDir -ArgumentList "/c start `"$($win.Title)`" cmd /k `"$inner`""
+    # Claude retitles the window to the session name seconds after boot, so we can NOT
+    # find the window by title. Instead: snapshot cmd PIDs, launch (the intermediate
+    # cmd is hidden so it never owns a window), and grab the one new cmd that appears
+    # with a window handle - that's ours, whatever it calls itself.
+    $before = @(Get-Process cmd -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id)
+    Start-Process cmd -WindowStyle Hidden -WorkingDirectory $launchDir `
+        -ArgumentList "/c start `"$($win.Title)`" cmd /k `"$inner`""
 
-    # `start` returns immediately; cmd appends the running command to the title
-    # ("Claude 1 - PLAN - HIGH - claude ..."), so find the newest cmd window whose
-    # title STARTS with ours, then position it.
     $hwnd = [IntPtr]::Zero
     $deadline = (Get-Date).AddSeconds(8)
     while ($hwnd -eq [IntPtr]::Zero -and (Get-Date) -lt $deadline) {
         Start-Sleep -Milliseconds 150
         $proc = Get-Process cmd -ErrorAction SilentlyContinue |
-            Where-Object { $_.MainWindowTitle -like "$($win.Title)*" } |
+            Where-Object { $_.Id -notin $before -and $_.MainWindowHandle -ne 0 } |
             Sort-Object StartTime -Descending | Select-Object -First 1
         if ($proc) { $hwnd = $proc.MainWindowHandle }
     }
