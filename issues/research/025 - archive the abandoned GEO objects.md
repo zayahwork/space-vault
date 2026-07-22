@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 type: AFK
 owner: Randy (research)
 blocked-by: []
@@ -38,3 +38,20 @@ be "not worth it". The archived snapshots hold `gp_active.csv.gz` from `2026-07-
 onward (earlier snapshots are operator-side only). `quiet_exam.csv` already carries the
 documented status per object with `in_exam_set` marking the 67 we currently track. Contact no
 one; WebSearch yes, WebFetch no (Python urllib).
+
+**Closed 2026-07-22 (night, ralph). Recommendation: do NOT build a catalog-only cadence track.**
+Full evidence in `03 Reference/Abandoned GEO - can we build a catch-rate population.md`. All three
+done-whens answered:
+- **Presence:** 2 of 65 documented-abandoned GEO objects appear in our `gp_active` snapshots (vs
+  66/66 healthy). The archiver pulls CelesTrak `GROUP=active` (`supgp_archive.py:258`), which excludes
+  abandoned objects by definition — so getting them needs a tech-lane archiver change.
+- **Separability:** measured on 60d GP_HISTORY, 10+10 sample. Abandoned vs healthy separate trivially
+  by inclination (median 11.95 vs 0.03 deg) — but that is exactly what geotab already classifies as
+  GEO/ID vs GEO/S. Refresh cadence, the one measure a cadence track would add, barely separates them
+  (2.76 vs 3.65 epochs/day); abandoned GEO objects stay well-tracked.
+- **Recommendation:** not worth it — wrong feed, redundant with geotab, weak on its own measure, and it
+  still yields zero WENT-QUIET-able objects (MIN_SPIKES=3 needs a spike history pre-archive-abandoned
+  objects can't have). The catch-rate gap is structural: it closes only when a satellite we're actively
+  watching goes quiet on our watch.
+- The one cheap thing worth doing (a live-vs-dead inclination chart for the broker) is filed as
+  **issue 027**, not done here, since this card was scoped as measurement.
