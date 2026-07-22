@@ -34,7 +34,8 @@
       "Bash(schtasks /query /fo CSV)",
       "Bash(echo \"=== exit $? ===\")",
       "Bash(schtasks /query /fo TABLE)",
-      "PowerShell(Get-ScheduledTask *)"
+      "PowerShell(Get-ScheduledTask *)",
+      "Bash(\"C:/Users/Administrator/AppData/Local/Programs/Python/Python314/python.exe\" outreach.py --status)"
     ]
   }
 }

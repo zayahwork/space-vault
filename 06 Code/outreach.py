@@ -695,6 +695,8 @@ def main():
                     help="round-robin across segments instead of CSV order")
     ap.add_argument("--count-today", action="store_true",
                     help="print how many went out today, per the audit log, and exit")
+    ap.add_argument("--count-ready", action="store_true",
+                    help="print how many rows are actually sendable, and exit")
     ap.add_argument("--live", action="store_true",
                     help="really send. Requires --send and gmail_auth.json.")
     ap.add_argument("--smtp-host", default="smtp.gmail.com")
@@ -734,6 +736,13 @@ def main():
         return 2
     if args.count_today:
         print(sent_today())          # bare integer: the drip reads this to pace itself
+        return 0
+    if args.count_ready:
+        # Also a bare integer. An empty queue is the failure mode nobody notices:
+        # the drip keeps running, sends nothing, and the log looks like a quiet day.
+        checks = {} if args.skip_validation else validation()
+        mailed = sent_addresses()
+        print(sum(1 for r in rows if not blockers(r, checks, mailed)))
         return 0
     if args.check_bounces:
         return check_bounces(rows, args)
