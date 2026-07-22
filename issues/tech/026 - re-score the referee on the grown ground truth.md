@@ -1,8 +1,10 @@
 ---
-status: open
+status: done
 type: AFK
 owner: Tim (tech)
 blocked-by: []
+closed: 2026-07-22
+closed-by: tim
 ---
 # Re-score the referee — ground truth grew from 16 to 19 GEO rows
 
@@ -28,3 +30,28 @@ the nicer number.
   data change fails loudly in the doc, not silently in the suite.
 - Cheap: `referee_cache/` already holds the null-object history; only the three new events
   need fetching.
+
+---
+
+## ✅ Closed 2026-07-22 — re-scored on 17 rows; headline number held where it matters
+
+`referee_geo.py` re-run on the current CSV (17 scoreable, up from 14). New scoreboard:
+
+| measurement | all 17 | double-sourced 6 |
+|---|---|---|
+| altitude ±3d | 13/17 | 2/6 |
+| **altitude −3/+14d** | **16/17** | **5/6** |
+| inclination −3/+14d | 9/17 | 3/6 |
+
+- **The double-sourced 5/6 did not move** — that is the number quoted externally, and it is
+  the point of this card: the all-scoreable rate rose 13/14 → 16/17 purely on the three new
+  **single-sourced** rows, the weak tier. RESULTS now leads with 5/6 and flags the 16/17 as
+  leaning on weak evidence, so the headline can't drift upward on the cheapest rows.
+- **All three new rows are east-west station-keeping and all three are caught on altitude at
+  ±3d** (Intelsat 1002 42×, Astra 3B 43×, AMC 11 7×; lag <1 day). E-W burns move fitted
+  altitude 15–21 km — a third strike against the altitude-blindness hypothesis 015 already
+  refuted, this time on the *other* GEO burn type.
+- Updated: `RESULTS - Beyond Starlink.md` (table extended to 17, scoreboard, external-safe
+  sentence, test count 53→55). 015's closed record keeps its 14-row numbers with a pointer
+  to this re-score. Run saved to `output/referee_026.json`.
+- Whole suite green (referee 55, window 36). No code changed — data-only re-run, as filed.

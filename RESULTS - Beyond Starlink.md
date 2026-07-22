@@ -1,6 +1,6 @@
 ---
 date: 2026-07-22
-status: OneWeb clean; GEO referee ruled (issue 015) — altitude + lag-aware −3/+14d window catches 13/14 documented maneuvers (5/6 double-sourced); SES miss still unexplained; live GEO suspects still n=4
+status: OneWeb clean; GEO referee ruled (issue 015) — altitude + lag-aware −3/+14d window catches 16/17 documented maneuvers (5/6 double-sourced — quote the 5/6); SES miss still unexplained; live GEO suspects still n=4
 code: "06 Code/detect.py --group oneweb|intelsat|ses, 06 Code/verify.py (LEO), 06 Code/verify_geo.py (GEO), 06 Code/referee_geo.py (issue 015)"
 snapshot: 2026-07-22 0800Z
 ---
@@ -11,10 +11,11 @@ snapshot: 2026-07-22 0800Z
 > **OneWeb: the method works, full stop** — suspects show 80% independent-movement
 > confirmation vs a 10% control base rate.
 >
-> **GEO: the referee has ruled (issue 015).** Against the 14 externally documented GEO
-> maneuvers, the **altitude verifier with a lag-aware −3/+14 day window catches 13 of 14**
-> (5 of 6 double-sourced) — the inclination channel catches 9 of 14 and never beats altitude
-> at any window width. The verifier's GEO failure was its **±3-day timing window** against a
+> **GEO: the referee has ruled (issue 015, re-scored 026).** Against the 17 externally
+> documented GEO maneuvers, the **altitude verifier with a lag-aware −3/+14 day window
+> catches 16 of 17** — but quote the **5 of 6 double-sourced**, since the three rows that
+> lifted it above 13/14 are all single-sourced. The inclination channel catches 9 of 17 and
+> never beats altitude at any window width. The verifier's GEO failure was its **±3-day timing window** against a
 > catalog that lags up to ~11 days — wrong *when*, not wrong *what*. The earlier "altitude is
 > blind to GEO burns by construction" claim in this note was mine, it is refuted, and it is
 > struck below.
@@ -241,7 +242,7 @@ a satellite 1 km above geostationary drifts west at **0.01284 °/day** (publishe
 > `referee_geo.py` scored every documented GEO event in `ground_truth.csv` on both channels
 > at four window shapes, with the same step-finding rule the shipped verifiers use — asserted
 > identical to `verify.biggest_step_km` and `verify_geo.biggest_step` by `_test_referee.py`,
-> 53 cases, so this scores the verifiers we actually ship rather than a rewrite of them.
+> 55 cases, so this scores the verifiers we actually ship rather than a rewrite of them.
 >
 > Each event is judged against its **own era- and cadence-matched bar**: the largest step
 > abandoned GEO drifters (GCAT `GEO/ID`, no engine) tracked at a comparable catalog rate
@@ -259,9 +260,11 @@ a satellite 1 km above geostationary drifts west at **0.01284 °/day** (publishe
 > Randy's recommended edit as literally written — `WINDOW_DAYS = 3.0 → 14.0` — would
 > introduce exactly that. The fix is a one-sided window, not a wider one.
 >
-> All 14 scoreable events (2src = survived Randy's double-sourcing; steps in km / degrees,
+> All 17 scoreable events (2src = survived Randy's double-sourcing; steps in km / degrees,
 > with how many times the row's own bar in brackets; ✅ over its bar, ✗ under;
-> \* = verdict flips if the 99th-pct bar is used instead of the max):
+> \* = verdict flips if the 99th-pct bar is used instead of the max). **Re-scored
+> 2026-07-22 (issue 026)** — the research lane added three east-west station-keeping rows;
+> they are the last three, all 1src:
 >
 > | event | date | src | alt ±3d | alt −3/+14d | inc ±3d | inc −3/+14d |
 > |---|---|---|---|---|---|---|
@@ -279,14 +282,32 @@ a satellite 1 km above geostationary drifts west at **0.01284 °/day** (publishe
 > | AMC 11 (N–S burn) | 2025-10-21 | 1src | 1.227 (3.3×) ✅ | 1.550 ✅ | 0.0435 (4.8×) ✅ | 0.0435 ✅ |
 > | AMC 11 (graveyard) | 2026-04-22 | 1src | 267.82 (678×) ✅ | 267.82 ✅ | 0.0135 (1.8×) ✅ | 0.0135 ✅ |
 > | Intelsat 25 (graveyard) | 2026-05-04 | 1src | 112.45 (285×) ✅ | 112.45 ✅ | 0.0293 (4.0×) ✅ | 0.0293 ✅ |
+> | Intelsat 1002 (E–W SK) | 2025-02-28 | 1src | 20.77 (42×) ✅ | 20.77 ✅ | 0.0021 ✗ | 0.0021 ✗ |
+> | AMC 11 (E–W SK) | 2025-06-10 | 1src | 3.01 (7.0×) ✅ | 3.01 ✅ | 0.0021 ✗ | 0.0021 ✗ |
+> | Astra 3B (E–W SK) | 2025-09-08 | 1src | 15.36 (43×) ✅ | 15.36 ✅ | 0.0021 ✗\* | 0.0021 ✗ |
 >
-> | measurement | all 14 | double-sourced 6 |
+> | measurement | all 17 | double-sourced 6 |
 > |---|---|---|
-> | (a) altitude, ±3d as shipped | 10/14 | 2/6 |
-> | (b) altitude, lag-aware −3/+10d | 12/14 | 4/6 |
-> | (b′) altitude, lag-aware −3/+14d | **13/14** | **5/6** |
-> | (c) inclination, ±3d | 8/14 | 2/6 |
-> | (d) inclination, −3/+14d (fairness control) | 9/14 | 3/6 |
+> | (a) altitude, ±3d as shipped | 13/17 | 2/6 |
+> | (b) altitude, lag-aware −3/+10d | 15/17 | 4/6 |
+> | (b′) altitude, lag-aware −3/+14d | **16/17** | **5/6** |
+> | (c) inclination, ±3d | 8/17 | 2/6 |
+> | (d) inclination, −3/+14d (fairness control) | 9/17 | 3/6 |
+>
+> **Quote the double-sourced 5/6, not the all-scoreable 16/17.** The three new rows are all
+> single-sourced and catalog-dated, the weak tier this write-up already warns is close to
+> tautological — a catalog-based detector agreeing with catalog-dated events. They lifted
+> the all-scoreable altitude rate from 13/14 to 16/17, but **the double-sourced column did
+> not move** (still 5/6), and that is the honest external number. The all-scoreable rate
+> going up on the strength of the weakest evidence is exactly the drift issue 026 was filed
+> to prevent.
+>
+> **They are, however, a third strike against altitude-blindness.** East-west station-keeping
+> is the *other* GEO burn my original claim said altitude could not see. Measured: it moves
+> fitted altitude **15–21 km** (Intelsat 1002 42×, Astra 3B 43×) — even the small one, AMC 11,
+> is 3 km at 7× — and all three are caught inside ±3 days, lag under a day. Nothing at GEO
+> that actually fires an engine is invisible to the altitude verifier; the miss was never
+> the observable.
 >
 > **±10 days is one day short.** Intelsat 33e's 29.87 km step lands at **+10.98 days** —
 > `ground_truth.csv` rounds that lag to 10, and a ±10d window misses the best-evidenced
@@ -294,7 +315,7 @@ a satellite 1 km above geostationary drifts west at **0.01284 °/day** (publishe
 > to ship is 14, which is what Randy's own write-up recommended; the CSV's rounded lag
 > column is what made 10 look sufficient.
 >
-> No row lacked GP_HISTORY — all 14 scored on real catalog data back to 2010 (thinnest:
+> No row lacked GP_HISTORY — all 17 scored on real catalog data back to 2010 (thinnest:
 > Galaxy 15, 53 records over its ±25 days, 1.1/day). One row, AMC-9 2017-11-13, had no
 > drifter tracked within 0.5–2× its own rate that season and is scored against a widened
 > cadence match; it is marked `widened` in the run output and its verdict (8.3× the bar)
@@ -357,8 +378,8 @@ string, so the constant can be argued with from the output instead of the source
 > 80 of 80**. The runs say so themselves — every one printed
 > `** PROVISIONAL: only 0.08 d of the +14 d forward reach has been published yet **`.
 >
-> The change is still correct and still worth shipping: on the 14 documented maneuvers it
-> takes verification from 10/14 to 13/14 (2/6 → 5/6 double-sourced). It pays off when a
+> The change is still correct and still worth shipping: on the 17 documented maneuvers it
+> takes verification from 13/17 to 16/17 (2/6 → 5/6 double-sourced). It pays off when a
 > snapshot has aged past the window, not on the day it is taken. **Anyone quoting a
 > same-day GEO verification is quoting a window that has not happened yet.**
 
@@ -389,7 +410,7 @@ for all four groups. Bars are 3 snapshots old — **re-learn weekly** as the arc
 |---|---|
 | "the method is constellation-agnostic in LEO" | ✅ OneWeb, 80% vs 10% |
 | "we monitor GEO, where the insured value is" | ✅ runs daily, bar auditable |
-| "we *detect verified maneuvers* at GEO" | ⚠️ partial. External-safe sentence: **"Scored against 14 externally documented GEO maneuvers, our altitude method with a lag-aware window catches 13 of 14 — 5 of the 6 that carry two independent sources — and a documented non-maneuvering control stays silent."** Then the caveat, in the same breath: **detection is not same-day — the catalog itself runs up to 11 days late.** Do NOT say we verify *live* GEO suspects (still n=4, unproven), do not quote the SES "separation", and do not quote 13/14 without the double-sourced 5/6 beside it |
+| "we *detect verified maneuvers* at GEO" | ⚠️ partial. External-safe sentence: **"Scored against 17 externally documented GEO maneuvers, our altitude method with a lag-aware window catches 5 of the 6 that carry two independent sources — and a documented non-maneuvering control stays silent."** Then the caveat, in the same breath: **detection is not same-day — the catalog itself runs up to 11 days late.** Do NOT say we verify *live* GEO suspects (still n=4, unproven), do not quote the SES "separation", and lead with the double-sourced 5/6 — the all-scoreable 16/17 leans on single-sourced rows |
 | "the maneuvers we flag show up in an independent observable" | ✅ strongest at **OneWeb: inclination 11.5x, 70% vs 13%**, matching the altitude verifier's separate 80%-vs-10% |
 | any claim resting on the **63x drift** figures | ❌ do not use — same number at every altitude, near-circular with the detector |
 
@@ -404,5 +425,5 @@ python verify_geo.py --group intelsat      # GEO-shaped: inclination + longitude
 python verify_geo.py --group oneweb        # LEO negative control - exposed the drift issue
 python _test_verify_geo.py                 # 21 cases
 python referee_geo.py                      # issue 015: both verifiers vs 14 documented maneuvers
-python _test_referee.py                    # 53 cases, incl. step-math identity with shipped verifiers
+python _test_referee.py                    # 55 cases, incl. step-math identity with shipped verifiers
 ```
