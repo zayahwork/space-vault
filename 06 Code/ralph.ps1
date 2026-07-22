@@ -57,4 +57,10 @@ $issues
         Write-Host "Backlog is dry - stopping after $i iteration(s)." -ForegroundColor Green
         break
     }
+    if ($out -match 'session limit|rate limit|usage limit') {
+        # Burning the remaining iterations against a closed gate wastes nothing but
+        # produces 10 failure lines and no work. Stop; the CTO cycle relaunches after reset.
+        Write-Host "Hit the plan's session limit - stopping. Relaunch after the reset time above." -ForegroundColor Yellow
+        exit 2
+    }
 }
