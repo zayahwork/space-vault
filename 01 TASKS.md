@@ -26,7 +26,15 @@
       First number the detector didn't grade itself — **this is the number for Kelso and
       Moriba.** Also caught us publishing a wrong reason for the >500 km gate.
       → [[RESULTS - Checked Against History]]
-- [ ] 🕒 **Re-run the detector once a second catalog snapshot is banked** (`python detect.py`
+- [x] ✅ **Persistence went LIVE (2026-07-22 0750Z).** 488 candidates → **298 survived a
+      second look**, 190 unconfirmed, 221 cleared. ~39% didn't repeat.
+- [x] ✅ **The quiet detector is built** — `--mode alert` can return **zero** (bar learned
+      from past snapshots, provenance in `baselines.json`); `quiet.py` watches for satellites
+      that STOP maneuvering and honestly refuses until ~Jul 29 (needs 7 days of archive).
+      → [[RESULTS - The Quiet Detector]]
+- [ ] 🕒 **~Jul 29: run `python quiet.py`** — cadence verdicts unlock once the archive spans
+      7 days. Also re-learn the bar weekly: `python detect.py --learn-baseline --pct 99`.
+- [x] ~~Re-run the detector once a second catalog snapshot is banked~~ — done, see above (`python detect.py`
       in `06 Code`). Temporal persistence is built and tested, but it needs **two** snapshots
       with a public catalog saved beside them and we only have one (`2026-07-22/0200Z`). The
       scheduled archiver fetches one every run, so this unblocks itself — just re-run and the
