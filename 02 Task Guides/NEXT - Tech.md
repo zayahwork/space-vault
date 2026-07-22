@@ -27,17 +27,24 @@ review, or archive depth), pull the next unblocked card. The queue is stocked �
 always something to build. If the queue ever runs dry, say so in your commit message and the
 CTO restocks it same day.
 
-## 1. Warm-up — issue 001 (tests for detect.py core math)
+## 1. DONE — 001 (tests) and 002 (GEO verifier). Merged, reviewed, closed. Good work.
 
-`06 Code/tests/test_detect.py` per the card. Every RESULTS number rides on this math and it
-has zero automated coverage. Small, closed-ended, do it first.
+## 2. Main build NOW — issue 015 (referee test)
 
-## 2. Main build this week — issue 002 (GEO-aware verifier)
+Your GEO mechanism is in a formal dispute: a ground-truth set of 14 documented GEO maneuvers
+(`06 Code/ground_truth.csv`, `RESULTS - Ground Truth.md`) reports that N–S burns DID move
+fitted altitude (0.84–3.00 km) and that the altitude verifier's real failure is the ±3-day
+timing window vs a catalog lagging up to 10 days. The DISPUTED callout in
+`RESULTS - Beyond Starlink.md` has the full claim and the CTO ruling.
 
-The founder meets a GEO insurance broker ~Jul 30. Right now we are half-blind exactly in her
-market. Longitude drift + inclination, not altitude — full spec on the card. Target: a real
-SES answer (signal with numbers, or miss explained with numbers) by **Jul 29**. Either
-outcome updates `RESULTS - Beyond Starlink.md`.
+Card 015: score BOTH verifiers against the 14 documented events — (a) altitude ±3d,
+(b) altitude with lag-aware window, (c) inclination. Caught/missed per event, table replaces
+the DISPUTED callout, one honest paragraph on which SES explanation survived. Weight the 7
+double-sourced rows above the rest. The drift column stays retired regardless — you and the
+ground truth killed it independently.
+
+If the data proves your mechanism wrong, write that in the same tone you'd write it about
+anyone else's. That's the house standard you set.
 
 ## 3. When blocked or done — issue 003 (larger-n hardening)
 
