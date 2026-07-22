@@ -19,8 +19,7 @@
     "06 Code/supgp_archive": true,
     "06 Code/.venv-meeting": true,
     "06 Code/splid-devkit": true,
-    "06 Code/output": true,
-    "99 Archive": true
+    "06 Code/output": true
   },
   // Stop the file watcher from tailing 35k archive files - this is what makes
   // VS Code feel sluggish on a big vault.

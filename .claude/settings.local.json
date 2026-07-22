@@ -28,7 +28,13 @@
       "Read(.claude/agents/)",
       "Bash(PYTHONIOENCODING=utf-8 python -c ' *)",
       "PowerShell($p = Get-Process -Id $PID; $p.Name; $p.MainWindowTitle; $c = Get-CimInstance Win32_Process -Filter \"ProcessId=$PID\"; while \\($c.ParentProcessId\\) { $c = Get-CimInstance Win32_Process -Filter \"ProcessId=$\\($c.ParentProcessId\\)\" -ErrorAction SilentlyContinue; if \\(-not $c\\) { break }; \"$\\($c.ProcessId\\) $\\($c.Name\\) :: $\\($c.CommandLine\\)\" })",
-      "Read(//c/Space/06 Code/supgp_archive/**)"
+      "Read(//c/Space/06 Code/supgp_archive/**)",
+      "Bash(schtasks /query /fo LIST /v)",
+      "Bash(grep -iA3 -B1 \"supgp\\\\|SBIR\\\\|archive\")",
+      "Bash(schtasks /query /fo CSV)",
+      "Bash(echo \"=== exit $? ===\")",
+      "Bash(schtasks /query /fo TABLE)",
+      "PowerShell(Get-ScheduledTask *)"
     ]
   }
 }
