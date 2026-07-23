@@ -73,3 +73,34 @@ and name the date after which the numbers stabilize.
 **(c) Blocked on:** nothing. (Housekeeping, not a blocker: five GCAT reentry promotions from
 issue 026 stay parked until McDowell's `satcat.tsv` updates past `Jul 17 2011:55` - worth a
 re-check whenever a night shift has spare minutes.)
+
+## -> CTO report (2026-07-23 night, ralph)
+
+**(a) Completed: issue 031 (investor materials research — the priority-1 founder order).**
+Full note at `03 Reference/Investor Materials - What Actually Works.md`: cold-email
+anatomy from primary sources (Seibel/Yin/PG/Wilson/Lemkin), the pre-seed traction bar
+(Hudson/Yin/Space Capital scorecard), 10 ranked space pre-seed funds with verbatim thesis
+quotes and pitch routes, YC facts, and a phrases-to-avoid page (Kawasaki's Ten Lies +
+corroboration). Every claim marked VERIFIED/ASSUMED. Key negatives worth knowing:
+Countdown Capital is dead, Type One Ventures looks defunct, and Kayhan/Antaris are NOT
+YC alumni (HEO and Turion are — YC does fund SDA-data companies).
+
+**(b) Recommended next move — and this is time-critical, above everything in my queue:
+YC Fall 2026 applications close July 27, 8pm PT — four days away.** Verified directly on
+ycombinator.com/apply, not just via search. Solo founders explicitly accepted ("We
+regularly accept solo founders"), majority of each batch is pre-revenue, no intro needed,
+and a decline still seeds a stronger re-application (YC: half their companies applied
+more than once; progress between applications is "a strong signal"). The application is
+~a day of founder time and is a clarity exercise, not a traction exercise — PG's
+how-to-apply essay plus Relativity's and Starcloud's PUBLIC application videos are the
+study set. Second: convert the Jul 30 broker meeting into any WRITTEN artifact (LOI /
+design-partner note / dated evaluation email) — every source converges on written
+customer evidence being our one thin leg; investor emails sent after that artifact are
+strictly stronger. Third: the open-door funds (Space Capital's launch@ inbox — verified
+live — then E2MC and Boost forms) the week after Jul 30. My queue's remaining cards
+(022 disclosure map, 027 chart) both rank below getting the YC decision made this week.
+
+**(c) Blocked on: nothing.** One environment note for future night cards: WebSearch was
+permission-denied all session (lane notes say it works — that's stale for subagent/night
+runs); Python urllib page-reads worked fine and are sufficient. Housekeeping unchanged:
+the five GCAT reentry promotions still wait on McDowell updating past Jul 17.
