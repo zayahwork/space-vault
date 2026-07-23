@@ -8,12 +8,13 @@
 # absolute and machine-specific; regenerate on any new machine instead of syncing it).
 $cfg = Get-Content (Join-Path $PSScriptRoot 'loops.json') -Raw | ConvertFrom-Json
 
-$icons = @{ tim = '🔧'; randy = '📚'; mark = '📣'; video = '🎥' }
-$folders = @(@{ name = "🎯 CTO - everything"; path = $cfg.root })
+# Plain ASCII labels on purpose - PowerShell 5.1's ConvertTo-Json/Out-File pipeline
+# mangles emoji on round-trip (verified: wrote garbled bytes on first attempt).
+$tags = @{ tim = '[TIM]'; randy = '[RANDY]'; mark = '[MARK]'; video = '[VIDEO]' }
+$folders = @(@{ name = '[CTO] everything'; path = $cfg.root })
 foreach ($p in $cfg.lanes.PSObject.Properties) {
-    $icon = if ($icons.ContainsKey($p.Name)) { $icons[$p.Name] } else { '📁' }
-    $label = "$icon $($p.Name.ToUpper())"
-    $folders += @{ name = $label; path = $p.Value.worktree }
+    $tag = if ($tags.ContainsKey($p.Name)) { $tags[$p.Name] } else { "[$($p.Name.ToUpper())]" }
+    $folders += @{ name = "$tag $($p.Name)"; path = $p.Value.worktree }
 }
 
 $workspace = [ordered]@{
@@ -21,7 +22,7 @@ $workspace = [ordered]@{
     settings = @{}
 }
 $out = Join-Path $cfg.root 'Company.code-workspace'
-$workspace | ConvertTo-Json -Depth 5 | Out-File $out -Encoding utf8
+$workspace | ConvertTo-Json -Depth 5 | Out-File $out -Encoding ascii
 Write-Host "Wrote $out with $($folders.Count) folders:"
 $folders | ForEach-Object { Write-Host "  $($_.name)  ->  $($_.path)" }
 Write-Host "`nOpen it: code `"$out`"  (or double-click it in Explorer)"
