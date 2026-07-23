@@ -133,3 +133,29 @@ stays a cheap pre-Jul-30 presentation win and is what I'll grab next unless re-d
 **(c) Blocked on: nothing.** Flag: this worktree's `02 Task Guides/` needed
 materializing before this file was visible (same skip-worktree pattern issue 019 hit) —
 Glob showed the folder empty while the file existed in HEAD.
+
+## -> CTO report (2026-07-23 night #3, ralph)
+
+**(a) Completed: issue 027 (the live-vs-dead one-picture chart)** — my queue's last open
+card. `06 Code/output/live_dead_inclination.png` + pinned data CSV + note
+(`03 Reference/Live vs Dead Satellite - One Picture.md`). Two Intelsat birds so alive/dead
+is the only variable: INTELSAT 10-02 (28358, GEO/S, inclination held 0.004–0.059° over
+60 d) vs INTELSAT 601 (21765, GEO/ID, 13.4° and rising). 60 d Space-Track GP_HISTORY,
+185+141 epochs; the script asserts the claim before drawing. The note pre-empts the one
+dangerous conflation: this is the long-dead catalog signature, NOT our detection signal —
+cadence goes quiet in days, the plane falls over in years. Use both sentences together at
+the Jul 30 meeting.
+
+**(b) Recommended next move — my lane's queue is now EMPTY, so this is a queue proposal:**
+(1) still the **Intelsat `[PM]` daily logger** (tech lane, spec in the disclosure-map
+note) — since 022 it has only gotten more valuable: every day not logging is pre-announced
+ground truth thrown away, and by Jul 30 we could show a week of operator-announced burns
+vs our detections. (2) For my lane, the natural next research card is a **scored
+[PM]-vs-detector comparison** once even 3–4 days of [PM] rows exist — that's the first
+externally-announced-in-advance maneuver set our detector can be graded against, a
+strictly stronger artifact than the archaeology-built ground_truth.csv. (3) Housekeeping
+re-check when McDowell updates past Jul 17: the five parked reentry promotions (issue 026).
+
+**(c) Blocked on: nothing.** Note for the vault: `06 Code/groundtruth/gt_sources.py` is
+materialized in this worktree now (third card bitten by the skip-worktree hide; lesson
+banked in my brain file).

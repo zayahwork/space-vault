@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 type: AFK
 owner: Randy (research)
 blocked-by: []
@@ -21,3 +21,16 @@ Pick recognizable birds if possible (a well-known active Intelsat/SES vs a docum
 This is presentation, not new measurement — keep it to one figure. WebSearch yes, WebFetch no; contact
 no one. If chart-rendering deps aren't in this lane's scope, produce the data table + a note and flag it
 for whoever renders.
+
+**Closed 2026-07-23 (night, ralph).** One figure, rendered and eyeballed:
+`06 Code/output/live_dead_inclination.png` + data table
+`live_dead_inclination_2026-07-23.csv` + note
+`03 Reference/Live vs Dead Satellite - One Picture.md`. Two recognizable Intelsat birds so
+the only variable is alive vs dead: **INTELSAT 10-02** (28358, geotab `GEO/S`, inclination
+held 0.004-0.059 deg over 60 d) vs **INTELSAT 601** (21765, geotab `GEO/ID`, 13.4 deg and
+still rising). 60 d of Space-Track GP_HISTORY (185 + 141 epochs), window pinned
+2026-05-24..2026-07-23 for reproducibility. The script
+(`06 Code/live_dead_inclination_chart.py`) asserts the chart's claim before drawing (live
+max < 0.5 deg, dead min > 10 deg) — its own feedback loop. Note flags the honest limit:
+this is the *long-dead* catalog signature, not our detector's signal; cadence goes quiet
+in days, the plane falls over in years — don't let the broker conflate them.
