@@ -39,3 +39,4 @@ Office/Credentials/
 # Drip runtime log - regenerated every scheduled run
 06 Code/drip.log
 verify_geo_cache/
+*.code-workspace
