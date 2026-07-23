@@ -16,6 +16,15 @@ Never re-learn what is already here.
   number unilaterally. Verified: caught the 96%-vs-11% gap this shift only
   because of this check; the drip was live-sending the stale sentence.
 
+- **Prose linters must whitespace-normalize before phrase checks** (banked
+  2026-07-23, card 030). Markdown wraps at ~80 cols, so a required phrase like
+  "not operator ground truth" can split across a line break and a contiguous
+  regex misses it — `check_investor_prep.py` flagged a caveat that WAS present
+  in the cold email for exactly this reason. Fix: run required-phrase regexes
+  on `re.sub(r"\s+", " ", body)`. Verified red → green this shift. (The older
+  `check_segment_notes.py` has the same latent bug — its checks happened to
+  pass because those phrases never wrapped; fix it next time it's touched.)
+
 ## HYPOTHESIS
 
 - **Segment templates rot faster than hand drafts** (2026-07-22, card 023).
