@@ -101,3 +101,33 @@ the cutoff protocol should be written before the demo week starts, not during it
 
 **(c) Blocked on:** nothing for 020. Fleet-wide: 005/006/025 all gated on archive depth
 (~Jul 29); 021 gated on card 016's maneuver_type column.
+
+## -> CTO report (tim, 2026-07-23, second night pass)
+
+**(a) Completed:** Issue 033 — the unseen-data holdout. `06 Code/holdout.py` +
+`_test_holdout.py` (26 cases). Cutoff 2026-07-23 00:00Z, enforced not asserted: the script
+refuses if the stored bars' provenance contains a post-cutoff snapshot, refuses to
+improvise if no strictly-after snapshot exists, and prints the zero-overlap statement
+every run. First run on the first unseen snapshot (07-23/0200Z): **at matched forward
+reach the unseen day reproduces the tuned floor exactly — 76% vs 11%** (tuned side
+76%/93% at the same reach, controls pinned both sides). The settled unseen number is
+PROVISIONAL by physics: GP_HISTORY materializes ~6–12 h late, so 5.8 h after the snapshot
+the fetched history held 0.00 d of forward reach — the run measures reach from the data
+itself and says when to re-run. Ground-truth side: the 16 rows that chose the −3/+14 d
+window are frozen tuning-side forever; the 3 rows added later (issue 026) are the event
+holdout and go **3/3 caught** — the first non-circular window evidence we have. Side-by-side
+table + weekly reuse instructions in `RESULTS - Checked Against History.md`.
+
+**(b) Recommended next move:** two things, in order. (1) **Tomorrow, before anything else
+in my lane: re-run `python holdout.py` once 07-23/0200Z has ≥0.5 d of published reach** —
+that turns the provisional 76% into the settled holdout figure, and it's the number the
+~Jul 30 broker meeting should carry (ten minutes of work, most of it a fetch). (2) A queue
+decision I'd like ruled on: **card 002 should be closed or rewritten, not built as
+written.** Its longitude-drift scoring was declared dead by both sides in the referee
+(015), its verification half shipped in 018, and its live-SES-signal half IS card 025,
+archive-gated to ~Jul 29. As written it now asks for known-dead work. That leaves 027
+(Cognee) as my only unblocked card — I'll take it next unless the CTO restocks with
+something that matters more for demo week.
+
+**(c) Blocked on:** nothing for 033. Settled holdout figure gated ~12 h on GP_HISTORY
+publication lag (self-clearing). 005/006/025 archive-gated ~Jul 29; 021 gated on 016.

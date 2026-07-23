@@ -1,0 +1,158 @@
+{
+  "cutoff": "2026-07-23T00:00:00+00:00",
+  "basis": "all detector constants, the verify window table (issue 018), the observability correction (issue 003) and the stored bars (learned 2026-07-22T19:16Z) were fixed on or before 2026-07-22",
+  "holdout": [
+    {
+      "snapshot": "2026-07-23/0200Z",
+      "top": 75,
+      "regime": "LEO",
+      "window_before": 3.0,
+      "window_after": 3.0,
+      "data_reach": {
+        "n": 150,
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "settled": false,
+      "cells": [
+        {
+          "reach_days": 0.0,
+          "bar_km": 0.4539999999997235,
+          "n_suspects": 41,
+          "n_controls": 75,
+          "thin_suspects": 34,
+          "thin_controls": 0,
+          "over_suspects": 31,
+          "over_controls": 8,
+          "suspect_rate": 0.7560975609756098,
+          "control_rate": 0.10666666666666667
+        }
+      ]
+    }
+  ],
+  "tuned": [
+    {
+      "snapshot": "2026-07-22/0200Z",
+      "top": 75,
+      "regime": "LEO",
+      "window_before": 3.0,
+      "window_after": 3.0,
+      "data_reach": {
+        "n": 150,
+        "median": 0.34627353398148153,
+        "min": 0.0,
+        "max": 0.5252776989814815
+      },
+      "settled": false,
+      "cells": [
+        {
+          "reach_days": 0.0,
+          "bar_km": 0.15099999999983993,
+          "n_suspects": 75,
+          "n_controls": 75,
+          "thin_suspects": 0,
+          "thin_controls": 0,
+          "over_suspects": 57,
+          "over_controls": 8,
+          "suspect_rate": 0.76,
+          "control_rate": 0.10666666666666667
+        },
+        {
+          "reach_days": 0.25,
+          "bar_km": 0.15099999999983993,
+          "n_suspects": 75,
+          "n_controls": 75,
+          "thin_suspects": 0,
+          "thin_controls": 0,
+          "over_suspects": 70,
+          "over_controls": 8,
+          "suspect_rate": 0.9333333333333333,
+          "control_rate": 0.10666666666666667
+        },
+        {
+          "reach_days": 0.35,
+          "bar_km": 0.15099999999983993,
+          "n_suspects": 75,
+          "n_controls": 75,
+          "thin_suspects": 0,
+          "thin_controls": 0,
+          "over_suspects": 70,
+          "over_controls": 8,
+          "suspect_rate": 0.9333333333333333,
+          "control_rate": 0.10666666666666667
+        }
+      ]
+    },
+    {
+      "snapshot": "2026-07-22/0800Z",
+      "top": 75,
+      "regime": "LEO",
+      "window_before": 3.0,
+      "window_after": 3.0,
+      "data_reach": {
+        "n": 150,
+        "median": 0.09878339106481482,
+        "min": 0.0,
+        "max": 0.2705802210648148
+      },
+      "settled": false,
+      "cells": [
+        {
+          "reach_days": 0.0,
+          "bar_km": 0.14900000000034197,
+          "n_suspects": 75,
+          "n_controls": 75,
+          "thin_suspects": 0,
+          "thin_controls": 0,
+          "over_suspects": 70,
+          "over_controls": 8,
+          "suspect_rate": 0.9333333333333333,
+          "control_rate": 0.10666666666666667
+        },
+        {
+          "reach_days": 0.1,
+          "bar_km": 0.14900000000034197,
+          "n_suspects": 75,
+          "n_controls": 75,
+          "thin_suspects": 0,
+          "thin_controls": 0,
+          "over_suspects": 70,
+          "over_controls": 8,
+          "suspect_rate": 0.9333333333333333,
+          "control_rate": 0.10666666666666667
+        }
+      ]
+    }
+  ],
+  "events": {
+    "tuning": {
+      "scoreable": 14,
+      "caught": 13
+    },
+    "holdout": {
+      "scoreable": 3,
+      "caught": 3,
+      "rows": [
+        {
+          "object": "Astra 3B",
+          "norad": 36581,
+          "date": "2025-09-08",
+          "verdict": "caught"
+        },
+        {
+          "object": "Intelsat 1002",
+          "norad": 28358,
+          "date": "2025-02-28",
+          "verdict": "caught"
+        },
+        {
+          "object": "AMC 11",
+          "norad": 28252,
+          "date": "2025-06-10",
+          "verdict": "caught"
+        }
+      ]
+    }
+  }
+}

@@ -7,6 +7,49 @@ snapshot: 2026-07-22 0200Z
 
 # 🔬 RESULTS — checked against the catalog's own history
 
+## 🧪 Unseen-data holdout (issue 033, 2026-07-23) — "did you tune on what you tested?"
+
+The diligence question, answered in writing and enforced in code: `06 Code/holdout.py`
+(tests: `_test_holdout.py`, 26 cases). **Cutoff 2026-07-23 00:00Z** — every detector
+constant, the verify window table (issue 018), the observability correction (issue 003)
+and the stored alert bars (learned 2026-07-22 19:16Z from snapshots ≤ 07-22/1400Z, checked
+against provenance, not assumed) were fixed at or before it. A snapshot counts as unseen
+only if captured **strictly after** the cutoff; the script refuses to run if the bars'
+provenance contains a post-cutoff snapshot, and refuses to improvise if no unseen snapshot
+exists yet.
+
+**First run, on the first unseen snapshot (2026-07-23/0200Z), top-75, production code path**
+(`detect.analyze` rank mode → `verify.select_groups` → controls' own 90th-pct bar):
+
+| forward reach (matched) | tuned set (Jul 22) | **UNSEEN (post-cutoff)** |
+|---|---|---|
+| 0.00 d | 76% / 11% (0200Z) · 93% / 11% (0800Z) | **76% / 11%** (31/41 vs 8/75) |
+
+- **At matched reach the unseen day reproduces the tuned floor exactly** — 76% of scoreable
+  unseen suspects clear the bar vs 11% of matched controls, the same zero-reach value the
+  published sweep recorded. The separation is not an artifact of tuning on July 22's data.
+- **The settled holdout number is still pending, and must be** — the +3 d forward window
+  needs published orbit determinations that don't exist yet. Measured from the fetched
+  history itself (never the wall clock: GP_HISTORY materializes ~6–12 h late, so a fetch
+  5.8 h after the snapshot contains **0.00 d** of forward reach), the run labels itself
+  PROVISIONAL and says when to re-run. **Do not quote a settled holdout figure externally
+  until a re-run at ≥0.5 d reach lands in this table.**
+- **34 of the unseen top-75 are a fresh launch batch** (analyst-range NORADs 100012–100056,
+  climbing at 280–490 km gaps, 2–3 history records each) — unscoreable yet, excluded from
+  the denominator per the standing thin-history rule, not counted as misses.
+
+**Ground-truth split (GEO −3/+14 d window):** the 16 rows that existed at issue 015 *chose*
+the window and may never be quoted as evidence for it again (13/14 scoreable caught —
+tuning-set performance, not validation). The three rows added afterward by issue 026 —
+Astra 3B 2025-09-08, Intelsat 1002 2025-02-28, AMC 11 2025-06-10 — never touched any
+tuning decision: **3/3 caught by the frozen window**. Small n and single-sourced tier, but
+it is the first window evidence that is not circular. Future ground-truth rows land in the
+holdout side automatically (frozen key list in `holdout.py`).
+
+**Reusable weekly:** `python holdout.py --cutoff <new freeze instant>` — the archive grows
+every 6 h, so genuinely unseen data accumulates daily. Run saved to
+`06 Code/output/holdout_033.json`.
+
 > [!note] Window change 2026-07-22 (issue 018) — **the Starlink headline did not move, and here is the proof**
 > `verify.py` no longer hardcodes a ±3-day step window; it now takes a regime-aware,
 > one-sided window (see [[RESULTS - Beyond Starlink]] for why). **LEO deliberately stays at
