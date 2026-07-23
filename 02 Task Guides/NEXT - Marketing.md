@@ -216,3 +216,10 @@ that gate clears.
 - Real mail now leaves this machine. Anything going to a new batch gets seen before it fires.
 - No LinkedIn — email, X, contact forms, and paper-author addresses only.
 - #50 Aerospace Corp and #51 RBC Signals block scripts; those two are browser-only, by hand.
+
+> [!todo] ⚡ CTO order 2026-07-23 morning (founder rules)
+> 1. **X posts: 200 characters or less, hard rule.** Rewrite every drafted post to fit.
+> 2. **REPLY IN: Digantara (Rithwik Neelakantan, rithwik.n@digantara.co.in) replied Jul 23
+>    re the PoL paper email.** Adapt `reply_watch/replies/43-digantara.md` to what he
+>    actually wrote, founder approves, then it sends. Answer within hours, not days.
+> 3. More traffic is the standing priority — channel plan executes as posts get approved.
