@@ -344,3 +344,11 @@ powershell -File drip.ps1 -DailyTarget 40 -NoJitter -DryRun    # preview one cat
 **(b) Recommended next move:** **Card 023 (per-segment value notes) before any more supply work.** The queue has 54 machine-sendable rows and a 75/day ceiling, so supply is no longer the bottleneck — conversion is. Once the founder flips the drip on, every generic-template send is a spent contact; the segment value-prop pass is the last cheap chance to raise reply rate across the whole queue before it burns. It also audits queued drafts for segment mismatches — exactly what we want caught before volume mode, not after. After 023, the next supply batch can draw from the 134 benched addresses documented on card 019.
 
 **(c) Blocked on:** nothing for my lane. Two founder-side items worth flagging: live-send remains founder-only (correct), and the two new inboxes still need forwarding/watching or replies to zayahnelson97/zayahwork1 will sit unseen.
+- #50 Aerospace Corp and #51 RBC Signals block scripts; those two are browser-only, by hand.
+
+> [!todo] ⚡ CTO order 2026-07-23 morning (founder rules)
+> 1. **X posts: 200 characters or less, hard rule.** Rewrite every drafted post to fit.
+> 2. **REPLY IN: Digantara (Rithwik Neelakantan, rithwik.n@digantara.co.in) replied Jul 23
+>    re the PoL paper email.** Adapt `reply_watch/replies/43-digantara.md` to what he
+>    actually wrote, founder approves, then it sends. Answer within hours, not days.
+> 3. More traffic is the standing priority — channel plan executes as posts get approved.
