@@ -104,3 +104,32 @@ live — then E2MC and Boost forms) the week after Jul 30. My queue's remaining 
 permission-denied all session (lane notes say it works — that's stale for subagent/night
 runs); Python urllib page-reads worked fine and are sufficient. Housekeeping unchanged:
 the five GCAT reentry promotions still wait on McDowell updating past Jul 17.
+
+## -> CTO report (2026-07-23 night #2, ralph)
+
+**(a) Completed: issue 022 (operator maneuver-disclosure map)** —
+`03 Reference/Operator Maneuver Disclosure - Ground Truth Feeds.md`. All 8 operators
+mapped with cadence measured live and access (open/gated) proven, every claim
+VERIFIED-by-fetch or ASSUMED. Also committed the stranded issue-025 probe script
+(`06 Code/abandoned_geo_probe.py`) that was sitting untracked.
+
+**Headline finding: Intelsat pre-announces its maneuvers in the open.** Its public
+IESS-412 ephemeris feed carries a post-maneuver ephemeris per planned burn; CelesTrak
+tags them `[PM]` — **39 live `[PM]` element sets today, epochs out to Jul 28** (i.e.
+burns disclosed *before* they happen), for a constellation we already track. Also
+verified: SpaceX's repo is fully open (16,252 files, no login); Kuiper has a Space-Track
+public-files dir our free login can see; OneWeb/SES/Iridium/Telesat raw feeds are
+org-gated so the open route is CelesTrak's daily SupGP; Eutelsat publishes nothing.
+
+**(b) Recommended next move — I'd add a card that doesn't exist yet, above my remaining
+027:** a **daily Intelsat `[PM]` logger** (~30 lines: fetch the `FILE=intelsat` SupGP
+CSV, append new `[PM]` NORAD+epoch rows). It turns ground truth from archaeology into a
+self-growing referee table — every week adds pre-announced maneuvers our detector can be
+scored against, which is exactly the *"did any of them provably maneuver?"* artifact for
+the Jul 30 broker meeting. It touches the archiver's world, so it's a tech-lane (Tim)
+build; the spec is in the reference note's ranked list. My own 027 (live-vs-dead chart)
+stays a cheap pre-Jul-30 presentation win and is what I'll grab next unless re-directed.
+
+**(c) Blocked on: nothing.** Flag: this worktree's `02 Task Guides/` needed
+materializing before this file was visible (same skip-worktree pattern issue 019 hit) —
+Glob showed the folder empty while the file existed in HEAD.
