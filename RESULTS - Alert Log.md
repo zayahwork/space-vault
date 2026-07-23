@@ -70,3 +70,24 @@ regime, from the baseline file. "quiet" = nothing over the bar.*
 > baseline stores its mixed-fleet floor as a list (`[1.0, 2.0]`), which crashed the
 > scheduled scorer on every snapshot since. `load_baselines` now reads a list floor back
 > as per-object regime floors; the two missed snapshots above were backfilled 2026-07-23.
+
+## 2026-07-23/0800Z
+
+- **intelsat**: 2 over the bar of 44 scored (0 more among deorbiting hardware, 0 data-quality) — top: 27380 at 44.6 km, 2.3x its bar
+- **oneweb**: 3 over the bar of 651 scored (0 more among deorbiting hardware, 0 data-quality) — top: 54679 at 12.0 km, 6.0x its bar
+- **ses**: 🔇 quiet — all 68 objects inside the stored bar
+- **starlink**: 164 over the bar of 10836 scored (21 more among deorbiting hardware, 43 data-quality) — top: 69550 at 384.4 km, 17.0x its bar
+
+## 2026-07-23/1400Z
+
+- **intelsat**: 2 over the bar of 44 scored (0 more among deorbiting hardware, 0 data-quality) — top: 54741 at 24.8 km, 1.3x its bar
+- **oneweb**: 9 over the bar of 651 scored (0 more among deorbiting hardware, 0 data-quality) — top: 49219 at 30.3 km, 15.2x its bar
+- **ses**: 1 over the bar of 68 scored (0 more among deorbiting hardware, 0 data-quality) — top: 53961 at 72.0 km, 4.2x its bar
+- **starlink**: 94 over the bar of 10836 scored (23 more among deorbiting hardware, 67 data-quality) — top: 59929 at 410.4 km, 18.1x its bar
+
+## 2026-07-23/2000Z
+
+- **intelsat**: 1 over the bar of 44 scored (0 more among deorbiting hardware, 0 data-quality) — top: 57493 at 22.8 km, 1.2x its bar
+- **oneweb**: 4 over the bar of 651 scored (0 more among deorbiting hardware, 0 data-quality) — top: 54142 at 9.6 km, 4.8x its bar
+- **ses**: 1 over the bar of 68 scored (0 more among deorbiting hardware, 0 data-quality) — top: 42967 at 17.5 km, 2.0x its bar
+- **starlink**: 92 over the bar of 10836 scored (20 more among deorbiting hardware, 56 data-quality) — top: 64262 at 233.3 km, 10.3x its bar
