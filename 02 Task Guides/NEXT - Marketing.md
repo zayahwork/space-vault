@@ -300,6 +300,18 @@ powershell -File drip.ps1 -DailyTarget 40 -NoJitter -DryRun    # preview one cat
 
 ---
 
+## -> CTO report — night shift 2, 2026-07-22 (card 023)
+
+**(a) Completed:** Card 023 — `06 Code/drafts/SEGMENT_NOTES.md`: per-segment value language for all 7 segments actually in rotation (the card named "launch-adjacent"; no such rows exist — `contract` and `competitor` do, so those got notes). Each segment: pain in their words, dated verified number, caveat at their sophistication, one ask. Test-first via a new linter `check_segment_notes.py` (red → green) that enforces the language rules mechanically: no retired multiple, GEO only via the external-safe sentence, no named people, dated number + caveat + single ask per section. All existing loops still green (`check_reply_watch`, competitor-template test, multi-account test). Audited all 78 queued rows against the notes; mismatches **listed, not rewritten**, in the notes' audit section. Zero sends.
+
+**(b) Recommended next move — two things, the first is urgent:**
+1. **You need to rule on the number, tonight if possible.** `RESULTS - Checked Against History` re-measured the headline late today (issue 003): 68–72% was scored before the forward window existed and is struck as an underestimate — the settled value is **96% vs 11%**. Meanwhile the drip is LIVE and every queued draft plus my new segment notes quote the approved 68–72% sentence. We are currently mailing real people a number our own results page has struck. Underselling, not overselling — but it's stale language going out at volume, and the fix is one language rule from you plus a one-sentence sweep (same shape as the 11.3× retirement, ~30 min of work once ruled). I did NOT switch anything to 96% unilaterally.
+2. **The audit's headline finding: 33 of 78 queued rows are template-only, and the `outreach.py` segment templates still carry the pre-verification "I'm trying to learn" pitch with no number at all** (operator 15, insurer 7, partner 8, gov 5 — ids in the notes). Every hand draft was swept onto the new number; the templates never were. Once the drip exhausts the hand-drafted tier it starts sending the old pitch. Recommend a card: rewrite the 6 segment templates around the (post-ruling) number using SEGMENT_NOTES.md as the spec — cheap, high-leverage, and it should land before the drip reaches the template tier. Smaller items also listed in the audit: #23 lacks the verified rate its founder-approved spec requires; contract #59–66 are undated/weak-caveat (one sentence each).
+
+**(c) Blocked on:** nothing for this card. Card 028 (three-account engine) I deliberately did not take: its done-when starts with founder-supplied app passwords in `gmail_auth.json`, and the NEXT note above says the 3-account engine + drip already shipped on master from `C:\Space` — 028 looks partially overtaken by events; needs a CTO pass to re-scope or close before anyone burns a night on it.
+
+---
+
 ## -> CTO report — night shift, 2026-07-22 (card 026)
 
 **(a) Completed:** Card 026 — the `competitor` segment is now sendable. Added an honest `competitor` template to `outreach.py` (posture straight from `reply_watch/replies/43-digantara.md`: one engineer on free data, "I'm not a customer, and I'm not going to pretend to be one", asking where the method breaks). Chose template over retiring the segment: re-tagging to `partner` would have mailed competitors a "comparing notes" email that hides who we are. Test-first via new `_test_competitor_template.py` (was red, now green); `_test_multi_account.py` and `check_reply_watch.py` still green; `--send --ids 82` renders in a dry run. Zero sends.
