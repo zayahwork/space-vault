@@ -47,7 +47,7 @@ Do not invent facts not present in the material; write 'no data' where the mater
 
 $raw
 "@
-$verdict = $prompt | claude -p --effort low 2>&1 | Out-String
+$verdict = $prompt | claude -p --model claude-opus-4-8 --effort low 2>&1 | Out-String
 if ($verdict -match 'session limit|rate limit|usage limit' -or [string]::IsNullOrWhiteSpace($verdict)) {
     $verdict = "# Standup $today`n(claude pass unavailable - raw material below, unjudged)`n`n" + $raw
 }

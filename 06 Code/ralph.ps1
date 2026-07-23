@@ -89,7 +89,8 @@ ISSUE BACKLOG:
 $issues
 "@
 
-    $out = $prompt | claude -p --permission-mode acceptEdits --effort $Effort `
+    # Founder rule 2026-07-23: workers run Opus 4.8, never Fable 5 (Fable is the CTO seat).
+    $out = $prompt | claude -p --model claude-opus-4-8 --permission-mode acceptEdits --effort $Effort `
         --allowedTools "Bash(python *),Bash(pip *),Bash(git *)" 2>&1 | Out-String
     Write-Host $out
 
