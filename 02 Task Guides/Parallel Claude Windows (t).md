@@ -54,8 +54,8 @@ When "ctx % left" gets low, run `/compact` (squeeze the conversation down) or `/
 
 ## The Pocock pipeline (added 2026-07-22)
 
-For anything bigger than a quick fix: **`/grill` → `/prd` → `/issues` → ralph**.
-- **`/grill <idea>`** — the AI interviews you relentlessly, one question at a time, with a
+For anything bigger than a quick fix: **`/grill-me` → `/prd` → `/issues` → ralph**.
+- **`/grill-me <idea>`** — the AI interviews you relentlessly, one question at a time, with a
   recommended answer each time, until you two share one mental model. Use it for features,
   emails, founder decisions — anything where misalignment is expensive. This is the big one.
 - **`/prd`** — turns the grilling into a short destination doc in `issues/` (don't polish it).

@@ -5,7 +5,7 @@ argument-hint: [feature name]
 
 Write a PRD — the destination document — for: $ARGUMENTS (if empty, use what we just grilled about in this conversation).
 
-If we have NOT just had a grilling session about this, stop and run the /grill flow first — a PRD without alignment is a guess.
+If we have NOT just had a grilling session about this, stop and run the /grill-me flow first — a PRD without alignment is a guess.
 
 Write it to `issues/PRD - <short-name>.md` with exactly these sections:
 1. **Problem** — what hurts, for whom, in plain words.
