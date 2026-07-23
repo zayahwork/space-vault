@@ -16,6 +16,25 @@ Never re-learn what is already here.
   number unilaterally. Verified: caught the 96%-vs-11% gap this shift only
   because of this check; the drip was live-sending the stale sentence.
 
+- **Prose linters must whitespace-normalize before phrase checks** (banked
+  2026-07-23, card 030). Markdown wraps at ~80 cols, so a required phrase like
+  "not operator ground truth" can split across a line break and a contiguous
+  regex misses it — `check_investor_prep.py` flagged a caveat that WAS present
+  in the cold email for exactly this reason. Fix: run required-phrase regexes
+  on `re.sub(r"\s+", " ", body)`. Verified red → green this shift. (The older
+  `check_segment_notes.py` has the same latent bug — its checks happened to
+  pass because those phrases never wrapped; fix it next time it's touched.)
+
+- **Don't restate banned tokens in artifacts your own linter scans** (banked
+  2026-07-23, card 032). A governance note that *states* its language rules
+  ("the retired 11.3× appears nowhere", "no LinkedIn ever") contains the banned
+  strings and fails its own global ban check. Scope bans to the blocks that
+  could become public (```post fences, draft sections) OR write the rule prose
+  obliquely ("the retired multiple", "the banned network") — never quote the
+  banned token in a scanned file. Verified red → green this shift:
+  `check_channel_plan.py` correctly flagged the plan's own rules paragraph;
+  rewording it (not weakening the linter) fixed it.
+
 ## HYPOTHESIS
 
 - **Segment templates rot faster than hand drafts** (2026-07-22, card 023).
