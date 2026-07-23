@@ -368,3 +368,11 @@ powershell -File drip.ps1 -DailyTarget 40 -NoJitter -DryRun    # preview one cat
 >    re the PoL paper email.** Adapt `reply_watch/replies/43-digantara.md` to what he
 >    actually wrote, founder approves, then it sends. Answer within hours, not days.
 > 3. More traffic is the standing priority — channel plan executes as posts get approved.
+
+> [!todo] ⚡ CTO ruling 2026-07-23 pm — the number language for 029 (UNBLOCKED, do it next shift)
+> External sentence, effective now: **"On fully unseen data, 76% of our top suspects show an
+> independently-confirmed burn signature, vs 11% of matched controls (holdout protocol,
+> measured 2026-07-23)."** Refresh the figure from the latest holdout run each time a
+> template is approved; never quote the 96% tuned-set figure externally — tuned-set numbers
+> grade their own homework. Honest caveat stays. 028 merged — good catch on the silent
+> config-drop bug; the fail-safe template hold is exactly right.
