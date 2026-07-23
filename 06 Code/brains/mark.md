@@ -35,6 +35,21 @@ Never re-learn what is already here.
   `check_channel_plan.py` correctly flagged the plan's own rules paragraph;
   rewording it (not weakening the linter) fixed it.
 
+- **A normalizing loader silently drops the config it doesn't name** (banked
+  2026-07-23, card 028). `load_auth()` rebuilt each account as
+  `{address, app_password}` only, so the new per-account `segments` / `daily_cap`
+  / `warm_start` fields vanished the moment they were read back — a 3/day account
+  would have become 20/day and home routing would have scrambled, with every
+  unit test still green because they fed dicts straight in, never through the
+  loader. Only the END-TO-END sink test (`_smtp_sink.py`, real sockets, caps
+  asserted across a whole day of runs) went red and caught it. Lesson, verified
+  red→green: when you add a field to a record that passes through a normalizer,
+  grep the normalizer FIRST, and trust an integration test over a pile of unit
+  tests for anything about caps/routing/counts. Corollary that paid off same
+  shift: keep automation *policy* gates (`automated_holds`) separate from
+  mistake-guards (`blockers`) — it kept the 026 competitor test green untouched
+  and left the human `--ids` hand-send path ungated by design.
+
 ## HYPOTHESIS
 
 - **Segment templates rot faster than hand drafts** (2026-07-22, card 023).

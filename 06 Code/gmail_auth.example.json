@@ -1,0 +1,23 @@
+{
+  "_comment": "Copy this to gmail_auth.json (which is gitignored and never committed) and paste each account's Google App Password from myaccount.google.com/apppasswords - NOT the normal password. An account whose app_password still starts with PASTE is skipped, not fatal, so you can warm accounts up one at a time. Per account: 'segments' is the list of drip segments that mailbox owns (a thread never changes sender, so keep these stable once threads exist); 'daily_cap' overrides the 20/day default; 'warm_start' (YYYY-MM-DD, the day the mailbox began sending) holds a brand-new account to 8/day for its first week, then it rises to its cap on its own.",
+  "accounts": [
+    {
+      "address": "account-one@gmail.com",
+      "app_password": "PASTE APP PASSWORD",
+      "segments": ["operator", "partner"],
+      "daily_cap": 20
+    },
+    {
+      "address": "account-two@gmail.com",
+      "app_password": "PASTE APP PASSWORD",
+      "segments": ["insurer", "gov", "contract"],
+      "daily_cap": 20
+    },
+    {
+      "address": "account-three@gmail.com",
+      "app_password": "PASTE APP PASSWORD",
+      "segments": ["academic", "competitor"],
+      "warm_start": "2026-07-23"
+    }
+  ]
+}

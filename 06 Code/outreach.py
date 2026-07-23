@@ -25,11 +25,21 @@ on any single account:
 That is a Google App Password (myaccount.google.com/apppasswords), not the
 account password - normal passwords are refused by SMTP.
 
-With more than one account the send rotates between them and each carries its
-own DAILY_CAP, so two accounts means fifty a day rather than fifty from one
-mailbox. The From: address, the Message-ID domain and the Sent copy all follow
-whichever account actually sent it, and the log records it, so a reply landing
-in the wrong inbox is traceable.
+With more than one account each mailbox carries its OWN daily allowance
+(PER_ACCOUNT_CAP), so three accounts is ~60/day, not 60 from one mailbox. A
+brand-new account is warm-ramped: held to WARM_CAP for its first WARM_DAYS (set
+"warm_start" on it) so it doesn't start life looking like a burst. Each contact
+has a home account by segment, and a thread NEVER changes sender - a reply or
+nudge always goes back out from the mailbox the thread started on. The From:
+address, the Message-ID domain, the Sent copy and the logged "account" all
+follow whichever account actually sent it, so a reply in the wrong inbox is
+traceable.
+
+Two founder gates are enforced in code, not memory: a segment's generic template
+text will not go out on the unattended drip until its flag in
+template_approvals.json is true; and any warm/named row (a live thread) is
+hard-blocked from every automated path regardless of its CSV status. Neither
+gate touches --ids, which is the human hand-send path.
 
 Usage:
   python outreach.py                      # today's 15 drafts
@@ -77,7 +87,32 @@ FIELDS = ["id", "segment", "company", "why_them", "contact_route", "email",
 
 FROM_NAME = "Zayah Nelson"
 MAX_PER_RUN = 5           # hard ceiling per run. A loop bug costs 5 emails, not 500.
-DAILY_CAP = 25            # across every run today, counted from the audit log.
+DAILY_CAP = 25            # legacy single-account / dry-run ceiling, from the audit log.
+
+# The three-account engine: each mailbox carries its OWN daily allowance, so the
+# project ceiling is the sum, not a shared pool. A brand-new account that starts
+# at 20/day looks like a burst to Gmail's reputation system and gets throttled or
+# flagged; a warmed one that has been sending a trickle for a week does not. So a
+# new account is held to WARM_CAP for its first WARM_DAYS (set warm_start in
+# gmail_auth.json to the day it started), then rises to its full cap on its own.
+PER_ACCOUNT_CAP = 20      # each warmed mailbox, per day.
+WARM_CAP = 8              # a new mailbox's first-week ceiling (founder guidance: 5-10).
+WARM_DAYS = 7             # how long the warm-up ramp lasts.
+
+# Founder gate #1, enforced in code not memory: a segment's TEMPLATE text may not
+# leave the building on the unattended drip until the founder has seen a sample of
+# it and flipped its flag true here. Missing file or missing segment => not
+# approved. Hand-written per-row drafts (drafts/<id>.txt) are the founder's own
+# words and are never gated by this - only the generic segment templates are.
+APPROVALS_PATH = HERE / "template_approvals.json"
+
+# Founder gate #2: rows that are a live human relationship (a named contact, an
+# open thread) must never be touched by the unattended drip, no matter what status
+# the CSV happens to carry. A note carrying one of these markers, or the "hold"
+# status, or an id on the protected list, is hand-send-only forever.
+WARM_NOTE_MARKERS = ("active thread", "live thread", "warm", "do not auto",
+                     "hand-send", "hand send", "follow up only", "follow-up only")
+WARM_IDS = {"23", "36", "38"}   # Heldreth (Gallagher), Jah (ASTRIAGraph), Kelso (CelesTrak).
 #
 # Why 25 and not more: Gmail's own SMTP limit for a free account is 500
 # recipients a day, so volume is not what gets an account restricted. What gets
@@ -404,7 +439,12 @@ def load_auth():
         if not secret or secret.startswith(PLACEHOLDER_SECRET):
             waiting.append(address)
             continue
-        accounts.append({"address": address, "app_password": secret})
+        # Carry the whole account through - segments, daily_cap and warm_start
+        # are what the per-account caps and home routing read; dropping them
+        # here is how a 3/day account silently becomes a 20/day one.
+        acct = dict(a)
+        acct["address"], acct["app_password"] = address, secret
+        accounts.append(acct)
 
     for address in waiting:
         print(f"  note: {address} has no app password yet - skipping it this run.")
@@ -506,7 +546,7 @@ def sent_today_by_account(accounts, log=None):
     for e in (read_log() if log is None else log):
         if not (e.get("ok") and e.get("day") == today):
             continue
-        who = (e.get("from") or primary).lower()
+        who = (e.get("account") or e.get("from") or primary).lower()
         if who in counts:
             counts[who] += 1
     return counts
@@ -634,25 +674,137 @@ def check_bounces(rows, args):
     return 0
 
 
-def assign_senders(accounts, room, count):
-    """Which account sends which email, alternating while allowances last.
+def account_cap(account, today=None):
+    """This mailbox's allowance for `today`, warm-ramp included.
 
-    Alternating rather than draining one account first is the point: two
-    mailboxes each sending a dozen unremarkable emails look like two people,
-    while one mailbox sending twenty-five and another sending none looks like
-    one overworked mailbox and a spare.
+    A new account (warm_start within the last WARM_DAYS) is held to WARM_CAP so
+    it doesn't start life looking like a spam cannon; after that it rises to its
+    own daily_cap, or PER_ACCOUNT_CAP if it doesn't name one.
     """
+    base = int(account.get("daily_cap", PER_ACCOUNT_CAP))
+    start = account.get("warm_start")
+    if start:
+        today = today or datetime.date.today()
+        try:
+            began = datetime.date.fromisoformat(str(start).strip())
+        except ValueError:
+            began = None
+        if began is not None and (today - began).days < WARM_DAYS:
+            return min(base, WARM_CAP)
+    return base
+
+
+def segment_homes(accounts):
+    """segment -> the one account that owns it. Every template segment gets one.
+
+    A thread must never change sender, so a segment needs a *stable* home. An
+    account can claim segments explicitly via a "segments" list in the auth file;
+    anything left over is dealt out round-robin so no segment is ever homeless
+    (an unhomed segment would silently fall back and could switch senders).
+    """
+    homes, addrs = {}, [a["address"] for a in accounts]
+    for a in accounts:
+        for seg in a.get("segments", []) or []:
+            homes.setdefault(seg, a["address"])
+    leftover = [s for s in sorted(set(TEMPLATES) | set(SEGMENT_PRIORITY))
+                if s not in homes]
+    for i, seg in enumerate(leftover):
+        homes[seg] = addrs[i % len(addrs)]
+    return homes
+
+
+def thread_account(row_id, log):
+    """The account this row was last sent from, if any - the thread's sender.
+
+    Read newest-last: the audit log is append-only, so the last matching send is
+    the current sender of record for that thread.
+    """
+    found = None
+    rid = str(row_id).strip()
+    for e in log:
+        if e.get("ok") and str(e.get("id", "")).strip() == rid:
+            who = e.get("account") or e.get("from")
+            if who:
+                found = who.strip()
+    return found
+
+
+def home_address(row, accounts, homemap, log):
+    """Which account should carry this row: its live thread's sender if one
+    exists (never switch a thread), else its segment home, else the first
+    account. Only ever returns an address that is actually configured now."""
+    addrs = {a["address"] for a in accounts}
+    stuck = thread_account(row["id"], log)
+    if stuck and stuck in addrs:
+        return stuck
+    home = homemap.get(row["segment"])
+    if home in addrs:
+        return home
+    return accounts[0]["address"]
+
+
+def assign_home(accounts, rows, room, homemap, log):
+    """Pair each row with its home account while that home has room.
+
+    Returns (paired, deferred). A row whose home account is out of allowance is
+    DEFERRED - never handed to a different account - because moving a thread to a
+    new sender is exactly what this whole scheme exists to prevent. It just waits
+    for tomorrow's allowance instead.
+    """
+    by_addr = {a["address"]: a for a in accounts}
     remaining = dict(room)
-    out, i = [], 0
-    while len(out) < count:
-        if all(v <= 0 for v in remaining.values()):
-            break
-        acct = accounts[i % len(accounts)]
-        i += 1
-        if remaining[acct["address"]] > 0:
-            remaining[acct["address"]] -= 1
-            out.append(acct)
-    return out
+    paired, deferred = [], []
+    for r in rows:
+        addr = home_address(r, accounts, homemap, log)
+        if remaining.get(addr, 0) > 0:
+            remaining[addr] -= 1
+            paired.append((r, by_addr[addr]))
+        else:
+            deferred.append((r, f"home account {addr} at its daily cap"))
+    return paired, deferred
+
+
+def template_approved(segment):
+    """Has the founder signed off on this segment's generic template text?
+
+    Gate #1. Default no: a missing file, unreadable file, or absent segment all
+    mean not-approved, because the safe failure here is 'don't send'.
+    """
+    if not APPROVALS_PATH.exists():
+        return False
+    try:
+        data = json.loads(APPROVALS_PATH.read_text(encoding="utf-8"))
+    except (ValueError, OSError):
+        return False
+    return bool(data.get(segment) is True)
+
+
+def is_warm(row):
+    """A live human relationship the drip must never touch. Gate #2."""
+    if str(row.get("id", "")).strip() in WARM_IDS:
+        return True
+    if (row.get("status") or "").strip().lower() == "hold":
+        return True
+    note = (row.get("notes") or "").lower()
+    return any(m in note for m in WARM_NOTE_MARKERS)
+
+
+def automated_holds(row):
+    """Policy reasons this row must not go out on the *unattended* drip.
+
+    Separate from blockers() on purpose: blockers() catches mistakes (dead route,
+    no address, unfilled template) and applies to every path including a human
+    hand-send. These are automation *policy* - the two permanent founder gates -
+    and apply only when nobody is at the keyboard.
+    """
+    holds = []
+    if is_warm(row):
+        holds.append("warm/named thread - hand-send only, never automated")
+    # Only the generic segment template is gated; a hand-written draft is the
+    # founder's own words for that one row.
+    if read_draft(row) is None and not template_approved(row["segment"]):
+        holds.append(f"template batch for {row['segment']!r} not founder-approved")
+    return holds
 
 
 def send_batch(rows, args):
@@ -679,34 +831,51 @@ def send_batch(rows, args):
     checks = {} if args.skip_validation else validation()
     log = read_log()
     mailed = sent_addresses(log)
+    # blockers() catches mistakes and applies to every path, --ids included. The
+    # two founder gates (unapproved template text, warm/named thread) are policy
+    # for the *unattended* drip only - a human naming --ids has made that call.
+    def why_held(r):
+        reasons = blockers(r, checks, mailed, ignore_status=bool(args.ids))
+        if not args.ids:
+            reasons += automated_holds(r)
+        return reasons
+
     ready, held = [], []
     for r in pool:
-        (held if blockers(r, checks, mailed, ignore_status=bool(args.ids))
-         else ready).append(r)
+        (held if why_held(r) else ready).append(r)
     if args.mix and not args.ids:
         ready = interleave(ready)      # --ids means "this order", so never reshuffle it
 
-    # The cap belongs to the mailbox, not to the project: two accounts means two
-    # allowances, not one shared one. Loading the accounts here (rather than at
-    # send time) is what lets the count printed above match what will happen.
-    accounts = load_auth() if (args.live and not args.smtp_plain) else None
+    # The cap belongs to the mailbox, not to the project: three accounts means
+    # three allowances, each warm-ramped on its own. Load the accounts here (the
+    # plain sink path included, so the sink test drives the real rotation) so the
+    # counts printed below match exactly what will be sent.
+    accounts = load_auth() if args.live else None
 
     already = sent_today(log)
+    home_deferred = []
     if accounts:
         per = sent_today_by_account(accounts, log)
-        room = {a["address"]: max(0, DAILY_CAP - per[a["address"].lower()])
+        room = {a["address"]: max(0, account_cap(a) - per[a["address"].lower()])
                 for a in accounts}
         left = sum(room.values())
-        cap_note = f"{DAILY_CAP}/day on each of {len(accounts)} accounts"
+        cap_note = f"per-account cap across {len(accounts)} account(s)"
+        # Home routing: each row rides its thread's sender (or its segment home),
+        # and is deferred rather than rerouted when that mailbox is out of room.
+        homemap = segment_homes(accounts)
+        paired, home_deferred = assign_home(accounts, ready[:n], room, homemap, log)
+        batch = [r for r, _ in paired]
+        senders = [a for _, a in paired]
     else:
         room = None
         left = max(0, DAILY_CAP - already)
         cap_note = f"{DAILY_CAP}/day"
-    batch = ready[:min(n, left)]
+        batch = ready[:min(n, left)]
+        senders = [{"address": "DRY-RUN@localhost"}] * len(batch)
 
     print(f"\n  {len(pool)} unsent targets. {len(ready)} sendable, "
           f"{len(held)} held back. This run: {len(batch)}.")
-    print(f"  {already} already sent today; {left} left under the {cap_note} cap.")
+    print(f"  {already} already sent today; {left} left under the {cap_note}.")
     if room and len(room) > 1:
         print("  " + " · ".join(f"{a}: {n_left} left" for a, n_left in room.items()))
     if ready and not left:
@@ -715,22 +884,16 @@ def send_batch(rows, args):
     if held:
         print("\n  held back:")
         for r in held[:20]:
-            print(f"    #{r['id']:<3} {r['company']:<30} "
-                  f"{'; '.join(blockers(r, checks, mailed, ignore_status=bool(args.ids)))}")
+            print(f"    #{r['id']:<3} {r['company']:<30} {'; '.join(why_held(r))}")
         if len(held) > 20:
             print(f"    ... and {len(held) - 20} more")
+    if home_deferred:
+        print("\n  waiting on a mailbox's allowance (thread sender is fixed):")
+        for r, why in home_deferred[:20]:
+            print(f"    #{r['id']:<3} {r['company']:<30} {why}")
     if not batch:
-        print("\n  nothing sendable. Find real addresses first.\n")
+        print("\n  nothing sendable this run.\n")
         return 0
-
-    if args.live and args.smtp_plain:
-        # No login on the plain path, so no password needed. The only server
-        # that accepts this is the local sink; Gmail refuses unauthenticated.
-        senders = [{"address": "harness@localhost"}] * len(batch)
-    elif accounts:
-        senders = assign_senders(accounts, room, len(batch))
-    else:
-        senders = [{"address": "DRY-RUN@localhost"}] * len(batch)
 
     print("\n  " + ("SENDING FOR REAL" if args.live else "DRY RUN - nothing leaves this machine"))
     for r, acct in zip(batch, senders):
@@ -789,7 +952,8 @@ def send_batch(rows, args):
                 print(f"  {'BOUNCED' if perm else 'FAILED '} #{r['id']} "
                       f"{r['company']}: {e}")
                 log_send({"kind": "send", "id": r["id"], "company": r["company"],
-                          "to": msg["To"], "from": acct["address"], "ok": False,
+                          "to": msg["To"], "from": acct["address"],
+                          "account": acct["address"], "ok": False,
                           "error": str(e), "bounced": perm})
                 if isinstance(e, (smtplib.SMTPServerDisconnected,
                                   smtplib.SMTPSenderRefused,
@@ -810,7 +974,7 @@ def send_batch(rows, args):
             r["sent_on"] = today
             log_send({"kind": "send", "id": r["id"], "company": r["company"],
                       "to": msg["To"], "from": acct["address"],
-                      "subject": msg["Subject"],
+                      "account": acct["address"], "subject": msg["Subject"],
                       "message_id": msg["Message-ID"], "ok": True})
             save(rows)          # after each one: a crash can't lose the record
             print(f"  sent #{r['id']} {r['company']} -> {msg['To']}"
@@ -896,7 +1060,11 @@ def main():
         # the drip keeps running, sends nothing, and the log looks like a quiet day.
         checks = {} if args.skip_validation else validation()
         mailed = sent_addresses()
-        print(sum(1 for r in rows if not blockers(r, checks, mailed)))
+        # The drip runs unattended, so count only what the drip may actually send:
+        # blockers() plus the two founder gates. A queue that looks full of ready
+        # rows but is all unapproved templates would otherwise pace as if busy.
+        print(sum(1 for r in rows
+                  if not blockers(r, checks, mailed) and not automated_holds(r)))
         return 0
     if args.check_bounces:
         return check_bounces(rows, args)

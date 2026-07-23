@@ -1,0 +1,10 @@
+{
+  "_comment": "Founder gate #1 (cards 028/029). A segment is set true ONLY after the founder has read one sample of that segment's CURRENT generic template text. Until then the unattended drip will not send that segment's template rows - hand-written per-row drafts (drafts/<id>.txt) are never gated by this. Card 029 rewrites the template text; every flag stays false until the new text is reviewed.",
+  "operator": false,
+  "insurer": false,
+  "partner": false,
+  "academic": false,
+  "gov": false,
+  "competitor": false,
+  "contract": false
+}
