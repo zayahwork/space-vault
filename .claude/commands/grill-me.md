@@ -1,6 +1,6 @@
 ---
-description: Interview me relentlessly until we reach a shared understanding (run before any plan)
-argument-hint: <the idea, brief, or pasted message to grill>
+description: Interview me relentlessly until we reach a shared understanding (run before any plan). Also triggers on "grill me".
+argument-hint: <the idea, brief, pasted message, or attached file to grill>
 ---
 
 Interview me relentlessly about every aspect of this plan until we reach a shared understanding. The subject:
@@ -8,6 +8,7 @@ Interview me relentlessly about every aspect of this plan until we reach a share
 $ARGUMENTS
 
 Rules:
+- **If a file is attached or dropped in with this command** (image, PDF, markdown, code, screenshot) and no other subject is given in the text, **that file IS the subject** — read it in full before asking anything. If both a file and text are given, the text frames the question and the file is supporting evidence to read first.
 - First, if this is a fresh session, explore the relevant parts of the repo (use a subagent so exploration doesn't fill this context).
 - Walk down each branch of the decision tree, resolving dependencies one by one.
 - Ask questions ONE AT A TIME. For each question, provide your recommended answer so I can just say "yes" or push back.
