@@ -29,6 +29,34 @@
           "control_rate": 0.10666666666666667
         }
       ]
+    },
+    {
+      "snapshot": "2026-07-23/0800Z",
+      "top": 75,
+      "regime": "LEO",
+      "window_before": 3.0,
+      "window_after": 3.0,
+      "data_reach": {
+        "n": 150,
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "settled": false,
+      "cells": [
+        {
+          "reach_days": 0.0,
+          "bar_km": 0.1929999999993015,
+          "n_suspects": 50,
+          "n_controls": 75,
+          "thin_suspects": 25,
+          "thin_controls": 0,
+          "over_suspects": 27,
+          "over_controls": 8,
+          "suspect_rate": 0.54,
+          "control_rate": 0.10666666666666667
+        }
+      ]
     }
   ],
   "tuned": [

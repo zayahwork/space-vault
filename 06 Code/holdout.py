@@ -152,6 +152,32 @@ def data_reach_days(history, centre):
             "min": min(reaches), "max": max(reaches)}
 
 
+def evict_unsettled_cache(cache_dir, centre, after_days, days):
+    """Delete cached history files that do not yet span the snapshot's full forward
+    window, so a re-run refetches instead of re-serving its own first fetch.
+
+    Found on the second real run (2026-07-23): the 0200Z snapshot printed no fetches
+    and returned the same 0.00d reach as the day before - its per-snapshot cache,
+    written 5.8h after capture, was re-served whole, so the "re-run once aged ~0.5d"
+    instruction could never settle the number. Per-snapshot dirs stop cross-snapshot
+    truncation; this stops the same lie from a stale re-serve WITHIN one snapshot.
+    Settled files are kept - refetching them could not add information.
+    """
+    evicted = 0
+    for f in cache_dir.glob(f"*_{days}d.json"):
+        try:
+            pts = json.loads(f.read_text(encoding="utf-8"))
+            keep = pts and max(
+                (datetime.fromisoformat(t) - centre).total_seconds() / 86400.0
+                for t, _ in pts) >= after_days - 1e-9
+        except (ValueError, TypeError):
+            keep = False          # corrupt cache teaches nothing; one refetch is cheap
+        if not keep:
+            f.unlink()
+            evicted += 1
+    return evicted
+
+
 def score_at_reach(suspects, controls, history, centre, before_days, reach_days):
     """Suspect-vs-control rates with the forward window clamped to `reach_days`.
 
@@ -209,6 +235,11 @@ def sweep_snapshot(session, snap_name, top, days, cache_dir):
     old_cache = verify.CACHE
     try:
         cache_dir.mkdir(parents=True, exist_ok=True)
+        if cache_dir != verify.CACHE:      # holdout's own caches only, never the shared one
+            n_evicted = evict_unsettled_cache(cache_dir, centre, after, days)
+            if n_evicted:
+                print(f"     cache: {n_evicted} unsettled file(s) evicted - "
+                      f"refetching fresher history")
         verify.CACHE = cache_dir
         hist = verify.get_history(session, [r["norad"] for r in suspects + controls],
                                   days)

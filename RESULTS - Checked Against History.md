@@ -10,7 +10,7 @@ snapshot: 2026-07-22 0200Z
 ## 🧪 Unseen-data holdout (issue 033, 2026-07-23) — "did you tune on what you tested?"
 
 The diligence question, answered in writing and enforced in code: `06 Code/holdout.py`
-(tests: `_test_holdout.py`, 26 cases). **Cutoff 2026-07-23 00:00Z** — every detector
+(tests: `_test_holdout.py`, 35 cases). **Cutoff 2026-07-23 00:00Z** — every detector
 constant, the verify window table (issue 018), the observability correction (issue 003)
 and the stored alert bars (learned 2026-07-22 19:16Z from snapshots ≤ 07-22/1400Z, checked
 against provenance, not assumed) were fixed at or before it. A snapshot counts as unseen
@@ -45,6 +45,18 @@ Astra 3B 2025-09-08, Intelsat 1002 2025-02-28, AMC 11 2025-06-10 — never touch
 tuning decision: **3/3 caught by the frozen window**. Small n and single-sourced tier, but
 it is the first window evidence that is not circular. Future ground-truth rows land in the
 holdout side automatically (frozen key list in `holdout.py`).
+
+> [!warning] Protocol defect found and fixed on the second real run (2026-07-23 night)
+> The re-run instruction above **silently no-oped as first shipped**: an unseen snapshot's
+> per-snapshot cache re-served its own first fetch (made 5.8 h after capture, 0.00 d reach)
+> on every later run — no fetch, same 0.00 d, so the number could never settle.
+> `holdout.py` now evicts any cached file that does not yet span the full forward window and
+> refetches it (settled files stay cached; the shared `verify_cache` is never touched).
+> Verified on real data the same night: the refetched 0200Z snapshot **still** measures
+> 0.00 d forward reach ~a day after capture, and the second unseen snapshot (07-23/0800Z)
+> reads 54%/11% at zero reach — GP_HISTORY's publication lag is running **longer than the
+> ~6–12 h estimated above**; the PROVISIONAL label is doing its job. Regression cases in
+> `_test_holdout.py`.
 
 **Reusable weekly:** `python holdout.py --cutoff <new freeze instant>` — the archive grows
 every 6 h, so genuinely unseen data accumulates daily. Run saved to

@@ -131,3 +131,37 @@ something that matters more for demo week.
 
 **(c) Blocked on:** nothing for 033. Settled holdout figure gated ~12 h on GP_HISTORY
 publication lag (self-clearing). 005/006/025 archive-gated ~Jul 29; 021 gated on 016.
+
+## -> CTO report (tim, 2026-07-23, third night pass)
+
+**(a) Completed:** Issue **002 closed** — per my last report's recommendation, and ralph
+left it as the top open unblocked card. Closing record maps every done-when item to where
+it shipped (verify_geo.py under 002 itself; the honest SES outcome + drift retirement via
+015's negative control; RESULTS updated repeatedly). No new build — building it as written
+would have re-implemented the retired drift signal. The live SES question routes to 025
+(archive-gated) as before. Also, the 033 follow-through re-run of `holdout.py` **caught a
+real protocol bug and it's fixed**: an unseen snapshot's per-snapshot cache re-served its
+own first fetch forever, so "re-run once aged ~0.5d" silently no-oped and the holdout
+number could literally never settle. `holdout.py` now evicts cached files that don't span
+the full forward window (settled files stay; shared verify_cache untouched), 4 regression
+cases added (`_test_holdout.py` 35 total), verified on real data tonight — eviction fired,
+refetch happened. Fresh finding from that run: **0200Z still measures 0.00 d forward reach
+~a day after capture, and the new unseen 0800Z reads 54%/11% at zero reach** — GP_HISTORY
+publication lag is running longer than the ~6–12 h we estimated. RESULTS note updated.
+Whole tech suite green, 11 files.
+
+**(b) Recommended next move:** (1) The settled holdout figure is still the lane's most
+valuable pending number for the ~Jul 30 meeting — keep re-running `python holdout.py`
+each morning; now that the cache bug is fixed the run will genuinely settle the moment
+Space-Track publishes. If the lag stays >1 day, that itself belongs in the RESULTS note as
+the measured lag. (2) **027 (Cognee) is BLOCKED on machine config, measured not guessed:**
+cognee→litellm has no Python 3.14 wheel and its sdist build needs Rust/Cargo, which isn't
+installed. Founder-machine fix, either one: install rustup, or give me a Python 3.12 venv.
+Also ollama isn't left serving, which the nightly rebuild will need. Card updated with the
+full note. Until one of those lands or the archive unblocks 005/006/025 (~Jul 27–29), my
+queue is EMPTY — restock, or rule on 027's fallback (plain local embedding index, which
+needs no cognee and could ship in a session).
+
+**(c) Blocked on:** 027 per above (Rust toolchain or py3.12 venv — founder's machine);
+005/006/025 archive depth (~Jul 27–29); 021 on card 016; settled holdout on Space-Track
+publication lag (self-clearing, now provably so).

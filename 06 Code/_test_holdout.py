@@ -197,6 +197,69 @@ def test_bar_is_the_controls_90th_percentile():
     check("exactly one control over its own bar", out["over_controls"], 1)
 
 
+# ---------------------------------------------------------------- cache eviction
+
+def _cache_file(d, norad, days, pts):
+    import json
+    f = d / f"{norad}_{days}d.json"
+    f.write_text(json.dumps([[t.isoformat(), a] for t, a in pts]), encoding="utf-8")
+    return f
+
+
+def test_unsettled_cache_file_is_evicted():
+    """The bug this guards against (found 2026-07-23, second real run): a snapshot's
+    first fetch lands in its per-snapshot cache with 0.00d forward reach, and every
+    re-run re-serves that file - so 're-run once aged ~0.5d' silently no-ops and the
+    holdout figure can never settle. A cached file that does not yet span the full
+    forward window must be evicted so the re-run refetches."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        d = Path(td)
+        f = _cache_file(d, 101, 30, _pts((-24, 500.0), (0, 500.0), (2, 500.0)))
+        n = holdout.evict_unsettled_cache(d, CENTRE, 3.0, 30)
+        check("short-reach file evicted", f.exists(), False)
+        check("eviction counted", n, 1)
+
+
+def test_settled_cache_file_is_kept():
+    """Once the cached history spans the full forward window, refetching cannot add
+    information - the file stays and Space-Track is not asked twice."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        d = Path(td)
+        f = _cache_file(d, 102, 30, _pts((-24, 500.0), (0, 500.0), (73, 500.0)))
+        n = holdout.evict_unsettled_cache(d, CENTRE, 3.0, 30)
+        check("settled file kept", f.exists(), True)
+        check("nothing evicted", n, 0)
+
+
+def test_empty_and_corrupt_cache_files_are_evicted():
+    """An empty history teaches nothing and a corrupt file would crash the read -
+    both are worth one refetch."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        d = Path(td)
+        empty = _cache_file(d, 103, 30, [])
+        corrupt = d / "104_30d.json"
+        corrupt.write_text("{not json", encoding="utf-8")
+        n = holdout.evict_unsettled_cache(d, CENTRE, 3.0, 30)
+        check("empty file evicted", empty.exists(), False)
+        check("corrupt file evicted", corrupt.exists(), False)
+        check("both counted", n, 2)
+
+
+def test_other_days_suffix_untouched():
+    """Eviction only reasons about files fetched at this run's --days; a file for a
+    different span is someone else's and stays."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        d = Path(td)
+        other = _cache_file(d, 105, 60, _pts((0, 500.0)))
+        n = holdout.evict_unsettled_cache(d, CENTRE, 3.0, 30)
+        check("different-days file untouched", other.exists(), True)
+        check("not counted", n, 0)
+
+
 if __name__ == "__main__":
     for name, fn in sorted({k: v for k, v in globals().items()
                             if k.startswith("test_") and callable(v)}.items()):
