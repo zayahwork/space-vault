@@ -42,6 +42,7 @@ short lines, jargon explained or omitted). From the raw material below produce
   and any MISSED promise in **bold**. No praise padding. Misses get named, not softened.
 - One company line: countdown, sends vs target, budget used yesterday.
 - Final line: the single most important thing in the company today.
+- SECTION 'This Week's Grind List' (founder order): a LONG structured per-lane list for the week - enough that finishing it is a grind, not a sprint - plus the #1 named bottleneck (current CTO read: zero customers; investor conversations + traffic channels are the fix in motion).
 Do not invent facts not present in the material; write 'no data' where the material is silent.
 
 $raw
