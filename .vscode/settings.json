@@ -7,15 +7,29 @@
     "**/.git": true,
     "**/__pycache__": true,
     "**/*.pyc": true,
+    "**/.obsidian": true,
+    "99 Archive": true,
     "06 Code/supgp_archive": true,
     "06 Code/.venv-meeting": true,
     "06 Code/splid-devkit": true,
     "06 Code/.brain_cwd": true,
-    "06 Code/sink_out": true
+    "06 Code/sink_out": true,
+    "06 Code/referee_cache": true,
+    "06 Code/groundtruth": true
+  },
+  // Related files fold under their parent in the explorer - the company reads as
+  // a handful of top-level objects instead of a wall of scripts.
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "detect.py": "_test_*.py, baselines_*.json, verify*.py, quiet.py, referee_geo.py, daily_alert.py",
+    "outreach.py": "check_*.py, outreach_*.jsonl, outreach_*.csv, template_approvals.json, _smtp_sink.py",
+    "loop.ps1": "ralph.ps1, gather.ps1, standup.ps1, loops.json, ralph_budget.json, nightshift.cmd, drip.ps1"
   },
   "search.exclude": {
     "**/.git": true,
     "**/__pycache__": true,
+    "**/.obsidian": true,
+    "99 Archive": true,
     "06 Code/supgp_archive": true,
     "06 Code/.venv-meeting": true,
     "06 Code/splid-devkit": true,
