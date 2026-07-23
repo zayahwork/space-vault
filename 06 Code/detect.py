@@ -64,6 +64,7 @@ import argparse
 import gzip
 import io
 import json
+import re
 import sys
 from collections import Counter
 from datetime import datetime, timezone
@@ -510,6 +511,15 @@ def load_baselines(group):
     # in the output. An empty dict refuses loudly instead, which is the house rule.
     for regime in ("station", "falling"):
         raw["cuts"].setdefault(regime, {})
+    # learn_baselines stamps the floor(s) it APPLIED - one number, or a list when
+    # the fleet straddles regimes (SES: [1.0, 2.0]). The list is provenance, not a
+    # parameter: analyze() takes one float or None, and None reproduces exactly
+    # what the learn run did (each object judged by its own regime's floor). Read
+    # it back as None rather than handing every consumer a list that crashes the
+    # first float comparison - daily_alert's scheduled run died on exactly this
+    # the evening SES re-learned as a mixed fleet.
+    if isinstance(raw.get("min_km"), list):
+        raw["min_km"] = None
     return raw
 
 
@@ -668,8 +678,127 @@ def apply_persistence(rows, looks, min_looks=MIN_LOOKS):
             r["verdict"] = "SUSPECT (new this look - unconfirmed)"
 
 
+# --------------------------------------------------------- one-command daily run
+#
+# The whole morning verdict as `python detect.py --all`: every fleet scored in
+# ALERT mode against its stored bar, one combined block on stdout, the same block
+# appended to the vault's alert log. daily_alert.py stays the every-snapshot
+# ledger the scheduled task fills; this is the command a human (or the scheduled
+# task, once switched) runs to get today's answer in one go.
+
+ALL_GROUPS = ["starlink", "oneweb", "intelsat", "ses"]
+ALERT_LOG = HERE.parent / "RESULTS - Alert Log.md"
+
+
+def score_fleet(group, every, history=HISTORY_SNAPSHOTS, min_looks=MIN_LOOKS):
+    """One fleet's verdict on the newest snapshot: alert mode, persistence applied.
+
+    Returns a plain dict for run_all to format. Deliberately does NOT catch its
+    own exceptions - run_all does, per fleet, so one broken fleet reports and the
+    rest still score.
+    """
+    stored = load_baselines(group)
+    if stored is None:
+        return {"group": group,
+                "unscored": "no stored baseline - run --learn-baseline first"}
+    latest = analyze(every[-1], group, stored["pct"], stored["min_km"],
+                     MAX_PLAUSIBLE_KM, allow_live=True, stored=stored)
+    if latest is None:
+        return {"group": group, "unscored": "no SupGP file in this snapshot"}
+    if latest["skipped"]:
+        return {"group": group, "unscored": latest["skipped"]}
+    rows = latest["rows"]
+
+    runs = [latest]
+    for older in every[-history:-1]:
+        run = analyze(older, group, stored["pct"], stored["min_km"],
+                      MAX_PLAUSIBLE_KM, allow_live=False, stored=stored)
+        if run and not run["skipped"] and run["rows"]:
+            runs.insert(-1, run)
+    if len(runs) > 1:
+        apply_persistence(rows, independent_looks(runs), min_looks)
+
+    over = sorted([r for r in rows if not r["falling"] and r.get("flagged")],
+                  key=lambda r: r["gap_km"] / max(r["band_cut_km"], 1e-9),
+                  reverse=True)
+    return {
+        "group": group, "n": len(rows), "over": over,
+        "persistent": sum(1 for r in over
+                          if r["verdict"] == "PERSISTENT SUSPECT"),
+        "descending": sum(1 for r in rows if r["falling"] and r.get("flagged")),
+        "dq": sum(1 for r in rows if r["verdict"].startswith("DATA QUALITY")),
+    }
+
+
+def fleet_line(s):
+    """One log line per fleet - same shape daily_alert.py established, plus the
+    persistent count the morning reader actually acts on."""
+    if "unscored" in s:
+        return f"- **{s['group']}**: not scored - {s['unscored']}"
+    if not s["over"] and not s["descending"]:
+        return (f"- **{s['group']}**: 🔇 quiet — all {s['n']} objects inside "
+                f"the stored bar")
+    line = (f"- **{s['group']}**: {len(s['over'])} over the bar of {s['n']} scored, "
+            f"{s['persistent']} persistent ({s['descending']} more among deorbiting "
+            f"hardware, {s['dq']} data-quality)")
+    if s["over"]:
+        top = s["over"][0]
+        line += (f" — top: {top['norad']} at {top['gap_km']:.1f} km, "
+                 f"{top['gap_km'] / max(top['band_cut_km'], 1e-9):.1f}x its bar")
+    return line
+
+
+def run_all(groups=None, log_path=None, history=HISTORY_SNAPSHOTS,
+            min_looks=MIN_LOOKS):
+    """Score every fleet, print one block, append it to the alert log.
+
+    Exit code is 0 as long as ANY fleet scored; 1 only when every fleet failed.
+    The log is a ledger: a snapshot that already has a heading there is printed
+    but never appended twice (same rule daily_alert.py keys on).
+    """
+    groups = groups or ALL_GROUPS
+    log_path = Path(log_path) if log_path else ALERT_LOG
+    every = snapshot_dirs()
+    sid = f"{every[-1].parent.name}/{every[-1].name}"
+
+    lines, failed = [], 0
+    for g in groups:
+        try:
+            s = score_fleet(g, every, history, min_looks)
+        except Exception as e:            # one fleet must not kill the others
+            failed += 1
+            lines.append(f"- **{g}**: FAILED - {type(e).__name__}: {e}")
+            continue
+        lines.append(fleet_line(s))
+
+    print(f"\n  daily run - alert mode, stored bars - snapshot {sid}\n")
+    for ln in lines:
+        print(f"  {ln}")
+
+    if log_path.exists():
+        text = log_path.read_text(encoding="utf-8")
+    else:
+        try:                              # reuse the ledger's own header, once
+            import daily_alert
+            text = daily_alert.LOG_HEADER
+        except Exception:
+            text = "# 🚨 Alert Log\n"
+    if re.search(rf"^## {re.escape(sid)}\s*$", text, re.MULTILINE):
+        print(f"\n  {log_path.name} already has an entry for {sid} - not appended")
+    else:
+        log_path.write_text(text + f"\n## {sid}\n\n" + "\n".join(lines) + "\n",
+                            encoding="utf-8")
+        print(f"\n  appended -> {log_path.name}")
+    if failed:
+        print(f"  {failed} fleet(s) FAILED above; the rest were still scored")
+    return 1 if failed == len(groups) else 0
+
+
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--all", action="store_true",
+                    help="score every fleet (alert mode, stored bars), print one "
+                         "combined summary and append it to the alert log")
     ap.add_argument("--group", default="starlink")
     ap.add_argument("--pct", type=float, default=95.0,
                     help="a gap above this percentile FOR ITS AGE BIN is a suspect")
@@ -698,6 +827,9 @@ def main():
     ap.add_argument("--chart", action="store_true")
     ap.add_argument("--csv", action="store_true", help="write the full table")
     args = ap.parse_args()
+
+    if args.all:
+        return run_all(history=args.history, min_looks=args.min_looks)
 
     if args.learn_baseline:
         base = learn_baselines(args.group, args.pct, args.min_km, args.max_km)

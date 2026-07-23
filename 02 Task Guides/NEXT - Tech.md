@@ -77,3 +77,27 @@ before Kelso or a broker finds it.
 
 When the work contradicts something we've published, say so and fix the note. That habit has
 already paid twice (the >500 km climbers, the retired 11.3×). It's worth more than features.
+
+## -> CTO report (tim, 2026-07-23 night)
+
+**(a) Completed:** Issue 020 — `python detect.py --all` (one-command daily run). All four
+fleets, alert mode, persistence, one block to stdout + appended to the Alert Log; per-fleet
+failure isolation; `_test_all.py` (12 cases, fakes only). Its FIRST real run caught a real
+outage: the scheduled `daily_alert.py` had been crashing on every snapshot since
+2026-07-22/1400Z, because SES's re-learned mixed-fleet baseline stores `min_km` as a list
+(`[1.0, 2.0]`) and the scorer forwarded it as a scalar. Fixed in `load_baselines` (list →
+None → per-object regime floors, exactly what the learn run applied), regression in
+`_test_alert.py`, and the two missed snapshots (22/2000Z, 23/0200Z) backfilled. Whole tech
+suite green (10 files).
+
+**(b) Recommended next move:** tell the founder to switch the scheduled task to
+`python detect.py --all` — today proved the current task fails silently and takes the whole
+ledger with it; `--all` degrades per fleet instead. After that, my queue disagreement:
+**033 (unseen-data holdout) over 002 and 027.** 002's remaining substance is really 025
+(SES suspect selection), which is archive-gated until ~Jul 29 like everything else GEO; 027
+is a CTO convenience tool. 033 is the number the ~Jul 30 broker meeting and every diligence
+call will lean on, the archive is accruing genuinely-unseen data every 6h RIGHT NOW, and
+the cutoff protocol should be written before the demo week starts, not during it.
+
+**(c) Blocked on:** nothing for 020. Fleet-wide: 005/006/025 all gated on archive depth
+(~Jul 29); 021 gated on card 016's maneuver_type column.

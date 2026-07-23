@@ -167,6 +167,20 @@ try:
     detect.classify(fall_rows, 95.0, 5.0, stored_cuts=half["cuts"]["falling"])
     passed &= check("  -> that regime refuses instead of silently ranking",
                     flagged(fall_rows), 0)
+    # A mixed fleet's learned floor is stamped as a LIST ([1.0, 2.0] for SES's
+    # GEO+MEO halves). That list is provenance; analyze() takes one float or None.
+    # load_baselines must hand back None (= each object's own regime floor, which
+    # is exactly what the learn run applied) - forwarding the list crashed the
+    # scheduled alert run the evening SES re-learned as mixed.
+    path.write_text(json.dumps({
+        "group": TEST_GROUP, "learned_utc": "2026-07-22T00:00:00+00:00",
+        "pct": 99.0, "min_km": [1.0, 2.0], "snapshots": ["2026-07-22/0200Z"],
+        "regimes": {"station": [{"lo": 12, "hi": 24, "n": 900, "cut_km": 43.9,
+                                 "basis": "bin"}], "falling": []},
+    }), encoding="utf-8")
+    mixed = detect.load_baselines(TEST_GROUP)
+    passed &= check("mixed-fleet list floor -> read back as None (per-object regime floor)",
+                    mixed["min_km"], None)
 finally:
     if path.exists():
         path.unlink()
