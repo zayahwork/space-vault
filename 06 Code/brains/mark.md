@@ -25,6 +25,16 @@ Never re-learn what is already here.
   `check_segment_notes.py` has the same latent bug — its checks happened to
   pass because those phrases never wrapped; fix it next time it's touched.)
 
+- **Don't restate banned tokens in artifacts your own linter scans** (banked
+  2026-07-23, card 032). A governance note that *states* its language rules
+  ("the retired 11.3× appears nowhere", "no LinkedIn ever") contains the banned
+  strings and fails its own global ban check. Scope bans to the blocks that
+  could become public (```post fences, draft sections) OR write the rule prose
+  obliquely ("the retired multiple", "the banned network") — never quote the
+  banned token in a scanned file. Verified red → green this shift:
+  `check_channel_plan.py` correctly flagged the plan's own rules paragraph;
+  rewording it (not weakening the linter) fixed it.
+
 ## HYPOTHESIS
 
 - **Segment templates rot faster than hand drafts** (2026-07-22, card 023).
